@@ -5,7 +5,7 @@ describe("Category APIs", () => {
 
   test("Get categories without token", async () => {
     const response = await request(app)
-      .get("/category");
+      .get("/categories");
 
     expect([401, 403]).toContain(response.statusCode);
   });

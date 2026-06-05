@@ -61,7 +61,7 @@ app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     environment: process.env.NODE_ENV || "development",
-    message: "Mantra API Core Engine Running Seamlessly."
+    message: "Mantra Backend Running"
   });
 });
 
