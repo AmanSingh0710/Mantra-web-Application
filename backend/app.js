@@ -12,6 +12,8 @@ const globalLimiter = require("./middleware/globalLimiter");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 /* ==========================================
    1. GLOBAL HIGH-PERFORMANCE MIDDLEWARES (Non-Rate Limited)
    ========================================== */
