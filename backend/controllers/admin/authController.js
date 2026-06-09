@@ -176,6 +176,14 @@ exports.login = async (req, res) => {
     // Remove password string from output data leak paths
     user.password = undefined;
 
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,      // Must be true on Render (HTTPS)
+      sameSite: "None",  // Required because frontend is Vercel and backend is Render
+      path: "/",
+    };
+
     // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
     res.cookie("accessToken", accessToken, {
       ...cookieOptions,
