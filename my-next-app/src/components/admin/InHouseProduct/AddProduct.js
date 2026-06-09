@@ -57,7 +57,7 @@ export default function AddProduct() {
         // Categories fetch karne ke liye
         const fetchCategories = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/category`, {
+                const res = await fetch(`${BASE_URL}/categories`, {
                     credentials: "include"
                 });
                 const data = await res.json();
@@ -83,7 +83,6 @@ export default function AddProduct() {
                     credentials: "include"
                 });
                 const data = await res.json();
-                console.log("Brands Data:", data);
                 setBrands(data);
             } catch (err) { console.error("Brand Fetch Error:", err); }
         };
@@ -146,7 +145,7 @@ export default function AddProduct() {
         data.append("tags", tags.split(",").map(tag => tag.trim())); // String to Array conversion
 
         try {
-            const res = await fetch(`${BASE_URL}/admin-products/add`, {
+            const res = await fetch(`${BASE_URL}/Adminproducts/add`, {
                 method: "POST",
                 credentials: "include",
                 body: data

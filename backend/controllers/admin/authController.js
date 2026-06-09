@@ -1,4 +1,4 @@
-//controllers/authController.js
+//controllers/admin/authController.js
 
 const User = require("../../models/User");
 const Order = require("../../models/Order");
@@ -9,6 +9,20 @@ const { sendMobileOTP } = require("../../utils/sendMobileOTP");
 const generateOTP = require("../../utils/generateOTP");
 const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
+
+/**
+ * Helper to generate cookie options dynamically based on environment.
+ */
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true, // Neutralizes XSS by making the cookie unreadable to client JS
+    secure: isProduction, // True in production (requires HTTPS)
+    // If your frontend and backend domains are separate (e.g. Vercel & Heroku), use "None".
+    sameSite: isProduction ? "None" : "Lax",
+    path: "/",
+  };
+};
 
 // REGISTER
 exports.register = async (req, res) => {
@@ -159,6 +173,21 @@ exports.login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    // Remove password string from output data leak paths
+    user.password = undefined;
+
+    // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, 
+    });
+
+    // Refresh token cookie (Matches your longer lived token life, e.g. 7 days)
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
+    });
+
     res.status(200).json({
       accessToken,
       refreshToken,
@@ -167,7 +196,6 @@ exports.login = async (req, res) => {
 
 
   } catch (error) {
-    console.error("LOGIN ERROR 👉", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -378,52 +406,38 @@ exports.updateAdmin = async (req, res) => {
 };
 
 
-// Refresh Token 
+// REFRESH TOKEN (Modified to read and set tokens via cookies instead of body payloads)
 exports.refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    // Look inside req.cookies instead of the request body
+    const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
       return res.status(401).json({ message: "No refresh token provided" });
     }
 
-    // 1. Verify token
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET
-    );
-
-    // 2. Check user in DB (ADD THIS LINE)
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
 
-    // 3. Validate refresh token
     if (!user || user.refreshToken !== refreshToken) {
-      return res.status(403).json({
-        message: "Invalid refresh token"
-      });
+      return res.status(403).json({ message: "Invalid refresh token" });
     }
 
-    // 4. Generate new access token
-    const newAccessToken = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRE }
-    );
-
-    const newRefreshToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRE }
-    );
+    const payload = { id: user._id, role: user.role, storeId: user.storeId };
+    
+    const newAccessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.JWT_ACCESS_EXPIRE || "15m" });
+    const newRefreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRE || "7d" });
 
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    return res.json({
-      success: true,
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken
-    });
+    const cookieOptions = getCookieOptions();
+
+    // Deliver new tokens quietly back via client cookies
+    res.cookie("accessToken", newAccessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+    res.cookie("refreshToken", newRefreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    return res.json({ success: true });
 
   } catch (err) {
     return res.status(403).json({
@@ -434,25 +448,28 @@ exports.refreshToken = async (req, res) => {
 };
 
 
-
+// LOGOUT (sweep and clear client engine cookies)
 exports.logout = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.cookies;
 
-    if (!refreshToken) return res.sendStatus(204);
-
-    const user = await User.findOne({ refreshToken });
-
-    if (user) {
-      user.refreshToken = null;
-      await user.save();
+    if (refreshToken) {
+      const user = await User.findOne({ refreshToken });
+      if (user) {
+        user.refreshToken = null;
+        await user.save();
+      }
     }
 
-    res.json({ message: "Logged out successfully" });
+    const cookieOptions = getCookieOptions();
+
+    // Expire and clear client side cookie paths instantly
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
+
+    res.json({ success: true, message: "Logged out successfully" });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-

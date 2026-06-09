@@ -15,114 +15,93 @@ export const getImageUrl = (image) => {
   return `${BASE_URL}/uploads${cleanPath}`;
 };
 
-// 🔥 Safe logout helper (reusable inside API layer)
-export const logoutUser = () => {
+// 🔥 Safe logout helper (Refactored to notify backend to sweep HttpOnly cookies)
+export const logoutUser = async () => {
   if (typeof window === "undefined") return;
 
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-
-  window.location.href = "/login";
+  try {
+    // Inform the backend to clear cookies (res.clearCookie)
+    await fetch(`${BASE_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("Backend logout failed:", err);
+  } finally {
+    // Wipe local UI state cache and force redirect
+    localStorage.clear();
+    window.location.href = "/login";
+  }
 };
 
-export async function fetchFromAPI(endpoint, options = {}) {
+export const fetchFromAPI = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
-
-  let accessToken =
-    typeof window !== "undefined"
-      ? localStorage.getItem("accessToken")
-      : null;
-
-  const refreshToken =
-    typeof window !== "undefined"
-      ? localStorage.getItem("refreshToken")
-      : null;
-
-  // 🔹 Build headers properly
   const isFormData = options.body instanceof FormData;
 
+  // 🔹 Build headers cleanly (No more Bearer Token Injection)
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
-    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
   };
 
-  // 🔹 First request
   let res;
 
   try {
     res = await fetch(url, {
       ...options,
       headers,
-      credentials: "include",
+      // CRUCIAL: Instructs the browser to automatically attach/receive cookies
+      credentials: "include", 
     });
   } catch (err) {
     console.error("Network Error:", err);
     throw new Error("Network error. Please try again.");
   }
 
-  // 🔴 Token expired → refresh flow
-  if (res.status === 401 && refreshToken) {
+  // 🔴 Access Token Expired (401) → Silent cookie refresh flow
+  if (res.status === 401) {
     try {
+      // Hit your backend refresh endpoint. 
+      // It reads 'refreshToken' from cookies and sets a fresh 'accessToken' cookie via response headers.
       const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-        credentials: "include",
+        credentials: "include", // Sends the HttpOnly refreshToken cookie automatically
       });
 
+      // If the refresh token itself is expired or manipulated, boot the user out
       if (!refreshRes.ok) {
-        logoutUser();
+        await logoutUser();
         return;
       }
 
-      const refreshData = await refreshRes.json();
-
-      if (!refreshData?.accessToken) {
-        logoutUser();
-        return;
-      }
-
-      // Save New Token
-      localStorage.setItem(
-        "accessToken",
-        refreshData.accessToken
-      );
-
-      // 🔁 Retry original request
+      // 🔁 Refresh succeeded! Retry the original request immediately.
+      // The browser automatically attaches the brand new cookie set by the refresh step.
       res = await fetch(url, {
         ...options,
-        headers: {
-          ...(isFormData ? {} : { "Content-Type": "application/json" }),
-          ...(options.headers || {}),
-          Authorization: `Bearer ${refreshData.accessToken}`,
-        },
+        headers,
         credentials: "include",
       });
     } catch (err) {
       console.error("Refresh failed:", err);
-      logoutUser();
+      await logoutUser();
       return;
     }
   }
 
-
-   let data = null;
-
+  // Parse JSON response data safely
+  let data = null;
   try {
     data = await res.json();
   } catch {
     data = null;
   }
 
-  // ❌ Handle API errors
+  // ❌ Handle API business errors downstream
   if (!res.ok) {
-    const message =
-      data?.message || "Something went wrong";
-
-
+    const message = data?.message || "Something went wrong";
     throw new Error(message);
   }
 
   return data;
-}
+};

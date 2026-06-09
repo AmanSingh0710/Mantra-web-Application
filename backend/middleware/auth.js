@@ -6,18 +6,13 @@ const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
   try {
-    let token;
+   const token = req.cookies ? req.cookies.accessToken : null;
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-
+    // 2. If cookie doesn't exist, block access immediately
     if (!token) {
       return res.status(401).json({
-        message: "Access denied. No token provided"
+        success: false,
+        message: "Access denied. Authentication token missing."
       });
     }
 
