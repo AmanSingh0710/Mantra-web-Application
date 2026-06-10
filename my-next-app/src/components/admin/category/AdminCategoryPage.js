@@ -3,7 +3,7 @@ import { Search, Edit, Trash2, UploadCloud, Info, Download, ChevronDown } from '
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { fetchFromAPI } from '@/utils/api'; // ✅ IMPORT
+import { fetchFromAPI } from '@/utils/api';
 
 const CategorySetup = () => {
     const [setupType, setSetupType] = useState('category');
@@ -23,8 +23,10 @@ const CategorySetup = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const data = await fetchFromAPI('/category');
-            setAllCategories(Array.isArray(data) ? data : []);
+            const response = await fetchFromAPI("/categories");
+
+            setAllCategories(response.data || []);
+            
         } catch (err) {
             console.error("Error fetching data", err);
         } finally {
@@ -57,7 +59,7 @@ const CategorySetup = () => {
 
         try {
             if (editId) {
-                await fetchFromAPI(`/category/${editId}`, {
+                await fetchFromAPI(`/categories/${editId}`, {
                     method: 'PUT',
                     body: JSON.stringify({
                         ...formData,
@@ -66,7 +68,7 @@ const CategorySetup = () => {
                     })
                 });
             } else {
-                await fetchFromAPI(`/category`, {
+                await fetchFromAPI(`/categories`, {
                     method: 'POST',
                     body: JSON.stringify({
                         ...formData,
@@ -90,7 +92,7 @@ const CategorySetup = () => {
         if (!window.confirm("Are you sure?")) return;
 
         try {
-            await fetchFromAPI(`/category/${id}`, {
+            await fetchFromAPI(`/categories/${id}`, {
                 method: 'DELETE'
             });
             fetchData();

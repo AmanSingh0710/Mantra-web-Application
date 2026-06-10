@@ -5,11 +5,19 @@ exports.getCategories = async (req, res) => {
     const cats = await Category.find()
       .populate("parent", "name")
       // Level wise sort karega, phir priority (1,2,3...) ke hisab se, phir name se
-      .sort({ level: 1, priority: 1, name: 1 }); 
+      .sort({ level: 1, priority: 1, name: 1 });
 
-    res.json(cats);
+    return res.status(200).json({
+      success: true,
+      count: categories.length,
+      data: categories
+    });
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
@@ -32,11 +40,9 @@ exports.getPublicCategories = async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
-
     res.status(500).json({
       success: false,
-      message: "Failed to load categories"
+      message: error.message
     });
   }
 };
@@ -70,10 +76,14 @@ exports.createCategory = async (req, res) => {
       level
     });
 
-    res.status(201).json(category);
+    return res.status(201).json({
+      success: true,
+      message: "Category created successfully",
+      data: category
+    });
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
@@ -104,10 +114,17 @@ exports.updateCategory = async (req, res) => {
       { new: true }
     );
 
-    res.json(category);
+    return res.status(200).json({
+      success: true,
+      message: "Category updated successfully",
+      data: category
+    });
 
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
@@ -126,9 +143,12 @@ exports.deleteCategory = async (req, res) => {
 
     await deleteWithChildren(req.params.id);
 
-    res.json({ message: "Category and subcategories deleted" });
+    return res.status(200).json({
+      success: true,
+      message: "Category and subcategories deleted"
+    });
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({success: false, message: err.message });
   }
 };
