@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getAccessToken } from "@/utils/auth";
 import { fetchFromAPI , getImageUrl } from "@/utils/api";
 import { FaStar, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -10,7 +9,6 @@ import toast from "react-hot-toast";
 
 
 export default function TopPicks() {
-  const token = getAccessToken();
   const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("BESTSELLER");
   const [loading, setLoading] = useState(true);
@@ -36,7 +34,6 @@ export default function TopPicks() {
 
       setProducts(data?.products || []);
     } catch (error) {
-      console.error("Products Error:", error);
       toast.error(error.message);
     } finally {
       setLoading(false);
