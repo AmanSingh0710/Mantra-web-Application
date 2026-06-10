@@ -45,15 +45,17 @@ export default function InHouseProductList() {
             try {
 
                 const [catRes, brandRes] = await Promise.all([
-                    fetch(`${BASE_URL}/category`, { credentials: "include" }),
+                    fetch(`${BASE_URL}/categories`, { credentials: "include" }),
                     fetch(`${BASE_URL}/brand`, { credentials: "include" })
                 ]);
-                const catData = await catRes.json();
-                const brandData = await brandRes.json();
+                const catResult = await catRes.json()
+                const brandResult = await brandRes.json();
+
+                const cats = catResult.data || [];
 
                 // Sirf Level 1 categories filter karein agar backend saara data bhej raha hai
-                setCategories(catData.filter(c => !c.parent || c.level === 1));
-                setBrands(brandData || []);
+                setCategories(cats.filter(c => !c.parent || c.level === 1));
+                setBrands(brandResult.data || brandResult || []);
             } catch (err) {
                 console.error("Metadata fetch error:", err);
             }
@@ -100,7 +102,7 @@ export default function InHouseProductList() {
         if (!categoryId) return setSubCategories([]);
 
         try {
-            const res = await fetch(`${BASE_URL}/category?parent=${categoryId}`, {
+            const res = await fetch(`${BASE_URL}/categories?parent=${categoryId}`, {
                 credentials: "include"
             });
             setSubCategories(await res.json());
@@ -114,7 +116,7 @@ export default function InHouseProductList() {
         if (!subId) return setSubSubCategories([]);
 
         try {
-            const res = await fetch(`${BASE_URL}/category?parent=${subId}`, {
+            const res = await fetch(`${BASE_URL}/categories?parent=${subId}`, {
                 credentials: "include"
             });
             setSubSubCategories(await res.json());
@@ -132,7 +134,7 @@ export default function InHouseProductList() {
 
     const handleToggleStatus = async (id, field) => {
         try {
-            await fetch(`${BASE_URL}/Adminproducts/toggle-status`, {
+            const res = await fetch(`${BASE_URL}/Adminproducts/toggle-status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -290,7 +292,7 @@ export default function InHouseProductList() {
                                                 src={ product.thumbnail ? `${BASE_URL}/uploads/${product.thumbnail.split(/[\\/]/).pop()}` : "/default.png"}
                                                 alt={product.name}
                                                 className="w-10 h-10 rounded shadow-sm border object-cover"
-                                                onError={(e) => { console.log("Broken Image URL:", e.target.src); e.target.src = "https://via.placeholder.com/50?text=No+Img"; }}
+                                                onError={(e) => { e.target.onerror = null; e.target.src = "/no-image.png"; }}
                                             />
                                         </div>
                                     </td>

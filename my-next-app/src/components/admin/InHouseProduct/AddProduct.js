@@ -54,7 +54,6 @@ export default function AddProduct() {
 
     useEffect(() => {
 
-        // Categories fetch karne ke liye
         const fetchCategories = async () => {
             try {
                 const res = await fetch(`${BASE_URL}/categories`, {
