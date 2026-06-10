@@ -2,7 +2,7 @@ const Category = require("../../models/Category");
 
 exports.getCategories = async (req, res) => {
   try {
-    const cats = await Category.find()
+    const categories = await Category.find()
       .populate("parent", "name")
       // Level wise sort karega, phir priority (1,2,3...) ke hisab se, phir name se
       .sort({ level: 1, priority: 1, name: 1 });
