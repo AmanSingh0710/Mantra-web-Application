@@ -60,9 +60,14 @@ export default function AddProduct() {
                 const res = await fetch(`${BASE_URL}/categories`, {
                     credentials: "include"
                 });
-                const data = await res.json();
-                setAllCategories(data);
-                const level1 = data.filter(cat => cat.level === 1);
+                const result = await res.json();
+
+                const categories = result.data || [];
+
+                setAllCategories(categories);
+
+                const level1 = categories.filter(cat => cat.level === 1);
+
                 setCategories(level1);
             } catch (err) { console.error("Cat Fetch Error:", err); }
         };
