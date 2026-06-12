@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Order = require("../../models/Order");
 const User = require("../../models/User");
 const Store = require("../../models/Store");
-const Product = require("../../models/Product");
+const Product = require("../../models/VendorProduct");
 const DeliveryMan = require("../../models/Deliveryman/DeliveryMan");
 
 exports.getDashboard = async (req, res) => {
