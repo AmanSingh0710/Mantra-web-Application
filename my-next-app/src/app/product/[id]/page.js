@@ -6,7 +6,7 @@ import { fetchFromAPI } from "@/utils/api";
 import { FaShoppingBag, FaBolt, FaStar, FaShieldAlt, FaTruck, FaUndo, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 
-
+//src/app/product/[id]/page.js
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ProductPage() {
@@ -190,7 +190,7 @@ export default function ProductPage() {
                             <span
                                 onClick={() => {
                                     if (product.category) {
-                                        router.push(`/products?category=${encodeURIComponent(product.category)}`);
+                                        router.push(`/product?category=${encodeURIComponent(product.category)}`);
                                     }
                                 }}
                                 className="text-xs uppercase tracking-wider text-amber-600 font-bold bg-amber-50 px-2.5 py-1 rounded cursor-pointer hover:bg-amber-100 hover:text-amber-700 transition-all inline-block"

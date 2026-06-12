@@ -13,7 +13,7 @@ export default function ShopPage() {
     useEffect(() => {
         const loadProducts = async () => {
             try {
-                const res = await fetchFromAPI("/products");
+                const res = await fetchFromAPI("/Adminproducts");
                 const safeProducts = res?.products || [];
                 setProducts(Array.isArray(safeProducts) ? safeProducts : []);
             } catch (err) {

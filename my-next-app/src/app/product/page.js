@@ -5,7 +5,7 @@ import { FaStar, FaSlidersH, FaTimes, FaShoppingBag } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
+//src/app/product/page.js
 export default function ProductsPage() {
   return (
     <Suspense fallback={
@@ -187,7 +187,7 @@ function ProductsContent() {
                   <div 
                     key={product._id} 
                     className="bg-white border border-gray-100 rounded-sm p-2 sm:p-3 flex flex-col group transition-all hover:shadow-md cursor-pointer relative"
-                    onClick={() => router.push(`/product/${product._id}`)} // 🎯 FIXED: Changed /products/ to /product/ to avoid 404
+                    onClick={() => router.push(`/product/${product._id}`)} 
                   >
                     
                     {/* Item Image Box Container Layout */}

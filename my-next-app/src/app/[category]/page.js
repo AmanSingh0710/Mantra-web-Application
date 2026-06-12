@@ -59,9 +59,9 @@ export default function DynamicCategoryPage() {
                 }
 
                 // 2. Build optimized database query endpoints
-                let endpoint = "/products";
+                let endpoint = "/product";
                 if (targetCategory !== "all products") {
-                    endpoint = `/products?category=${encodeURIComponent(targetCategory)}`;
+                    endpoint = `/product?category=${encodeURIComponent(targetCategory)}`;
                 }
 
                 // 3. Fetch ONLY the needed data from the database server

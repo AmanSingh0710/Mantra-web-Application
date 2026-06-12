@@ -30,7 +30,7 @@ export default function TopPicks() {
     try {
       setLoading(true);
 
-      const data = await fetchFromAPI("/products");
+      const data = await fetchFromAPI("/AdminProducts");
 
       setProducts(data?.products || []);
     } catch (error) {

@@ -73,7 +73,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetchFromAPI("/products");
+      const res = await fetchFromAPI("/Adminproducts");
       const data = await res.json();
       setProducts(data);
     } catch {
@@ -101,7 +101,7 @@ export default function ProductsPage() {
   const addProduct = async (e) => {
     e.preventDefault();
 
-    const res = await fetchFromAPI("/products", {
+    const res = await fetchFromAPI("/Adminproducts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export default function ProductsPage() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    const res = await fetchFromAPI(`/products/${currentProduct._id}`, {
+    const res = await fetchFromAPI(`/Adminproducts/${currentProduct._id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -156,7 +156,7 @@ export default function ProductsPage() {
   const deleteProduct = async (id) => {
     if (!confirm("Are you sure?")) return;
 
-    const res = await fetchFromAPI(`/products/${id}`, {
+    const res = await fetchFromAPI(`/Adminproducts/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

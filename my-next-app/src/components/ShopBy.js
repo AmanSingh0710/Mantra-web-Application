@@ -17,7 +17,7 @@ export default function ShopByConcern() {
     const fetchLiveConcerns = async () => {
       try {
         // Hitting our newly written backend endpoint
-        const res = await fetch(`${BASE_URL}/products/concerns`);
+        const res = await fetch(`${BASE_URL}/Adminproducts/concerns`);
         const result = await res.json();
         
         if (result.success && result.data) {
@@ -96,7 +96,7 @@ export default function ShopByConcern() {
           {concerns.map((item, i) => (
             <div 
               key={i} 
-              onClick={() => router.push(`/products?concern=${encodeURIComponent(item.title)}`)}
+              onClick={() => router.push(`/product?concern=${encodeURIComponent(item.title)}`)}
               className="flex-shrink-0 w-[42%] sm:w-[28%] md:w-[22%] lg:w-[11.5%] flex flex-col items-center group/card cursor-pointer"
               style={{ scrollSnapAlign: "start" }}
             >

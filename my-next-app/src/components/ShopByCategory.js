@@ -56,7 +56,7 @@ export default function ShopByCategory() {
     const encodedCategory = encodeURIComponent(categoryTitle);
 
     // Aapke flow ke hisab se router path choose karein:
-    router.push(`/products?category=${encodedCategory}`);
+    router.push(`/product?category=${encodedCategory}`);
     // AGAR aapka dedicated page alag hai toh aap `/category/${encodedCategory}` bhi kar sakte hain.
   };
 
