@@ -76,7 +76,7 @@ router.patch('/vendors/review/:vendorId', adminLimiter, auth, isAdmin("ADMIN"), 
 // 🌍 PUBLIC CATALOG VISUALIZATION (Aggregated pipeline output for user storefront)
 router.get('/public', publicLimiter, productController.getPublicProducts);
 
-router.get('/public/:id', publicLimiter,  productController.getPublicProducts);
+router.get('/public/:id', publicLimiter,  productController.getPublicProductById);
 
 
 module.exports = router;
