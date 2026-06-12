@@ -69,10 +69,10 @@ function ProductsContent() {
   const handleCategoryFilter = (cat) => {
     if (cat === selectedCategory) {
       setSelectedCategory("");
-      router.push("/products");
+      router.push("/product");
     } else {
       setSelectedCategory(cat);
-      router.push(`/products?category=${encodeURIComponent(cat)}`);
+      router.push(`/product?category=${encodeURIComponent(cat)}`);
     }
   };
 
