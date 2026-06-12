@@ -68,7 +68,6 @@ app.get("/", (req, res) => {
 });
 
 // --- User Domain Space API Endpoints ---
-app.use("/products", require("./routes/user/productRoutes")); 
 app.use("/cart", require("./routes/user/cartRoutes"));
 app.use("/faq", require("./routes/user/faqRoutes"));
 app.use("/review", require("./routes/user/reviewRoutes"));

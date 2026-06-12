@@ -1,3 +1,5 @@
+//controller/Vendor/vendorStoreController
+
 const Product = require("../../models/VendorProduct");
 const Store = require("../../models/Store");
 const Order = require("../../models/Order");
@@ -64,12 +66,23 @@ exports.addProduct = async (req, res) => {
         (file) => file.filename
       ) || [];
 
+    const metaImage =
+      req.files?.metaImage?.[0]?.filename || "";
+
+
+
+
     const product = new Product({
       ...req.body,
-      store: req.user.id,
+      store: req.user.storeId,
       thumbnail,
       images,
+      metaImage,
+      addedBy: "VENDOR",
+      approvedByAdmin: false,
+      status: "DRAFT",
     });
+
 
     await product.save();
 
@@ -93,19 +106,34 @@ exports.addProduct = async (req, res) => {
 exports.getVendorProducts = async (req, res) => {
   try {
 
-    const products = await Product.find({
-      store: req.user.id,
-      isDeleted: false,
-    })
-      .sort({ createdAt: -1 });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-    res.status(200).json(products);
+    const query = {
+      store: req.user.storeId,
+      isDeleted: false
+    };
+
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const total = await Product.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      products,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
 
   } catch (error) {
 
     res.status(500).json({
-      message: "Fetch failed",
-      error: error.message,
+      success: false,
+      message: error.message
     });
 
   }
@@ -118,7 +146,7 @@ exports.getSingleProduct = async (req, res) => {
 
     const product = await Product.findOne({
       _id: req.params.id,
-      store: req.user.id,
+      store: req.user.storeId,
       isDeleted: false,
     });
 
@@ -147,7 +175,7 @@ exports.updateProduct = async (req, res) => {
 
     const product = await Product.findOne({
       _id: req.params.id,
-      store: req.user.id,
+      store: req.user.storeId,
       isDeleted: false,
     });
 
@@ -187,12 +215,25 @@ exports.updateProduct = async (req, res) => {
         );
     }
 
+    // update Meta images
+    if (req.files?.metaImage) {
+
+      deleteFile(product.metaImage);
+
+      updateData.metaImage =
+        req.files.metaImage[0].filename;
+    }
+   
+    updateData.approvedByAdmin = false;
+    updateData.status = "DRAFT";
+
     const updatedProduct =
       await Product.findByIdAndUpdate(
         req.params.id,
         updateData,
         { new: true }
       );
+
 
     res.status(200).json({
       message: "Product updated",
@@ -216,7 +257,7 @@ exports.deleteProduct = async (req, res) => {
 
     const product = await Product.findOne({
       _id: req.params.id,
-      store: req.user.id,
+      store: req.user.storeId,
       isDeleted: false,
     });
 
@@ -233,6 +274,9 @@ exports.deleteProduct = async (req, res) => {
     product.images.forEach((img) => {
       deleteFile(img);
     });
+
+     // delete metaImage
+    deleteFile(product.metaImage);
 
     // soft delete
     product.isDeleted = true;
@@ -293,8 +337,7 @@ exports.getVendorOrders = async (req, res) => {
 exports.getVendorStats = async (req, res) => {
   try {
 
-    const storeId = req.user.id;
-
+    const storeId = req.user.storeId;
     // ================= TOTAL PRODUCTS =================
     const totalProducts =
       await Product.countDocuments({
@@ -307,7 +350,7 @@ exports.getVendorStats = async (req, res) => {
       await Product.aggregate([
         {
           $match: {
-            store: req.user.id,
+            store: req.user.storeId,
             isDeleted: false,
           },
         },

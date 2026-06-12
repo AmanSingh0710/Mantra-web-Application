@@ -67,6 +67,26 @@ const userSchema = new mongoose.Schema(
       default: ""
     },
 
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vendor-Product"
+      }
+    ],
+
+    lastLogin: {
+      type: Date
+    },
+
+    deviceInfo: {
+      type: String,
+      default: ""
+    },
+
+    passwordChangedAt: {
+      type: Date
+    },
+
     // ✅ REFRESH TOKEN
     refreshToken: String,
 

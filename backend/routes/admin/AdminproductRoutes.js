@@ -40,7 +40,8 @@ router.get('/', adminLimiter, auth, isAdmin("ADMIN"), productController.getProdu
 router.post('/add', adminLimiter, auth, isAdmin("ADMIN"),
   upload.fields([
     { name: 'thumbnail', maxCount: 1 },
-    { name: 'images', maxCount: 5 }
+    { name: 'images', maxCount: 5 },
+    {name:'metaImage',maxCount:1}
   ]),
   productController.addProduct
 );

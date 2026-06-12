@@ -171,6 +171,7 @@ exports.login = async (req, res) => {
       { expiresIn: process.env.JWT_REFRESH_EXPIRE }
     );
     user.refreshToken = refreshToken;
+    user.lastLogin = new Date();
     await user.save();
 
     // Remove password string from output data leak paths
@@ -187,13 +188,13 @@ exports.login = async (req, res) => {
     // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
     res.cookie("accessToken", accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, 
+      maxAge: 15 * 60 * 1000,
     });
 
     // Refresh token cookie (Matches your longer lived token life, e.g. 7 days)
     res.cookie("refreshToken", refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -303,9 +304,15 @@ exports.deleteUser = async (req, res) => {
 // GET SINGLE PROFILE
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id)
+      .select("-password")
+      .populate({
+        path: "wishlist", select: "productName slug price discountPrice thumbnail averageRating"
+      });
+
     if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -360,6 +367,8 @@ exports.updatePassword = async (req, res) => {
     // Set new password
     user.password = password;
 
+    user.passwordChangedAt = new Date();
+
     // pre("save") middleware auto hash karega
     await user.save();
 
@@ -394,6 +403,32 @@ exports.updateAdmin = async (req, res) => {
 
     if (req.file) {
       updateData.image = `/uploads/${req.file.filename}`;
+    }
+
+    if (
+      req.body.length ||
+      req.body.width ||
+      req.body.height
+    ) {
+      updateData.dimensions = {
+        length: Number(req.body.length) || 0,
+        width: Number(req.body.width) || 0,
+        height: Number(req.body.height) || 0,
+      };
+    }
+
+    if (req.body.variants) {
+      updateData.variants =
+        typeof req.body.variants === "string"
+          ? JSON.parse(req.body.variants)
+          : req.body.variants;
+    }
+
+    if (req.body.tags) {
+      updateData.tags =
+        typeof req.body.tags === "string"
+          ? req.body.tags.split(",")
+          : req.body.tags;
     }
 
     const updatedAdmin = await User.findByIdAndUpdate(
@@ -432,7 +467,7 @@ exports.refreshToken = async (req, res) => {
     }
 
     const payload = { id: user._id, role: user.role, storeId: user.storeId };
-    
+
     const newAccessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.JWT_ACCESS_EXPIRE || "15m" });
     const newRefreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRE || "7d" });
 

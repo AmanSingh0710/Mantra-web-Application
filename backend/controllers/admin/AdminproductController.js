@@ -36,6 +36,20 @@ exports.getProducts = async (req, res) => {
     if (status) filterQuery.status = status; // e.g., "ACTIVE", "INACTIVE", "DRAFT"
     if (approval) filterQuery.approvedByAdmin = approval === "true";
 
+
+    if (req.query.category) {
+      filterQuery.category = req.query.category;
+    }
+
+    if (req.query.brand) {
+      filterQuery.brand = req.query.brand;
+    }
+
+    if (req.query.featured) {
+      filterQuery.featured =
+        req.query.featured === "true";
+    }
+
     const products = await Product.find(filterQuery)
       .populate("store", "storeName")
       .limit(limit)
@@ -53,7 +67,6 @@ exports.getProducts = async (req, res) => {
       totalProducts: count
     });
   } catch (err) {
-    console.error("Admin Fetch Products Error:", err);
     res.status(500).json({ success: false, message: "Internal server error fetching catalog metrics" });
   }
 };
@@ -104,6 +117,11 @@ exports.getPublicProducts = async (req, res) => {
           stockStatus: 1,
           thumbnail: 1,
           images: 1,
+          metaImage: 1,
+          listingType: 1,
+          tags: 1,
+          featured: 1,
+          totalSales: 1,
           variants: 1,
           featured: 1,
           averageRating: {
@@ -125,6 +143,7 @@ exports.getPublicProducts = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to assemble catalog elements" });
   }
 };
+
 
 // ================= 3. SYSTEM ADMINISTRATION MANUAL ADDITION =================
 exports.addProduct = async (req, res) => {
@@ -149,6 +168,7 @@ exports.addProduct = async (req, res) => {
     if (req.files) {
       if (req.files.thumbnail) productData.thumbnail = req.files.thumbnail[0].filename;
       if (req.files.images) productData.images = req.files.images.map(file => file.filename);
+      if (req.files.metaImage) productData.metaImage = req.files.metaImage[0].filename;
     }
 
     const newProduct = await Product.create(productData);
@@ -158,6 +178,7 @@ exports.addProduct = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to create catalog instance", error: err.message });
   }
 };
+
 
 // ================= 4. TOGGLE STATUS (Featured / Operational States) =================
 exports.toggleStatus = async (req, res) => {
@@ -230,14 +251,14 @@ exports.toggleProductApproval = async (req, res) => {
       product.status = "ACTIVE";
     } else {
       product.approvedByAdmin = false;
-      product.status = "INACTIVE"; 
+      product.status = "INACTIVE";
     }
 
     await product.save();
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      message: `Product listing has been successfully ${action === "APPROVE" ? "approved for live storefront visualization" : "rejected back to vendor catalog"}.`, 
-      product 
+      message: `Product listing has been successfully ${action === "APPROVE" ? "approved for live storefront visualization" : "rejected back to vendor catalog"}.`,
+      product
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -255,20 +276,61 @@ exports.updateProduct = async (req, res) => {
 
     // Explicit list of editable schema properties 
     const allowedFields = [
-      "productName", 
-      "description", 
-      "shortDescription", 
-      "price", 
-      "discountPrice", 
-      "stock", 
-      "category", 
-      "subCategory", 
-      "brand", 
-      "status"
+      "productName",
+      "shortDescription",
+      "description",
+      "category",
+      "subCategory",
+      "subSubCategory",
+      "brand",
+      "price",
+      "discountPrice",
+      "costPrice",
+      "stock",
+      "sku",
+      "status",
+      "featured",
+      "productType",
+      "unit",
+      "minOrderQty",
+      "videoLink",
+      "listingType",
+      "tax",
+      "discountType",
+      "discountAmount",
+      "taxAmount",
+      "taxCalculation",
+      "multiplyQty",
+      "weight",
+      "shippingCharge",
+      "metaTitle",
+      "metaDescription"
     ];
 
+
     let updateData = {};
-    
+
+    if (req.files?.metaImage) {
+
+      safelyDeleteFile(oldProduct.metaImage);
+
+      updateData.metaImage =
+        req.files.metaImage[0].filename;
+    }
+
+
+    if (req.files?.images) {
+
+      oldProduct.images.forEach(
+        safelyDeleteFile
+      );
+
+      updateData.images =
+        req.files.images.map(
+          file => file.filename
+        );
+    }
+
     // Safely extract inputs and convert types where necessary
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
@@ -286,7 +348,7 @@ exports.updateProduct = async (req, res) => {
         // Fetch old record to scrub old asset first
         const oldProduct = await Product.findById(id);
         if (oldProduct?.thumbnail) safelyDeleteFile(oldProduct.thumbnail);
-        
+
         updateData.thumbnail = req.files.thumbnail[0].filename;
       }
     }

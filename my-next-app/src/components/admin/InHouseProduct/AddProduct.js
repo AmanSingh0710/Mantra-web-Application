@@ -26,7 +26,7 @@ export default function AddProduct() {
 
     // Saare input fields ke liye main state
     const [formData, setFormData] = useState({
-        name: "",
+        productName: "",
         storeId: "",
         category: "",
         subCategory: "",
@@ -35,7 +35,7 @@ export default function AddProduct() {
         productType: "Physical",
         sku: "",
         unit: "pc",
-        unitPrice: 0,
+        price: 0,
         minOrderQty: 1,
         currentStock: 0,
         discountType: "Flat",
@@ -166,20 +166,17 @@ export default function AddProduct() {
     //reset form btn
     const handleReset = () => {
         setFormData({
-            name: "", category: "", subCategory: "", subSubCategory: "",
-            brand: "", productType: "Physical", sku: "", unit: "pc",
-            unitPrice: 0, minOrderQty: 1, currentStock: 0,
-            discountType: "Flat", discountAmount: 0, taxAmount: 0,
-            taxCalculation: "Include with product", shippingCost: 0,
-            multiplyQty: false, videoLink: "", metaTitle: "", metaDescription: "",
+            productName: "", store: "", category: "", subCategory: "", subSubCategory: "", brand: "", productType: "Physical",
+            sku: "", price: 0, stock: 0, minOrderQty: 1, discountType: "Flat", discountAmount: 0, taxAmount: 0, taxCalculation: "Include with product", shippingCharge: 0,
+            videoLink: "", metaTitle: "", metaDescription: "", listingType: "BESTSELLER", shortDescription: "", featured: false, returnable: true, returnDays: 7, status: "ACTIVE"
         });
+
         setDescription("");
         setThumbnail(null);
         setAdditionalImages([]);
         setMetaImage(null);
         setTags("");
     };
-
     const generateSKU = (e) => {
         e.preventDefault(); // Page refresh hone se rokein
         const randomNum = Math.floor(100000 + Math.random() * 900000); // 6 digit random number
@@ -208,8 +205,8 @@ export default function AddProduct() {
                         <label className="block text-sm font-medium mb-1">Product Name (EN)</label>
                         <input
                             type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            value={formData.productName}
+                            onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                             placeholder="New Product"
                             className="w-full border rounded-md p-2 outline-none focus:border-blue-400"
                         />
@@ -288,10 +285,10 @@ export default function AddProduct() {
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Select Store </label>
                             <select
-                                name="storeId"
+                                name="store"
                                 required
                                 className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none focus:border-blue-400"
-                                value={formData.storeId}
+                                value={formData.store}
                                 onChange={handleInputChange}
                             >
                                 <option value="">Select a Store</option>
@@ -374,12 +371,12 @@ export default function AddProduct() {
                     <h2 className="text-md font-bold mb-4 flex items-center gap-2">💰 Pricing & others</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {[
-                            { label: "Unit Price (₹)", name: "unitPrice" },
+                            { label: "Unit Price (₹)", name: "price" },
                             { label: "Minimum Order Qty", name: "minOrderQty" },
-                            { label: "Current Stock Qty", name: "currentStock" },
+                            { label: "Current Stock Qty", name: "stock" },
                             { label: "Discount Amount (₹)", name: "discountAmount" },
                             { label: "Tax Amount (%)", name: "taxAmount" },
-                            { label: "Shipping Cost (₹)", name: "shippingCost" },
+                            { label: "Shipping Cost (₹)", name: "shippingCharge" },
                         ].map((item) => (
                             <div key={item.name}>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">{item.label} <FaInfoCircle className="inline text-gray-400 text-[10px]" /></label>
