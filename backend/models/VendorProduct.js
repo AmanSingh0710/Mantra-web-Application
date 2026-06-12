@@ -217,7 +217,7 @@ const vendorProductSchema = new mongoose.Schema(
 
     weightUnit: {
       type: String,
-      enum: ["g", "kg"],
+      enum: ["gms", "kg","pc","pcs","ml","ltr","pair" ],
       default: "kg"
     },
 

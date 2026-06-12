@@ -27,22 +27,22 @@ export default function AddProduct() {
     // Saare input fields ke liye main state
     const [formData, setFormData] = useState({
         productName: "",
-        storeId: "",
+        store: "",
         category: "",
         subCategory: "",
         subSubCategory: "",
         brand: "",
         productType: "Physical",
         sku: "",
-        unit: "pc",
+        weightUnit: "pc",
         price: 0,
         minOrderQty: 1,
-        currentStock: 0,
+        stock: 0,
         discountType: "Flat",
         discountAmount: 0,
         taxAmount: 0,
         taxCalculation: "Include with product",
-        shippingCost: 0,
+        shippingCharge: 0,
         multiplyQty: false,
         videoLink: "",
         metaTitle: "",
@@ -146,7 +146,7 @@ export default function AddProduct() {
 
         // 3. Special Fields (Tags & Description)
         data.append("description", description);
-        data.append("tags", tags.split(",").map(tag => tag.trim())); // String to Array conversion
+        data.append("tags", JSON.stringify(tags.split(",").map(tag => tag.trim()))); // String to Array conversion
 
         try {
             const res = await fetch(`${BASE_URL}/Adminproducts/add`, {
@@ -236,7 +236,7 @@ export default function AddProduct() {
                             >
 
                                 <option value="BESTSELLER">Bestseller (Default)</option>
-                                <option value="NEW ARRIVAL">New Arrival</option>
+                                <option value="NEW_ARRIVAL">New Arrival</option>
                                 <option value="COMBOS">Combos</option>
                             </select>
 
@@ -344,7 +344,7 @@ export default function AddProduct() {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Unit</label>
-                            <select name="unit" value={formData.unit} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
+                            <select name="unit" value={formData.weightUnit} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
                                 <option value="pc">pc</option>
                                 <option value="pcs">pcs</option>
                                 <option value="kg">kg</option>
