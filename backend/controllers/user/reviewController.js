@@ -1,5 +1,5 @@
 const Review = require("../../models/Review");
-const Product = require("../../models/Product");
+const Product = require("../../models/VendorProduct");
 const User = require("../../models/User");
 
 exports.getPublicReviews = async (req, res) => {
