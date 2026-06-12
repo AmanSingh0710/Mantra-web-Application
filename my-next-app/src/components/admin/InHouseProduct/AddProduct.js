@@ -136,7 +136,7 @@ export default function AddProduct() {
         // 2. Appending Form Data (With Number Conversion)
         Object.keys(formData).forEach((key) => {
             // Numbers ko convert karke bhejein
-            const numberFields = ['unitPrice', 'minOrderQty', 'currentStock', 'discountAmount', 'taxAmount', 'shippingCost'];
+            const numberFields = ['price', 'minOrderQty', 'stock', 'discountAmount', 'taxAmount', 'shippingCharge'];
             if (numberFields.includes(key)) {
                 data.append(key, Number(formData[key]));
             } else {
@@ -155,7 +155,7 @@ export default function AddProduct() {
                 body: data
             });
 
-            if (res.ok) alert("Product Uploaded!");
+            if (res.ok) toast.success("Product Uploaded!");
             else {
                 const err = await res.json();
                 alert("Error: " + err.message);
