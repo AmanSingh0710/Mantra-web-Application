@@ -1,6 +1,6 @@
 const User = require("../../models/User");
 const Store = require("../../models/Store");
-const Product = require("../../models/Product");
+const Product = require("../../models/VendorProduct");
 const fs = require("fs");
 const path = require("path");
 
