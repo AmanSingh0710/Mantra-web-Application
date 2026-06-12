@@ -39,7 +39,7 @@ function ProductsContent() {
     const fetchFilteredProducts = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${BASE_URL}/products`);
+        const res = await fetch(`${BASE_URL}/Adminproducts`);
         const data = await res.json();
 
         if (data.products) {

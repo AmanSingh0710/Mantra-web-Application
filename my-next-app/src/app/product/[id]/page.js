@@ -19,7 +19,7 @@ export default function ProductPage() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetchFromAPI(`/products/${id}`);
+                const res = await fetchFromAPI(`/Adminproducts/${id}`);
                 if (res && res.data) {
                     setProduct(res.data);
                     setSelectedImage(res.data.image);
