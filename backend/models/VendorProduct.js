@@ -394,7 +394,7 @@ const vendorProductSchema = new mongoose.Schema(
 
 
 //slug generate
-vendorProductSchema.pre("save", function (next) {
+vendorProductSchema.pre("save", function () {
 
   if (!this.slug) {
 
@@ -408,13 +408,11 @@ vendorProductSchema.pre("save", function (next) {
       Date.now();
 
   }
-
-  next();
 });
 
 
 //sku generate
-vendorProductSchema.pre("save", function (next) {
+vendorProductSchema.pre("save", function() {
 
   if (!this.sku) {
 
@@ -426,12 +424,11 @@ vendorProductSchema.pre("save", function (next) {
 
   }
 
-  next();
 });
 
 
 //discount price auto calculate
-vendorProductSchema.pre("save", function (next) {
+vendorProductSchema.pre("save", function () {
 
   if (this.discountAmount > 0) {
 
@@ -455,11 +452,10 @@ vendorProductSchema.pre("save", function (next) {
     }
   }
 
-  next();
 });
 
 //stock status auto update
-vendorProductSchema.pre("save", function (next) {
+vendorProductSchema.pre("save", function () {
 
   if (this.stock <= 0) {
 
@@ -475,7 +471,6 @@ vendorProductSchema.pre("save", function (next) {
 
   }
 
-  next();
 });
 
 
