@@ -3,6 +3,7 @@
 import { BASE_URL } from "@/utils/api";
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import toast from "react-hot-toast";
 import { FaCloudUploadAlt, FaInfoCircle, FaYoutube, FaGlobe } from "react-icons/fa";
 import "react-quill-new/dist/quill.snow.css";
 
