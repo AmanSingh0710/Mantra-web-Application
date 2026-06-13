@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { fetchFromAPI , getImageUrl } from "@/utils/api";
+import { fetchFromAPI } from "@/utils/api";
 import { FaStar, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa";
 import toast from "react-hot-toast";
 
@@ -30,7 +30,7 @@ export default function TopPicks() {
     try {
       setLoading(true);
 
-      const data = await fetchFromAPI("/Adminproducts");
+      const data = await fetchFromAPI("/Adminproducts/public");
 
       setProducts(data?.products || []);
     } catch (error) {
@@ -120,7 +120,7 @@ export default function TopPicks() {
       {/* Tabs */}
       <div className="flex justify-center mb-10 px-4">
         <div className="inline-flex bg-[#f3eee5] p-1.5 rounded-full overflow-x-auto no-scrollbar">
-          {["BESTSELLER", "NEW ARRIVAL", "COMBOS"].map((tab) => (
+          {["BESTSELLER", "NEW_ARRIVAL", "COMBOS"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -142,16 +142,16 @@ export default function TopPicks() {
           {filteredProducts.map((product) => (
             <div key={product._id} className="flex-shrink-0 w-[78%] sm:w-[45%] md:w-[30%] lg:w-[22%] flex flex-col group" style={{ scrollSnapAlign: "start" }}>
               <div className="bg-[#f9f9f9] aspect-square flex items-center justify-center overflow-hidden mb-4 relative rounded-sm border border-gray-50 shadow-sm">
-                <img src={getImageUrl(Array.isArray(product.thumbnail) ? product.thumbnail[0]  : product.thumbnail)} alt={product.productName} className="w-full h-32 sm:h-44 md:h-52 lg:h-56 object-contain transition-transform duration-700 group-hover:scale-110 p-4" />
+                <img src= {product.thumbnail?.url} alt={product.productName} className="w-full h-32 sm:h-44 md:h-52 lg:h-56 object-contain transition-transform duration-700 group-hover:scale-110 p-4" />
               </div>
 
               <div className="text-left space-y-1">
-                <h3 className="text-[10px] md:text-xs font-bold text-gray-800 uppercase line-clamp-2 h-8 md:h-10 leading-tight">{product.name}</h3>
+                <h3 className="text-[10px] md:text-xs font-bold text-gray-800 uppercase line-clamp-2 h-8 md:h-10 leading-tight">{product.productName}</h3>
                 <p className="text-xs md:text-sm lg:text-base font-black text-gray-900">₹ {product.price || product.price}</p>
 
                 <div className="flex items-center gap-1 text-yellow-400">
                   {[...Array(5)].map((_, i) => <FaStar key={i} size={10} className={i < (product.averageRating || 0) ? "fill-current" : "text-gray-200"} />)}
-                  <span className="text-[9px] text-gray-400">{product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"} ({product.reviewsCount || 0}) </span>
+                  <span className="text-[9px] text-gray-400">{product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"} ({product.totalReviews || 0}) </span>
                 </div>
 
                 <div className="flex gap-2 mt-3">
@@ -174,7 +174,7 @@ export default function TopPicks() {
           <div className="bg-white w-full max-w-md rounded-lg p-6 relative shadow-2xl">
             <button onClick={() => setShowReviewModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black"><FaTimes /></button>
             <h3 className="text-lg font-black uppercase mb-1">Write a Review</h3>
-            <p className="text-[10px] text-gray-500 uppercase mb-6">{selectedProduct?.name}</p>
+            <p className="text-[10px] text-gray-500 uppercase mb-6">{selectedProduct?.productName}</p>
 
             <div className="flex justify-center gap-2 mb-6 text-yellow-400">
               {[1, 2, 3, 4, 5].map((star) => (

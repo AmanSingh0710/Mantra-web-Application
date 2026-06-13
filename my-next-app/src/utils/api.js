@@ -1,18 +1,17 @@
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getImageUrl = (image) => {
-  if (!image) return "/no-image.png";
 
-  if (image.startsWith("http")) {
-    return image;
+  if (!image)
+    return "/no-image.png";
+
+  if (
+    typeof image === "object"
+  ) {
+    return image.url;
   }
 
-  // Fallback: Sirf purane local database entries ke liye backend port lgao
-  let cleanPath = image.replace(/\\/g, "/");
-  if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
-  if (cleanPath.startsWith("/uploads")) return `${BASE_URL}${cleanPath}`;
-
-  return `${BASE_URL}/uploads${cleanPath}`;
+  return image;
 };
 
 // 🔥 Safe logout helper (Refactored to notify backend to sweep HttpOnly cookies)
@@ -51,7 +50,7 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
       ...options,
       headers,
       // CRUCIAL: Instructs the browser to automatically attach/receive cookies
-      credentials: "include", 
+      credentials: "include",
     });
   } catch (err) {
     console.error("Network Error:", err);

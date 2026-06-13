@@ -1,4 +1,4 @@
-// backend/routes/AdminproductRoutes.js
+// backend/routes/admin/AdminproductRoutes.js
 
 const express = require('express');
 const router = express.Router();
@@ -10,7 +10,6 @@ const auth = require('../../middleware/auth');
 const isAdmin = require('../../middleware/isAdmin');
 const upload = require('../../middleware/upload');
 const validateId = require("../../middleware/validateId");
-
 const rateLimit = require("express-rate-limit");
 
 
@@ -41,7 +40,7 @@ router.post('/add', adminLimiter, auth, isAdmin("ADMIN"),
   upload.fields([
     { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 5 },
-    {name:'metaImage',maxCount:1}
+    { name: 'metaImage', maxCount: 1 }
   ]),
   productController.addProduct
 );
@@ -57,7 +56,12 @@ router.patch('/toggle-status', adminLimiter, auth, isAdmin("ADMIN"), productCont
 router.post('/bulk-import', adminLimiter, auth, isAdmin("ADMIN"), upload.single('file'), productController.bulkImportProducts);
 
 // ✅ INVENTORY PROFILE PROPERTY UPDATE 
-router.put('/:id', adminLimiter, auth, isAdmin("ADMIN"), validateId, productController.updateProduct);
+router.put('/:id', adminLimiter, auth, isAdmin("ADMIN"), validateId,
+  upload.fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+    { name: "metaImage", maxCount: 1 }
+  ]), productController.updateProduct);
 
 // ✅ PERMANENT ECOSYSTEM PURGE (Drops document & scrubs underlying asset artifacts)
 router.delete('/:id', adminLimiter, auth, isAdmin("ADMIN"), validateId, productController.deleteProduct);
@@ -76,7 +80,7 @@ router.patch('/vendors/review/:vendorId', adminLimiter, auth, isAdmin("ADMIN"), 
 // 🌍 PUBLIC CATALOG VISUALIZATION (Aggregated pipeline output for user storefront)
 router.get('/public', publicLimiter, productController.getPublicProducts);
 
-router.get('/public/:id', publicLimiter,  productController.getPublicProductById);
+router.get('/public/:id', publicLimiter, productController.getPublicProductById);
 
 
 module.exports = router;

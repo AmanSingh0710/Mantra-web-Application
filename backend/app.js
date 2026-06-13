@@ -27,10 +27,6 @@ app.use(cors({
 // Apply HTTP security headers variant globally
 app.use(helmet());
 
-// 🛡️ PRODUCTION FIX: Serve static assets BEFORE rate limiter 
-// Takii imagery asset pipelines consumer limit records count me catch na hon
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 // Logging pipeline configuration tracking
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));

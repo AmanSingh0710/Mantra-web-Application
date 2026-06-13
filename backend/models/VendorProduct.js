@@ -155,25 +155,39 @@ const vendorProductSchema = new mongoose.Schema(
 
     // ================= MEDIA =================
     thumbnail: {
-      type: String,
-      default: ""
+      publicId: {
+        type: String,
+        default: ""
+      },
+      url: {
+        type: String,
+        default: ""
+      }
     },
 
     images: [
       {
-        type: String
+        publicId: String,
+        url: String
       }
     ],
+
+    metaImage: {
+      publicId: {
+        type: String,
+        default: ""
+      },
+      url: {
+        type: String,
+        default: ""
+      }
+    },
 
     videoLink: {
       type: String,
       default: ""
     },
 
-    metaImage: {
-      type: String,
-      default: ""
-    },
 
     // ================= VARIANTS =================
     variants: [
@@ -217,7 +231,7 @@ const vendorProductSchema = new mongoose.Schema(
 
     weightUnit: {
       type: String,
-      enum: ["gms", "kg","pc","pcs","ml","ltr","pair" ],
+      enum: ["gms", "kg", "pc", "pcs", "ml", "ltr", "pair"],
       default: "kg"
     },
 
@@ -327,6 +341,19 @@ const vendorProductSchema = new mongoose.Schema(
       default: 0
     },
 
+    // ================= REVIEW  =================
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+
+    totalReviews: {
+      type: Number,
+      default: 0
+    },
+
     // ================= ADMIN =================
     addedBy: {
       type: String,
@@ -412,7 +439,7 @@ vendorProductSchema.pre("save", function () {
 
 
 //sku generate
-vendorProductSchema.pre("save", function() {
+vendorProductSchema.pre("save", function () {
 
   if (!this.sku) {
 

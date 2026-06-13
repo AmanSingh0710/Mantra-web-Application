@@ -1,5 +1,6 @@
 const Product = require("../../models/VendorProduct");
 const Review = require("../../models/Review");
+const deleteCloudinaryFile = require("../../utils/cloudinary");
 const fs = require("fs");
 const path = require("path");
 const excelJS = require("exceljs");
@@ -166,9 +167,26 @@ exports.addProduct = async (req, res) => {
     };
 
     if (req.files) {
-      if (req.files.thumbnail) productData.thumbnail = req.files.thumbnail[0].filename;
-      if (req.files.images) productData.images = req.files.images.map(file => file.filename);
-      if (req.files.metaImage) productData.metaImage = req.files.metaImage[0].filename;
+      if (req.files?.thumbnail) {
+        productData.thumbnail = {
+          publicId: req.files.thumbnail[0].filename,
+          url: req.files.thumbnail[0].path
+        };
+      }
+
+      if (req.files?.images) {
+        productData.images = req.files.images.map(file => ({
+          publicId: file.filename,
+          url: file.path
+        }));
+      }
+
+      if (req.files?.metaImage) {
+        productData.metaImage = {
+          publicId: req.files.metaImage[0].filename,
+          url: req.files.metaImage[0].path
+        };
+      }
     }
 
     const newProduct = await Product.create(productData);
@@ -246,9 +264,23 @@ exports.deleteProduct = async (req, res) => {
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ success: false, message: "Target document missing" });
 
-    // Scrub file storage traces cleanly using our helper function
-    safelyDeleteFile(product.thumbnail);
-    if (product.images?.length) product.images.forEach(safelyDeleteFile);
+    if (product.thumbnail?.publicId) {
+      await deleteCloudinaryFile(
+        product.thumbnail.publicId
+      );
+    }
+
+    if (product.metaImage?.publicId) {
+      await deleteCloudinaryFile(
+        product.metaImage.publicId
+      );
+    }
+
+    for (const image of product.images) {
+      await deleteCloudinaryFile(
+        image.publicId
+      );
+    }
 
     await Product.findByIdAndDelete(id);
     res.status(200).json({ success: true, message: "Product completely purged from database ecosystem" });
@@ -334,26 +366,15 @@ exports.updateProduct = async (req, res) => {
 
     let updateData = {};
 
-    if (req.files?.metaImage) {
+    const oldProduct = await Product.findById(id);
 
-      safelyDeleteFile(oldProduct.metaImage);
-
-      updateData.metaImage =
-        req.files.metaImage[0].filename;
+    if (!oldProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
     }
 
-
-    if (req.files?.images) {
-
-      oldProduct.images.forEach(
-        safelyDeleteFile
-      );
-
-      updateData.images =
-        req.files.images.map(
-          file => file.filename
-        );
-    }
 
     // Safely extract inputs and convert types where necessary
     allowedFields.forEach(field => {
@@ -366,16 +387,60 @@ exports.updateProduct = async (req, res) => {
       }
     });
 
-    // Handle file modifications dynamically if new assets are uploaded during edit
-    if (req.files) {
-      if (req.files.thumbnail) {
-        // Fetch old record to scrub old asset first
-        const oldProduct = await Product.findById(id);
-        if (oldProduct?.thumbnail) safelyDeleteFile(oldProduct.thumbnail);
+    if (req.files?.thumbnail) {
 
-        updateData.thumbnail = req.files.thumbnail[0].filename;
+      if (oldProduct.thumbnail?.publicId) {
+
+        await deleteCloudinaryFile(
+          oldProduct.thumbnail.publicId
+        );
+
       }
+
+      updateData.thumbnail = {
+        publicId:
+          req.files.thumbnail[0].filename,
+        url:
+          req.files.thumbnail[0].path
+      };
     }
+
+    if (req.files?.images) {
+
+      for (const image of oldProduct.images) {
+
+        await deleteCloudinaryFile(
+          image.publicId
+        );
+
+      }
+
+      updateData.images =
+        req.files.images.map(file => ({
+          publicId: file.filename,
+          url: file.path
+        }));
+    }
+
+    if (req.files?.metaImage) {
+
+      if (oldProduct.metaImage?.publicId) {
+
+        await deleteCloudinaryFile(
+          oldProduct.metaImage.publicId
+        );
+
+      }
+
+      updateData.metaImage = {
+        publicId:
+          req.files.metaImage[0].filename,
+        url:
+          req.files.metaImage[0].path
+      };
+    }
+
+
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
