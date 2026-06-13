@@ -299,7 +299,7 @@ export default function InHouseProductList() {
                                     <td className="px-4 py-4 max-w-xs">
                                         <div className="flex items-center gap-3">
                                             <img
-                                                src={getThumbnailUrl(product.thumbnail)}
+                                                src={getImageUrl(product.thumbnail)}
                                                 alt={product.productName}
                                                 className="w-12 h-12 rounded-lg shadow-2xs border border-slate-200 object-cover flex-shrink-0 bg-slate-50"
                                             />
