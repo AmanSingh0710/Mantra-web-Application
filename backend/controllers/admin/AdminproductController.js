@@ -225,38 +225,59 @@ exports.getPublicProductById = async (req, res) => {
 // ================= 4. TOGGLE STATUS (Featured / Operational States) =================
 exports.toggleStatus = async (req, res) => {
   try {
-    const { id, field } = req.body;
+    const { id, field, value } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid product identifier provided" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product identifier provided"
+      });
     }
 
     const allowedFields = ["featured", "isDeleted", "status"];
+
+    if (!allowedFields.includes(field)) {
+      return res.status(400).json({
+        success: false,
+        message: "Target modification parameter is restricted"
+      });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product record not found"
+      });
+    }
+
     if (field === "status") {
-      product.status = req.body.value;
+      product.status = value;
     } else {
       product[field] = !product[field];
     }
 
-   
-    if (!allowedFields.includes(field)) {
-      return res.status(400).json({ success: false, message: "Target modification parameter is restricted" });
-    }
-     await product.save();
-
-    const product = await Product.findById(id);
-    if (!product) return res.status(404).json({ success: false, message: "Product record not found" });
-
-    product[field] = !product[field];
     if (field === "isDeleted" && product.isDeleted) {
       product.deletedAt = new Date();
       product.status = "INACTIVE";
     }
 
     await product.save();
-    res.status(200).json({ success: true, message: `Parameter ${field} updated successfully`, status: product[field] });
+
+    res.status(200).json({
+      success: true,
+      message: `${field} updated successfully`,
+      product
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: "Toggle operations pipeline failed" });
+    console.error("Toggle Status Error:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
