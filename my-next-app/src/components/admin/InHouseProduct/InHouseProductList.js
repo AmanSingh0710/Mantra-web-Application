@@ -3,9 +3,9 @@
 import { BASE_URL } from "@/utils/api";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  FaSearch, FaDownload, FaPlus, FaEye, FaEdit, FaTrash, 
-  FaFilter, FaBoxOpen, FaLayerGroup, FaTag, FaCheckCircle, FaTimesCircle 
+import {
+    FaSearch, FaDownload, FaPlus, FaEye, FaEdit, FaTrash,
+    FaFilter, FaBoxOpen, FaLayerGroup, FaTag, FaCheckCircle, FaTimesCircle
 } from "react-icons/fa";
 
 export default function InHouseProductList() {
@@ -21,9 +21,9 @@ export default function InHouseProductList() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // Filter Metadata States
-    const [categories, setCategories] = useState([]); 
-    const [subCategories, setSubCategories] = useState([]); 
-    const [subSubCategories, setSubSubCategories] = useState([]); 
+    const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [subSubCategories, setSubSubCategories] = useState([]);
     const [brands, setBrands] = useState([]);
 
     // Production Form State (Aligned exactly with your Mongoose Schema)
@@ -91,8 +91,8 @@ export default function InHouseProductList() {
         }
     }, [page, search, filters]);
 
-    useEffect(() => { 
-        fetchProducts(); 
+    useEffect(() => {
+        fetchProducts();
     }, [page, fetchProducts]);
 
     // Relational Dependent Cascades
@@ -211,7 +211,7 @@ export default function InHouseProductList() {
 
     return (
         <div className="p-3 md:p-6 bg-[#f4f6f9] min-h-screen text-slate-800 font-sans tracking-tight">
-            
+
             {/* Real E-commerce Header Metric Blocks */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -299,10 +299,9 @@ export default function InHouseProductList() {
                                     <td className="px-4 py-4 max-w-xs">
                                         <div className="flex items-center gap-3">
                                             <img
-                                                src={product.thumbnail ? `${BASE_URL}/uploads/${product.thumbnail.split(/[\\/]/).pop()}` : "/no-image.png"}
+                                                src={getThumbnailUrl(product.thumbnail)}
                                                 alt={product.productName}
                                                 className="w-12 h-12 rounded-lg shadow-2xs border border-slate-200 object-cover flex-shrink-0 bg-slate-50"
-                                                onError={(e) => { e.target.onerror = null; e.target.src = "/no-image.png"; }}
                                             />
                                             <div className="truncate min-w-0">
                                                 <p className="font-semibold text-slate-900 truncate text-sm" title={product.productName}>{product.productName}</p>
@@ -328,20 +327,19 @@ export default function InHouseProductList() {
                                         {getStockBadge(product.stock, product.stockStatus)}
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        <span className={`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${
-                                            product.listingType === "BESTSELLER" ? "bg-orange-100 text-orange-700" :
-                                            product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
-                                        }`}>
+                                        <span className={`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${product.listingType === "BESTSELLER" ? "bg-orange-100 text-orange-700" :
+                                                product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                                            }`}>
                                             {product.listingType || "Standard"}
                                         </span>
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex flex-col items-center gap-2">
                                             <label className="relative inline-flex items-center cursor-pointer select-none">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={product.status === "ACTIVE"} 
-                                                    onChange={() => handleToggleStatus(product._id, 'status', product.status)} 
+                                                <input
+                                                    type="checkbox"
+                                                    checked={product.status === "ACTIVE"}
+                                                    onChange={() => handleToggleStatus(product._id, 'status', product.status)}
                                                     className="sr-only peer"
                                                 />
                                                 <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
@@ -375,14 +373,14 @@ export default function InHouseProductList() {
                         <div key={product._id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col gap-3">
                             <div className="flex gap-3">
                                 <img
-                                    src={product.thumbnail ? `${BASE_URL}/uploads/${product.thumbnail.split(/[\\/]/).pop()}` : "/no-image.png"}
+                                    src={getThumbnailUrl(product.thumbnail)}
                                     alt={product.productName}
                                     className="w-16 h-16 rounded-lg object-cover border bg-slate-50 flex-shrink-0"
                                 />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-1">
                                         <h3 className="font-bold text-slate-900 text-sm leading-tight break-words">{product.productName}</h3>
-                                        <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded flex-shrink-0">#{index+1}</span>
+                                        <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded flex-shrink-0">#{index + 1}</span>
                                     </div>
                                     <p className="text-xs font-mono text-slate-400 mt-1">SKU: {product.sku || "N/A"}</p>
                                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -392,7 +390,7 @@ export default function InHouseProductList() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
                                 <div className="flex flex-col gap-1">
                                     {getStockBadge(product.stock, product.stockStatus)}
@@ -439,7 +437,7 @@ export default function InHouseProductList() {
                             <div className="md:col-span-2 space-y-3">
                                 <div className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200/60 flex items-center justify-center aspect-square shadow-2xs">
                                     <img
-                                        src={selectedProduct.thumbnail ? `${BASE_URL}/uploads/${selectedProduct.thumbnail.split(/[\\/]/).pop()}` : "/no-image.png"}
+                                        src={getThumbnailUrl(selectedProduct.thumbnail)}
                                         alt={selectedProduct.productName}
                                         className="object-contain w-full h-full p-3"
                                         onError={(e) => { e.target.src = "/no-image.png"; }}
@@ -448,7 +446,7 @@ export default function InHouseProductList() {
                                 <div className="grid grid-cols-3 gap-1.5">
                                     {selectedProduct.images?.slice(0, 3).map((imgUrl, itemIdx) => (
                                         <div key={itemIdx} className="aspect-square border border-slate-200 rounded bg-slate-50 overflow-hidden">
-                                            <img src={`${BASE_URL}/uploads/${imgUrl.split(/[\\/]/).pop()}`} className="object-cover w-full h-full" alt="" onError={(e)=>e.target.src="/no-image.png"}/>
+                                            <img src={getImageUrlSafe(img)} alt = "No Image" className="object-cover w-full h-full"/>
                                         </div>
                                     ))}
                                 </div>
@@ -544,7 +542,7 @@ export default function InHouseProductList() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-bold text-slate-600 mb-1 uppercase">Listing Type Badge</label>
-                                    <select 
+                                    <select
                                         className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white"
                                         value={editFormData.listingType}
                                         onChange={(e) => setEditFormData({ ...editFormData, listingType: e.target.value })}
@@ -556,7 +554,7 @@ export default function InHouseProductList() {
                                 </div>
                                 <div>
                                     <label className="block font-bold text-slate-600 mb-1 uppercase">Market Status</label>
-                                    <select 
+                                    <select
                                         className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white"
                                         value={editFormData.status}
                                         onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
