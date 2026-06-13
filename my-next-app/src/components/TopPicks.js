@@ -30,7 +30,7 @@ export default function TopPicks() {
     try {
       setLoading(true);
 
-      const data = await fetchFromAPI("/AdminProducts");
+      const data = await fetchFromAPI("/Adminproducts");
 
       setProducts(data?.products || []);
     } catch (error) {
@@ -142,12 +142,12 @@ export default function TopPicks() {
           {filteredProducts.map((product) => (
             <div key={product._id} className="flex-shrink-0 w-[78%] sm:w-[45%] md:w-[30%] lg:w-[22%] flex flex-col group" style={{ scrollSnapAlign: "start" }}>
               <div className="bg-[#f9f9f9] aspect-square flex items-center justify-center overflow-hidden mb-4 relative rounded-sm border border-gray-50 shadow-sm">
-                <img src={getImageUrl(product.thumbnail)} alt={product.name} className="w-full h-32 sm:h-44 md:h-52 lg:h-56 object-contain transition-transform duration-700 group-hover:scale-110 p-4" />
+                <img src={getImageUrl(Array.isArray(product.thumbnail) ? product.thumbnail[0]  : product.thumbnail)} alt={product.productName} className="w-full h-32 sm:h-44 md:h-52 lg:h-56 object-contain transition-transform duration-700 group-hover:scale-110 p-4" />
               </div>
 
               <div className="text-left space-y-1">
                 <h3 className="text-[10px] md:text-xs font-bold text-gray-800 uppercase line-clamp-2 h-8 md:h-10 leading-tight">{product.name}</h3>
-                <p className="text-xs md:text-sm lg:text-base font-black text-gray-900">₹ {product.unitPrice || product.price}</p>
+                <p className="text-xs md:text-sm lg:text-base font-black text-gray-900">₹ {product.price || product.price}</p>
 
                 <div className="flex items-center gap-1 text-yellow-400">
                   {[...Array(5)].map((_, i) => <FaStar key={i} size={10} className={i < (product.averageRating || 0) ? "fill-current" : "text-gray-200"} />)}

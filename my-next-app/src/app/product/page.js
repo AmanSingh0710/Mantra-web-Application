@@ -23,7 +23,7 @@ export default function ProductsPage() {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const categoryParam = searchParams.get("category") || "";
 
   const [products, setProducts] = useState([]);
@@ -113,7 +113,7 @@ function ProductsContent() {
     <div className="w-full min-h-screen bg-[#f1f3f6] py-4 text-black antialiased">
       <Toaster position="top-center" />
       <div className="max-w-[1440px] mx-auto px-2 sm:px-4 lg:px-8">
-        
+
         {/* Amazon/Flipkart Top Banner Header */}
         <div className="bg-white p-4 rounded-sm border border-gray-200 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
           <div>
@@ -122,9 +122,9 @@ function ProductsContent() {
             </h1>
             <p className="text-xs text-gray-500">Showing {products.length} products</p>
           </div>
-          
+
           {selectedCategory && (
-            <button 
+            <button
               onClick={() => handleCategoryFilter("")}
               className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 text-xs font-semibold rounded-sm transition-all"
             >
@@ -135,7 +135,7 @@ function ProductsContent() {
 
         {/* Workspace Responsive Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          
+
           {/* 1. SIDEBAR FILTER: Desktop me sticky side block, Mobile me Horizontal Top Pill Slider */}
           <div className="lg:col-span-3 bg-white p-4 rounded-sm border border-gray-200 shadow-sm h-fit lg:sticky lg:top-20">
             <div className="hidden lg:flex items-center gap-2 border-b border-gray-100 pb-2 mb-3">
@@ -145,7 +145,7 @@ function ProductsContent() {
 
             <div>
               <h3 className="hidden lg:block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Categories</h3>
-              
+
               {/* Mobile Adaptive Scroll Track */}
               <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-1 max-h-[350px]">
                 {allCategories.map((cat, idx) => {
@@ -154,11 +154,10 @@ function ProductsContent() {
                     <button
                       key={idx}
                       onClick={() => handleCategoryFilter(cat)}
-                      className={`flex-shrink-0 text-left px-4 lg:px-3 py-1.5 lg:py-2.5 text-xs rounded-sm transition-all uppercase font-semibold flex items-center justify-between border lg:border-none cursor-pointer ${
-                        isActive 
-                          ? "bg-orange-500 text-white border-orange-500 shadow-sm lg:bg-[#2874f0]" 
+                      className={`flex-shrink-0 text-left px-4 lg:px-3 py-1.5 lg:py-2.5 text-xs rounded-sm transition-all uppercase font-semibold flex items-center justify-between border lg:border-none cursor-pointer ${isActive
+                          ? "bg-orange-500 text-white border-orange-500 shadow-sm lg:bg-[#2874f0]"
                           : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       <span>{cat}</span>
                       {isActive && <span className="hidden lg:block w-1.5 h-1.5 bg-white rounded-full"></span>}
@@ -184,17 +183,17 @@ function ProductsContent() {
               /* Flipkart/Amazon Balanced Standard Product Row Grid mapping logic */
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
                 {products.map((product) => (
-                  <div 
-                    key={product._id} 
+                  <div
+                    key={product._id}
                     className="bg-white border border-gray-100 rounded-sm p-2 sm:p-3 flex flex-col group transition-all hover:shadow-md cursor-pointer relative"
-                    onClick={() => router.push(`/product/${product._id}`)} 
+                    onClick={() => router.push(`/product/${product._id}`)}
                   >
-                    
+
                     {/* Item Image Box Container Layout */}
                     <div className="bg-white aspect-square flex items-center justify-center overflow-hidden mb-2 relative p-2">
-                      <img 
-                        src={getImageUrl(product.image)} 
-                        alt={product.name} 
+                      <img
+                        src={getImageUrl(product.thumbnail)}
+                        alt={product.productName}
                         className="w-full h-32 sm:h-40 object-contain transition-transform duration-300 group-hover:scale-102"
                         loading="lazy"
                       />
@@ -204,28 +203,43 @@ function ProductsContent() {
                     <div className="flex flex-col flex-1 text-left pt-1">
                       <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{product.category}</span>
                       <h3 className="text-xs text-gray-800 font-medium line-clamp-2 h-8 leading-tight mb-1 group-hover:text-blue-600">
-                        {product.name}
+                        {product.productName}
                       </h3>
-                      
+
                       {/* Flipkart Star Box Rating */}
                       <div className="flex items-center gap-1.5 my-1">
                         <div className="bg-green-700 text-white flex items-center gap-0.5 px-1 py-0.5 rounded-sm text-[10px] font-bold">
-                          {product.rating ? Number(product.rating).toFixed(1) : "4.0"} <FaStar size={8} className="fill-current text-white" />
+                          {product.averageRating ? Number(product.averageRating).toFixed(1) : "4.0"} <FaStar size={8} className="fill-current text-white" />
                         </div>
                         <span className="text-[10px] text-gray-400 font-semibold">
-                          ({product.numReviews || 12})
+                          ({product.totalReviews || 0})
                         </span>
                       </div>
 
                       {/* Price Segment */}
                       <div className="flex items-baseline gap-1.5 mt-1 mb-3">
-                        <span className="text-sm font-bold text-gray-900">₹{product.price}</span>
-                        <span className="text-[10px] text-gray-400 line-through">₹{Math.round(product.price * 1.4)}</span>
-                        <span className="text-[10px] text-green-600 font-semibold">28% off</span>
+                        <span className="text-sm font-bold text-gray-900">
+                          ₹{product.discountPrice > 0 ? product.discountPrice : product.price}
+                        </span>
+
+                        {product.discountPrice > 0 && (
+                          <>
+                            <span className="text-[10px] text-gray-400 line-through">
+                              ₹{product.price}
+                            </span>
+
+                            <span className="text-[10px] text-green-600 font-semibold">
+                              {Math.round(
+                                ((product.price - product.discountPrice) / product.price) * 100
+                              )}
+                              % off
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       {/* Premium Add To Cart Flipkart Theme Action Trigger */}
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation(); // Prevents layout routing bubbling conflict
                           handleAddCart(product._id);

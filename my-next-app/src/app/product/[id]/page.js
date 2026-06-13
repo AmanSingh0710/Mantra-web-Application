@@ -21,12 +21,13 @@ export default function ProductPage() {
         const fetchProduct = async () => {
             try {
                 const res = await fetchFromAPI(`/Adminproducts/public/${id}`);
-                if (res && res.data) {
-                    setProduct(res.data);
-                    setSelectedImage(res.data.image);
-                } else if (res) {
-                    setProduct(res);
-                    setSelectedImage(res.image);
+                if (res?.product) {
+                    setProduct(res.product);
+                    setSelectedImage(res.product.thumbnail);
+                }
+                else if (res?.data?.product) {
+                    setProduct(res.data.product);
+                    setSelectedImage(res.data.product.thumbnail);
                 }
             } catch (err) {
                 console.error("Error fetching product:", err);
@@ -119,6 +120,21 @@ export default function ProductPage() {
         }
     };
 
+    const actualPrice =
+        product.discountPrice > 0
+            ? product.discountPrice
+            : product.price;
+
+    const discountPercentage =
+        product.discountPrice > 0
+            ? Math.round(
+                ((product.price - product.discountPrice) /
+                    product.price) *
+                100
+            )
+            : 0;
+
+
     const renderStars = (rating = 0) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
@@ -133,16 +149,7 @@ export default function ProductPage() {
         return stars;
     };
 
-    // 🌟 DYNAMIC PRICES CONTROLLED BY ADMIN PANEL DATA
-    const productPrice = product.price || product.unitPrice || 0;
-    
-    // Agar admin ne database se product.mrp bheja hai toh use karein, nahi toh selling price ko hi dikhayein
-    const adminMRP = product.mrp || productPrice; 
-    
-    // Dynamic percentage calculation formula logic
-    const dynamicDiscount = adminMRP > productPrice 
-        ? Math.round(((adminMRP - productPrice) * 100) / adminMRP) 
-        : 0;
+
 
     return (
         <main className="min-h-screen bg-white text-gray-900 antialiased">
@@ -156,8 +163,8 @@ export default function ProductPage() {
                     <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24 h-fit">
                         <div className="border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-center p-4 overflow-hidden aspect-square shadow-sm">
                             <img
-                                src={getImageUrl(selectedImage || product.image)}
-                                alt={product.name}
+                                src={getImageUrl(selectedImage || product.thumbnail)}
+                                alt={product.productName}
                                 className="object-contain max-h-[450px] w-full mix-blend-multiply hover:scale-105 transition duration-300"
                             />
                         </div>
@@ -166,12 +173,12 @@ export default function ProductPage() {
                         {product.images && product.images.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                 <button
-                                    onClick={() => setSelectedImage(product.image)}
-                                    className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === product.image ? 'border-amber-500' : 'border-gray-200'}`}
+                                    onClick={() => setSelectedImage(product.thumbnail)}
+                                    className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === product.thumbnail ? 'border-amber-500' : 'border-gray-200'}`}
                                 >
-                                    <img src={getImageUrl(product.image)} className="w-full h-full object-contain mix-blend-multiply" alt="primary thumb" />
+                                    <img src={getImageUrl(product.thumbnail)} className="w-full h-full object-contain mix-blend-multiply" alt="primary thumb" />
                                 </button>
-                                {product.images.map((img, idx) => (
+                                {product.thumbnail.map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setSelectedImage(img)}
@@ -198,24 +205,24 @@ export default function ProductPage() {
                                 {product.category || "Premium Segment"}
                             </span>
                             <h1 className="text-2xl md:text-3xl font-semibold mt-3 tracking-tight text-gray-900 uppercase">
-                                {product.name}
+                                {product.productName}
                             </h1>
                         </div>
 
                         {/* Ratings & Metrics Dashboard Line */}
                         <div className="flex flex-wrap items-center gap-3 text-sm">
                             <div className="bg-green-600 text-white flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold shadow-sm">
-                                {product.rating ? Number(product.rating).toFixed(1) : "0.0"} <FaStar className="text-[10px]" />
+                                {product.averageRating ? Number(product.averageRating).toFixed(1) : "0.0"} <FaStar className="text-[10px]" />
                             </div>
 
                             <div className="flex items-center space-x-0.5">
-                                {renderStars(product.rating)}
+                                {renderStars(product.averageRating)}
                             </div>
 
                             {(product.numRatings > 0 || product.numReviews > 0) ? (
                                 <span className="text-gray-500 font-medium hover:underline cursor-pointer">
-                                    {Number(product.numRatings || 0).toLocaleString()} Ratings &{' '}
-                                    {Number(product.numReviews || 0).toLocaleString()} Reviews
+                                    {Number(product.averageRating || 0).toLocaleString()} Ratings &{' '}
+                                    {Number(product.totalReviews || 0).toLocaleString()} Reviews
                                 </span>
                             ) : (
                                 <span className="text-gray-400 text-xs italic">
@@ -229,12 +236,12 @@ export default function ProductPage() {
                         {/* Pricing Layout Breakdown - 🎯 NOW FULLY DYNAMIC CONTROLLED BY ADMIN */}
                         <div className="space-y-1">
                             <div className="flex items-baseline space-x-3">
-                                <span className="text-3xl font-bold text-gray-900">₹{productPrice}</span>
-                                
-                                {dynamicDiscount > 0 && (
+                                <span className="text-3xl font-bold text-gray-900">₹{actualPrice}</span>
+
+                                {product.discountPrice > 0 && (
                                     <>
-                                        <span className="text-lg text-gray-400 line-through">₹{adminMRP}</span>
-                                        <span className="text-green-600 font-semibold text-lg">{dynamicDiscount}% off</span>
+                                        <span className="text-lg text-gray-400 line-through">₹{product.price}</span>
+                                        <span className="text-green-600 font-semibold text-lg">{discountPercentage}% off</span>
                                     </>
                                 )}
                             </div>
