@@ -441,13 +441,12 @@ export default function InHouseProductList() {
                                         src={getImageUrl(selectedProduct.thumbnail)}
                                         alt={selectedProduct.productName}
                                         className="object-contain w-full h-full p-3"
-                                        onError={(e) => { e.target.src = "/no-image.png"; }}
                                     />
                                 </div>
                                 <div className="grid grid-cols-3 gap-1.5">
                                     {selectedProduct.images?.slice(0, 3).map(( itemIdx) => (
                                         <div key={itemIdx} className="aspect-square border border-slate-200 rounded bg-slate-50 overflow-hidden">
-                                            <img src={getImageUrl(img)} alt = "No Image" className="object-cover w-full h-full"/>
+                                            <img src={getImageUrl(selectedProduct.thumbnail)} alt = "No Image" className="object-cover w-full h-full"/>
                                         </div>
                                     ))}
                                 </div>

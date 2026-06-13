@@ -231,10 +231,18 @@ exports.toggleStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid product identifier provided" });
     }
 
-    const allowedFields = ["featured", "isDeleted"]; // Synced with real fields
+    const allowedFields = ["featured", "isDeleted", "status"];
+    if (field === "status") {
+      product.status = req.body.value;
+    } else {
+      product[field] = !product[field];
+    }
+
+   
     if (!allowedFields.includes(field)) {
       return res.status(400).json({ success: false, message: "Target modification parameter is restricted" });
     }
+     await product.save();
 
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ success: false, message: "Product record not found" });
