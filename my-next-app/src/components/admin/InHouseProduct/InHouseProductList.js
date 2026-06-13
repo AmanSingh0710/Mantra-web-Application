@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL } from "@/utils/api";
+import { BASE_URL , getImageUrl } from "@/utils/api";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
