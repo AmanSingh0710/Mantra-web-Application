@@ -328,7 +328,8 @@ export default function InHouseProductList() {
                                     </td>
                                     <td className="px-4 py-4 text-center">
                                         <span className={`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${product.listingType === "BESTSELLER" ? "bg-orange-100 text-orange-700" :
-                                                product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                                                product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : product.listingType === "COMBOS" ? "bg-blue-100 text-blue-700" :
+                                                "bg-gray-100 text-gray-700"
                                             }`}>
                                             {product.listingType || "Standard"}
                                         </span>
@@ -373,7 +374,7 @@ export default function InHouseProductList() {
                         <div key={product._id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col gap-3">
                             <div className="flex gap-3">
                                 <img
-                                    src={getThumbnailUrl(product.thumbnail)}
+                                    src={getImageUrl(product.thumbnail)}
                                     alt={product.productName}
                                     className="w-16 h-16 rounded-lg object-cover border bg-slate-50 flex-shrink-0"
                                 />
@@ -437,16 +438,16 @@ export default function InHouseProductList() {
                             <div className="md:col-span-2 space-y-3">
                                 <div className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200/60 flex items-center justify-center aspect-square shadow-2xs">
                                     <img
-                                        src={getThumbnailUrl(selectedProduct.thumbnail)}
+                                        src={getImageUrl(selectedProduct.thumbnail)}
                                         alt={selectedProduct.productName}
                                         className="object-contain w-full h-full p-3"
                                         onError={(e) => { e.target.src = "/no-image.png"; }}
                                     />
                                 </div>
                                 <div className="grid grid-cols-3 gap-1.5">
-                                    {selectedProduct.images?.slice(0, 3).map((imgUrl, itemIdx) => (
+                                    {selectedProduct.images?.slice(0, 3).map(( itemIdx) => (
                                         <div key={itemIdx} className="aspect-square border border-slate-200 rounded bg-slate-50 overflow-hidden">
-                                            <img src={getImageUrlSafe(img)} alt = "No Image" className="object-cover w-full h-full"/>
+                                            <img src={getImageUrl(img)} alt = "No Image" className="object-cover w-full h-full"/>
                                         </div>
                                     ))}
                                 </div>
