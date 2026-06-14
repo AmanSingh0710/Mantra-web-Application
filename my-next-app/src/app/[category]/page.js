@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { fetchFromAPI , getImageUrl} from "@/utils/api";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import Link from "next/link";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaSpinner, FaBoxes } from "react-icons/fa";
 
@@ -198,8 +198,8 @@ export default function DynamicCategoryPage() {
                                         className="relative block bg-stone-50/50 p-3 sm:p-4 aspect-square flex items-center justify-center overflow-hidden border-b border-stone-100"
                                     >
                                         <img
-                                             src={getImageUrl(product.thumbnail)}
-                                            alt={product.name}
+                                            src={getImageUrl(product.thumbnail)}
+                                            alt={product.productName}
                                             className="object-contain max-h-full w-auto mix-blend-multiply transform group-hover:scale-105 transition duration-300 ease-out"
                                             loading="lazy"
                                         />
@@ -220,7 +220,7 @@ export default function DynamicCategoryPage() {
 
                                             <Link href={`/product/${product._id}`} className="block">
                                                 <h2 className="text-xs sm:text-sm font-semibold text-stone-800 line-clamp-2 group-hover:text-amber-600 transition tracking-tight leading-tight min-h-[2rem]">
-                                                    {product.name}
+                                                    {product.productName}
                                                 </h2>
                                             </Link>
                                         </div>
@@ -228,11 +228,11 @@ export default function DynamicCategoryPage() {
                                         {/* Interactive Micro-Rating Metrics */}
                                         <div className="flex items-center space-x-1">
                                             <div className="flex items-center gap-0.5">
-                                                {renderStars(product.rating)}
+                                                {renderStars(product.averageRating)}
                                             </div>
-                                            {product.numRatings > 0 && (
+                                            {product.totalReviews > 0 && (
                                                 <span className="text-[9px] sm:text-[10px] text-stone-400 font-bold shrink-0">
-                                                    ({Number(product.numRatings).toLocaleString()})
+                                                    ({Number(product.totalReviews).toLocaleString()})
                                                 </span>
                                             )}
                                         </div>
