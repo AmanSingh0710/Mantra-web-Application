@@ -13,7 +13,7 @@ export default function ShopPage() {
     useEffect(() => {
         const loadProducts = async () => {
             try {
-                const res = await fetchFromAPI("/Adminproducts");
+                const res = await fetchFromAPI("/Adminproducts/public");
                 const safeProducts = res?.products || [];
                 setProducts(Array.isArray(safeProducts) ? safeProducts : []);
             } catch (err) {
@@ -80,25 +80,12 @@ export default function ShopPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
                     {Array.isArray(products) && products.length > 0 ? (
                         products.map((product) => {
-                            const salePrice = product.price || 0;
-                            const discountAmount = product.discountAmount || 0;
-                            const discountType = product.discountType || "Flat"; // "Percent" or "Flat"
 
-                            let originalPrice = salePrice;
-                            let dynamicDiscountPercentage = 0;
+                            const salePrice = product.discountPrice > 0 ? product.discountPrice : product.price;
 
-                            // 🌟 2. CALCULATE ORIGINAL PRICE & PERCENTAGE DYNAMICALLY
-                            if (discountAmount > 0) {
-                                if (discountType === "Percent") {
-                                    dynamicDiscountPercentage = discountAmount;
-                                    // Reverse calculation to find original price if your backend only stores the final sale price
-                                    originalPrice = Math.round((salePrice * 100) / (100 - discountAmount));
-                                } else {
-                                    // If it's a Flat discount (e.g., ₹100 off), calculate the original price first
-                                    originalPrice = salePrice + discountAmount;
-                                    dynamicDiscountPercentage = Math.round((discountAmount / originalPrice) * 100);
-                                }
-                            }
+                            const originalPrice = product.price;
+
+                            const dynamicDiscountPercentage = product.discountPrice > 0 ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0;
 
                             return (
                                 <div
@@ -108,17 +95,12 @@ export default function ShopPage() {
                                     {/* Product Image Area */}
                                     <Link href={`/product/${product._id}`} className="relative block bg-gray-50 p-4 aspect-square flex items-center justify-center overflow-hidden border-b border-gray-50">
                                         <img
-                                            src={product.image}
-                                            alt={product.name}
+                                            src={product.thumbnail?.url}
+                                            alt={product.productName}
                                             className="object-contain max-h-full w-auto mix-blend-multiply group-hover:scale-105 transition duration-300"
                                             loading="lazy"
                                         />
-                                        {/* 🌟 3. CONDITIONALLY RENDER DYNAMIC DISCOUNT PILL */}
-                                        {dynamicDiscountPercentage > 0 && (
-                                            <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-sm">
-                                                {dynamicDiscountPercentage}% OFF
-                                            </div>
-                                        )}
+
                                     </Link>
 
                                     {/* Product Meta Content */}
@@ -127,13 +109,13 @@ export default function ShopPage() {
                                         <div className="space-y-1">
                                             {/* Category Tag */}
                                             <p className="text-[10px] font-bold tracking-wider text-amber-600 uppercase truncate">
-                                                {product.category || "Premium Edit"}
+                                                {product.category?.name || "Premium Edit"}
                                             </p>
 
                                             {/* Dynamic Title (Limits text to 2 lines like Amazon/Flipkart layouts) */}
                                             <Link href={`/product/${product._id}`} className="block">
                                                 <h2 className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-amber-600 transition tracking-tight leading-tight">
-                                                    {product.name}
+                                                    {product.productName}
                                                 </h2>
                                             </Link>
                                         </div>
@@ -141,27 +123,35 @@ export default function ShopPage() {
                                         {/* Dynamic Star Rating String Row */}
                                         <div className="flex items-center space-x-1">
                                             <div className="flex items-center">
-                                                {renderStars(product.rating)}
+                                                {renderStars(product.averageRating)}
                                             </div>
-                                            {product.numRatings > 0 && (
+                                            {product.totalReviews > 0 && (
                                                 <span className="text-[10px] text-gray-400 font-semibold">
-                                                    ({Number(product.numRatings).toLocaleString()})
+                                                    ({Number(product.totalReviews).toLocaleString()})
                                                 </span>
                                             )}
                                         </div>
 
                                         {/* Dynamic Price Calculations Blocks */}
                                         <div className="pt-1">
-                                            <div className="flex items-baseline flex-wrap gap-1">
+                                            <div className="flex items-center gap-2">
                                                 <span className="text-base font-bold text-gray-900">
                                                     ₹{salePrice.toLocaleString("en-IN")}
                                                 </span>
-                                                {discountAmount > 0 && (
-                                                    <span className="text-xs text-gray-400 line-through">
-                                                        ₹{originalPrice.toLocaleString("en-IN")}
-                                                    </span>
+
+                                                {product.discountPrice > 0 && (
+                                                    <>
+                                                        <span className="text-xs text-gray-400 line-through">
+                                                            ₹{originalPrice.toLocaleString("en-IN")}
+                                                        </span>
+
+                                                        <span className="text-xs font-semibold text-green-600">
+                                                            {dynamicDiscountPercentage}% OFF
+                                                        </span>
+                                                    </>
                                                 )}
                                             </div>
+
                                             {/* Stock Alert Label */}
                                             {product.stock <= 0 ? (
                                                 <p className="text-[10px] font-bold text-red-600 mt-0.5">Out of stock</p>

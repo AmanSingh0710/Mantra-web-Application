@@ -61,7 +61,6 @@ exports.getProducts = async (req, res) => {
 };
 
 // ================= 2. GET PUBLIC STOREFRONT (Calculates Real-time Aggregate Ratings) =================
-// 🌟 FIXES N+1 QUERY BUG: Replaced mapping queries with a single database pipeline aggregation matrix.
 exports.getPublicProducts = async (req, res) => {
   try {
     const productsWithRatings = await Product.aggregate([
@@ -69,71 +68,186 @@ exports.getPublicProducts = async (req, res) => {
         $match: {
           status: "ACTIVE",
           approvedByAdmin: true,
-          isDeleted: false
-        }
+          isDeleted: false,
+        },
       },
+
+      // Reviews
       {
         $lookup: {
-          from: "reviews", // Collections named by mongoose are usually lowercase plurals
+          from: "reviews",
           localField: "_id",
           foreignField: "productId",
-          as: "productReviews"
-        }
+          as: "productReviews",
+        },
       },
+
       {
         $addFields: {
           activeReviews: {
             $filter: {
               input: "$productReviews",
-              as: "rev",
-              cond: { $eq: ["$$rev.status", "active"] }
-            }
-          }
+              as: "review",
+              cond: {
+                $eq: ["$$review.status", "active"],
+              },
+            },
+          },
+        },
+      },
+
+      // Category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      {
+        $unwind: {
+          path: "$category",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Sub Category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "subCategory",
+          foreignField: "_id",
+          as: "subCategory",
+        },
+      },
+      {
+        $unwind: {
+          path: "$subCategory",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Sub Sub Category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "subSubCategory",
+          foreignField: "_id",
+          as: "subSubCategoryData"
         }
       },
       {
+        $unwind: {
+          path: "$subSubCategoryData",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // Brand
+      {
+        $lookup: {
+          from: "brands",
+          localField: "brand",
+          foreignField: "_id",
+          as: "brand",
+        },
+      },
+      {
+        $unwind: {
+          path: "$brand",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
         $project: {
+          _id: 1,
           productName: 1,
           slug: 1,
           shortDescription: 1,
           description: 1,
-          category: 1,
-          subCategory: 1,
-          brand: 1,
+
           price: 1,
           discountPrice: 1,
+          discountAmount: 1,
+          discountType: 1,
+
           stock: 1,
           stockStatus: 1,
+
           thumbnail: 1,
           images: 1,
           metaImage: 1,
+
           listingType: 1,
           tags: 1,
           featured: 1,
           totalSales: 1,
           variants: 1,
-          featured: 1,
-          averageRating: {
-            $cond: [
-              { $gt: [{ $size: "$activeReviews" }, 0] },
-              { $avg: "$activeReviews.rating" },
-              0
-            ]
+
+          createdAt: 1,
+
+          category: {
+            _id: "$category._id",
+            name: "$category.name",
           },
-          totalReviews: { $size: "$activeReviews" }
-        }
+
+          subCategory: {
+            _id: "$subCategory._id",
+            name: "$subCategory.name",
+          },
+
+          subSubCategory: {
+            _id: "$subSubCategoryData._id",
+            name: "$subSubCategoryData.name"
+          },
+
+          brand: {
+            _id: "$brand._id",
+            name: "$brand.name",
+          },
+
+          averageRating: {
+            $round: [
+              {
+                $cond: [
+                  { $gt: [{ $size: "$activeReviews" }, 0] },
+                  { $avg: "$activeReviews.rating" },
+                  0,
+                ],
+              },
+              1,
+            ],
+          },
+
+          totalReviews: {
+            $size: "$activeReviews",
+          },
+        },
       },
-      { $sort: { createdAt: -1 } }
+
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
     ]);
 
-    res.status(200).json({ success: true, products: productsWithRatings });
+    return res.status(200).json({
+      success: true,
+      products: productsWithRatings,
+    });
+
   } catch (error) {
     console.error("Public Storefront Aggregation Error:", error);
-    res.status(500).json({ success: false, message: "Failed to assemble catalog elements" });
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to assemble catalog elements",
+    });
   }
 };
-
-
 // ================= 3. SYSTEM ADMINISTRATION MANUAL ADDITION =================
 exports.addProduct = async (req, res) => {
   try {
@@ -208,7 +322,6 @@ exports.getPublicProductById = async (req, res) => {
     });
   }
 };
-
 
 // ================= 4. TOGGLE STATUS (Featured / Operational States) =================
 exports.toggleStatus = async (req, res) => {

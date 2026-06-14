@@ -47,24 +47,24 @@ const vendorProductSchema = new mongoose.Schema(
 
     // ================= CATEGORY =================
     category: {
-      type: String,
-      required: true,
-      index: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true
     },
 
     subCategory: {
-      type: String,
-      default: ""
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category"
     },
 
     subSubCategory: {
-      type: String,
-      default: ""
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category"
     },
 
     brand: {
-      type: String,
-      default: ""
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Brand"
     },
 
     tags: [String],
