@@ -1,23 +1,11 @@
 const Product = require("../../models/VendorProduct");
 const Review = require("../../models/Review");
 const deleteCloudinaryFile = require("../../utils/cloudinary");
-const fs = require("fs");
 const path = require("path");
 const excelJS = require("exceljs");
 const mongoose = require("mongoose");
 
-// ================= FILE REMOVAL HELPER =================
-const safelyDeleteFile = (filename) => {
-  if (!filename) return;
-  const filePath = path.join(__dirname, "../uploads", filename);
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (!err) {
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) console.error(`Failed to delete asset: ${filename}`, unlinkErr);
-      });
-    }
-  });
-};
+
 
 // ================= 1. GET ALL SYSTEM PRODUCTS (Admin View with Pagination) =================
 exports.getProducts = async (req, res) => {

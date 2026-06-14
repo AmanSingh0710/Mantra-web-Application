@@ -153,7 +153,7 @@ export default function ProductPage() {
                     <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24 h-fit">
                         <div className="border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-center p-4 overflow-hidden aspect-square shadow-sm">
                             <img
-                                src={getImageUrl(selectedImage || product.thumbnail)}
+                                src={getImageUrl(selectedImage || product.thumbnail?.url)}
                                 alt={product.productName}
                                 className="object-contain max-h-[450px] w-full mix-blend-multiply hover:scale-105 transition duration-300"
                             />
@@ -163,18 +163,25 @@ export default function ProductPage() {
                         {product.images && product.images.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                 <button
-                                    onClick={() => setSelectedImage(product.thumbnail)}
-                                    className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === product.thumbnail ? 'border-amber-500' : 'border-gray-200'}`}
+                                    onClick={() => setSelectedImage(product.thumbnail?.url)}
+                                    className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === product.thumbnail?.url ? 'border-amber-500' : 'border-gray-200'}`}
                                 >
-                                    <img src={getImageUrl(product.thumbnail)} className="w-full h-full object-contain mix-blend-multiply" alt="primary thumb" />
+                                    <img src={getImageUrl(product.thumbnail?.url)} className="w-full h-full object-contain mix-blend-multiply" alt="primary thumb" />
                                 </button>
-                                {product.thumbnail.map((img, idx) => (
+                                {product.images?.map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setSelectedImage(img.url)}
-                                        className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === img.url ? 'border-amber-500' : 'border-gray-200'}`}
+                                        className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === img.url
+                                            ? "border-amber-500"
+                                            : "border-gray-200"
+                                            }`}
                                     >
-                                        <img src={getImageUrl(img.url)} className="w-full h-full object-contain mix-blend-multiply" alt="gallery thumb" />
+                                        <img
+                                            src={getImageUrl(img.url)}
+                                            className="w-full h-full object-contain mix-blend-multiply"
+                                            alt={`gallery-${idx}`}
+                                        />
                                     </button>
                                 ))}
                             </div>
@@ -251,12 +258,48 @@ export default function ProductPage() {
                             )}
                         </div>
 
-                        {/* Product Specifications Layout */}
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-gray-900 text-sm tracking-wide uppercase">Product Description</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed max-w-2xl">
-                                {product.description || "No specific detailed descriptions uploaded for this inventory entry."}
-                            </p>
+                        {/* Product Description Section */}
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+                            {/* Header */}
+                            <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
+                                <h2 className="text-lg font-semibold text-gray-900">
+                                    Product Description
+                                </h2>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-5">
+                                {product.description ? (
+                                    <div
+                                        className="prose prose-sm md:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-img:rounded-lg"
+                                        dangerouslySetInnerHTML={{
+                                            __html: product.description,
+                                        }}
+                                    />
+                                ) : (
+                                    <p className="text-gray-500">
+                                        No product description available.
+                                    </p>
+                                )}
+                                <div className="bg-white border border-gray-200 rounded-xl mt-6">
+                                    <div className="px-5 py-4 border-b bg-gray-50">
+                                        <h2 className="text-lg font-semibold">
+                                            About this item
+                                        </h2>
+                                    </div>
+
+                                    <div className="p-5">
+                                        <ul className="space-y-2 text-sm text-gray-700 list-disc pl-5">
+                                            <li>Premium quality ingredients</li>
+                                            <li>Suitable for all skin types</li>
+                                            <li>Dermatologically tested</li>
+                                            <li>Easy daily usage</li>
+                                            <li>Made in India</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Dynamic Item Quantity Controller */}
