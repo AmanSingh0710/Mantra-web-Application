@@ -16,6 +16,7 @@ export default function ProductPage() {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState("");
     const [isAdding, setIsAdding] = useState(false);
+    const [reviews, setReviews] = useState([]);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -23,6 +24,7 @@ export default function ProductPage() {
                 const res = await fetchFromAPI(`/Adminproducts/public/${id}`);
                 if (res?.product) {
                     setProduct(res.product);
+                    setReviews(res.reviews || []);
                     setSelectedImage(res.product.thumbnail.url);
                 }
                 else if (res?.data?.product) {
@@ -53,9 +55,8 @@ export default function ProductPage() {
         if (type === "dec" && quantity > 1) setQuantity(prev => prev - 1);
         if (type === "inc" && quantity < (product.stock || 10)) setQuantity(prev => prev + 1);
     };
+    
 
-
-    // 🌟 ROBUST CART SYNC SYSTEM (Token Authentication Problem Solved)
     const addToCart = async (redirectToCheckout = false) => {
         setIsAdding(true);
 
@@ -96,11 +97,11 @@ export default function ProductPage() {
                     toast.success("Redirecting to checkout...");
                     router.push("/cart?checkout=true");
                 } else {
-                    toast.success("Shopping Bag mein add ho gaya! 🎉");
+                    toast.success("Product add to cart! 🎉");
                     router.push("/cart");
                 }
             } else {
-                toast.error(result.message || "Cart update fail ho gayi.");
+                toast.error(result.message || "Cart update failed.");
             }
         } catch (err) {
             console.error("Cart error trace:", err);
@@ -194,12 +195,12 @@ export default function ProductPage() {
                             <span
                                 onClick={() => {
                                     if (product.category) {
-                                        router.push(`/product?category=${encodeURIComponent(product.category)}`);
+                                        router.push(`/product?category=${product.category?._id}`);
                                     }
                                 }}
                                 className="text-xs uppercase tracking-wider text-amber-600 font-bold bg-amber-50 px-2.5 py-1 rounded cursor-pointer hover:bg-amber-100 hover:text-amber-700 transition-all inline-block"
                             >
-                                {product.category || "Premium Segment"}
+                                {product.category?.name || "Premium Segment"}
                             </span>
                             <h1 className="text-2xl md:text-3xl font-semibold mt-3 tracking-tight text-gray-900 uppercase">
                                 {product.productName}
@@ -216,7 +217,7 @@ export default function ProductPage() {
                                 {renderStars(product.averageRating)}
                             </div>
 
-                            {(product.numRatings > 0 || product.numReviews > 0) ? (
+                            {(product.totalReviews > 0 ) ? (
                                 <span className="text-gray-500 font-medium hover:underline cursor-pointer">
                                     {Number(product.averageRating || 0).toLocaleString()} Ratings &{' '}
                                     {Number(product.totalReviews || 0).toLocaleString()} Reviews
@@ -300,6 +301,38 @@ export default function ProductPage() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Customer Reviews */}
+                        <div className="mt-8 bg-white border rounded-xl p-5">
+                            <h2 className="text-xl font-semibold mb-4">
+                                Customer Reviews ({reviews.length})
+                            </h2>
+
+                            {reviews.length === 0 ? (
+                                <p className="text-gray-500">
+                                    No reviews yet
+                                </p>
+                            ) : (
+                                reviews.map((review) => (
+                                    <div
+                                        key={review._id}
+                                        className="border-b py-4"
+                                    >
+                                        <h4 className="font-semibold">
+                                            {review.customerId?.name || "Anonymous"}
+                                        </h4>
+
+                                        <div className="flex">
+                                            {renderStars(review.rating)}
+                                        </div>
+
+                                        <p className="mt-2 text-gray-600">
+                                            {review.comment}
+                                        </p>
+                                    </div>
+                                ))
+                            )}
                         </div>
 
                         {/* Dynamic Item Quantity Controller */}

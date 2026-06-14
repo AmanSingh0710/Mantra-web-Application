@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const reviewSchema = new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Product", // Aapke product model ka naam
+        ref: "Vendor-Product", 
         required: true
     },
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Aapke user model ka naam
+        ref: "User", 
         required: true
     },
     rating: {

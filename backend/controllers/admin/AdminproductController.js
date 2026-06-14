@@ -301,24 +301,49 @@ exports.addProduct = async (req, res) => {
 
 exports.getPublicProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+
+    const product = await Product.findById(req.params.id)
+      .populate("category", "name")
+      .populate("subCategory", "name")
+      .populate("subSubCategory", "name")
+      .populate("brand", "name");
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
+    const reviews = await Review.find({
+      productId: product._id,
+      status: "ACTIVE",
+    })
+      .populate("customerId", "name")
+      .sort({ createdAt: -1 });
+
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) /
+          reviews.length
+        : 0;
+
     res.status(200).json({
       success: true,
-      product
+      product: {
+        ...product.toObject(),
+        averageRating,
+        totalReviews: reviews.length,
+      },
+      reviews,
     });
 
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
