@@ -1,11 +1,8 @@
-// models/Deliveryman/DeliveryMan.js
-
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const deliveryBoySchema = new mongoose.Schema(
+const deliveryManSchema = new mongoose.Schema(
   {
-    // ================= BASIC INFO =================
     name: {
       type: String,
       required: true,
@@ -18,123 +15,88 @@ const deliveryBoySchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Invalid Email",
+      ],
     },
 
     mobile: {
       type: String,
       required: true,
-      trim: true,
+      unique: true,
+      match: [/^[6-9]\d{9}$/, "Invalid Mobile"],
     },
 
     password: {
       type: String,
       required: true,
+      select: false,
     },
 
     image: {
-      type: String,
-      default: "",
+      url: String,
+      publicId: String,
     },
 
-    // ================= DELIVERY DETAILS =================
     vehicleType: {
       type: String,
-      enum: [
-        "BIKE",
-        "SCOOTER",
-        "BICYCLE",
-        "CAR",
-      ],
+      enum: ["BIKE", "SCOOTER", "BICYCLE", "CAR"],
       default: "BIKE",
     },
 
     vehicleNumber: {
       type: String,
-      default: "",
-      trim: true,
-    },
-
-    licenseNumber: {
-      type: String,
-      default: "",
+      uppercase: true,
       trim: true,
     },
 
     aadhaarNumber: {
       type: String,
-      default: "",
-      trim: true,
+      unique: true,
+      sparse: true,
     },
 
-    // ================= DOCUMENTS =================
     aadhaarFront: {
-      type: String,
-      default: "",
+      url: String,
+      publicId: String,
     },
 
     aadhaarBack: {
-      type: String,
-      default: "",
+      url: String,
+      publicId: String,
     },
 
     drivingLicenseImage: {
-      type: String,
-      default: "",
+      url: String,
+      publicId: String,
     },
 
     vehicleImage: {
-      type: String,
-      default: "",
+      url: String,
+      publicId: String,
     },
 
-    // ================= ADDRESS =================
-    address: {
-      type: String,
-      default: "",
-    },
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
 
-    city: {
-      type: String,
-      default: "",
-    },
-
-    state: {
-      type: String,
-      default: "",
-    },
-
-    pincode: {
-      type: String,
-      default: "",
-    },
-
-    // ================= LIVE LOCATION =================
     currentLocation: {
       type: {
         type: String,
         enum: ["Point"],
         default: "Point",
       },
-
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number],
         default: [0, 0],
       },
     },
 
-    // ================= STATUS =================
-    isAvailable: {
-      type: Boolean,
-      default: true,
-    },
-
     status: {
       type: String,
-      enum: [
-        "ONLINE",
-        "OFFLINE",
-        "ON_DELIVERY",
-      ],
+      enum: ["ONLINE", "OFFLINE", "ON_DELIVERY"],
       default: "OFFLINE",
     },
 
@@ -148,8 +110,7 @@ const deliveryBoySchema = new mongoose.Schema(
       default: false,
     },
 
-    // ================= EARNINGS =================
-    walletBalance: {
+    totalDeliveries: {
       type: Number,
       default: 0,
     },
@@ -159,103 +120,40 @@ const deliveryBoySchema = new mongoose.Schema(
       default: 0,
     },
 
-    totalDeliveries: {
+    walletBalance: {
       type: Number,
       default: 0,
     },
 
-    pendingPayout: {
-      type: Number,
-      default: 0,
-    },
-
-    // ================= BANK DETAILS =================
-    bankName: {
-      type: String,
-      default: "",
-    },
-
-    accountHolderName: {
-      type: String,
-      default: "",
-    },
-
-    accountNumber: {
-      type: String,
-      default: "",
-    },
-
-    ifscCode: {
-      type: String,
-      default: "",
-    },
-
-    upiId: {
-      type: String,
-      default: "",
-    },
-
-    // ================= OTP =================
-    otp: {
-      type: String,
-      default: "",
-    },
-
-    otpExpire: {
-      type: Date,
-      default: null,
-    },
-
-    // ================= DEVICE =================
-    fcmToken: {
-      type: String,
-      default: "",
-    },
-
-    // ================= LOGIN =================
-    lastLogin: {
-      type: Date,
-      default: null,
-    },
+    lastLogin: Date,
   },
   {
     timestamps: true,
   }
 );
 
-// ================= GEO INDEX =================
-deliveryBoySchema.index({
+deliveryManSchema.index({
   currentLocation: "2dsphere",
 });
 
-// ================= PASSWORD HASH =================
-deliveryBoySchema.pre(
-  "save",
-  async function () {
+deliveryManSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
-    if (!this.isModified("password"))
-      return;
-
-    this.password =
-      await bcrypt.hash(
-        this.password,
-        12
-      );
-  }
-);
-
-// ================= PASSWORD MATCH =================
-deliveryBoySchema.methods.comparePassword =
-async function (password) {
-
-  return bcrypt.compare(
-    password,
-    this.password
+  this.password = await bcrypt.hash(
+    this.password,
+    12
   );
-};
+});
 
-// ================= EXPORT =================
+deliveryManSchema.methods.comparePassword =
+  async function (password) {
+    return bcrypt.compare(
+      password,
+      this.password
+    );
+  };
+
 module.exports = mongoose.model(
   "DeliveryMan",
-  deliveryBoySchema
+  deliveryManSchema
 );

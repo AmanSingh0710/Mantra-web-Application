@@ -1,32 +1,12 @@
 // controllers/admin/deliveryBoyController.js
 
+const mongoose = require("mongoose");
 const DeliveryBoy = require("../../../models/Deliveryman/DeliveryMan");
 const Order = require("../../../models/Order");
-
+const cloudinary = require("../../../utils/cloudinary");
 const bcrypt = require("bcryptjs");
-const fs = require("fs");
-const path = require("path");
 
-// ================= DELETE FILE =================
-const deleteFile = (filename) => {
-  try {
 
-    if (!filename) return;
-
-    const filePath = path.join(
-      __dirname,
-      "../../uploads",
-      filename
-    );
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-  } catch (error) {
-    console.log(error.message);
-  }
-};
 
 // ======================================================
 // ADMIN ADD DELIVERY BOY
@@ -54,51 +34,30 @@ exports.addDeliveryBoy = async (req, res) => {
       upiId,
     } = req.body;
 
-    // ================= EMAIL CHECK =================
-    const existing =
-      await DeliveryBoy.findOne({
-        email,
-      });
+    const existing = await DeliveryBoy.findOne({
+      $or: [
+        { email },
+        { mobile }
+      ]
+    });
 
     if (existing) {
       return res.status(400).json({
         success: false,
-        message:
-          "Delivery boy already exists",
+        message: "Email or Mobile already exists"
       });
     }
 
-    // ================= HASH PASSWORD =================
-    const hashedPassword =
-      await bcrypt.hash(password, 12);
-
-    // ================= FILES =================
-    const image =
-      req.files?.image?.[0]?.filename || "";
-
-    const aadhaarFront =
-      req.files?.aadhaarFront?.[0]
-        ?.filename || "";
-
-    const aadhaarBack =
-      req.files?.aadhaarBack?.[0]
-        ?.filename || "";
-
-    const drivingLicenseImage =
-      req.files?.drivingLicenseImage?.[0]
-        ?.filename || "";
-
-    const vehicleImage =
-      req.files?.vehicleImage?.[0]
-        ?.filename || "";
-
-    // ================= CREATE =================
     const deliveryBoy =
       await DeliveryBoy.create({
+
         name,
         email,
         mobile,
-        password: hashedPassword,
+
+        // DON'T HASH HERE
+        password,
+
         vehicleType,
         vehicleNumber,
         licenseNumber,
@@ -107,23 +66,32 @@ exports.addDeliveryBoy = async (req, res) => {
         city,
         state,
         pincode,
+
         bankName,
         accountHolderName,
         accountNumber,
         ifscCode,
         upiId,
 
-        image,
-        aadhaarFront,
-        aadhaarBack,
-        drivingLicenseImage,
-        vehicleImage,
+        image:
+          req.files?.image?.[0]?.path || "",
+
+        aadhaarFront:
+          req.files?.aadhaarFront?.[0]?.path || "",
+
+        aadhaarBack:
+          req.files?.aadhaarBack?.[0]?.path || "",
+
+        drivingLicenseImage:
+          req.files?.drivingLicenseImage?.[0]?.path || "",
+
+        vehicleImage:
+          req.files?.vehicleImage?.[0]?.path || "",
       });
 
     res.status(201).json({
       success: true,
-      message:
-        "Delivery boy created successfully",
+      message: "Delivery Boy Created Successfully",
       deliveryBoy,
     });
 
@@ -142,23 +110,36 @@ exports.addDeliveryBoy = async (req, res) => {
 // ======================================================
 // GET ALL DELIVERY BOYS
 // ======================================================
-exports.getAllDeliveryBoys =
-async (req, res) => {
+exports.getAllDeliveryBoys = async (req, res) => {
   try {
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const total =
+      await DeliveryBoy.countDocuments();
 
     const deliveryBoys =
       await DeliveryBoy.find()
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
-    res.status(200).json(
-      deliveryBoys
-    );
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: deliveryBoys
+    });
 
   } catch (error) {
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
@@ -167,9 +148,20 @@ async (req, res) => {
 // ======================================================
 // GET SINGLE DELIVERY BOY
 // ======================================================
-exports.getSingleDeliveryBoy =
-async (req, res) => {
+exports.getSingleDeliveryBoy = async (req, res) => {
+
   try {
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        req.params.id
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Id"
+      });
+    }
 
     const deliveryBoy =
       await DeliveryBoy.findById(
@@ -179,20 +171,20 @@ async (req, res) => {
     if (!deliveryBoy) {
       return res.status(404).json({
         success: false,
-        message:
-          "Delivery boy not found",
+        message: "Delivery Boy Not Found"
       });
     }
 
-    res.status(200).json(
+    res.status(200).json({
+      success: true,
       deliveryBoy
-    );
+    });
 
   } catch (error) {
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
@@ -201,8 +193,7 @@ async (req, res) => {
 // ======================================================
 // UPDATE DELIVERY BOY
 // ======================================================
-exports.updateDeliveryBoy =
-async (req, res) => {
+exports.updateDeliveryBoy = async (req, res) => {
   try {
 
     const deliveryBoy =
@@ -222,76 +213,29 @@ async (req, res) => {
       ...req.body,
     };
 
-    // ================= IMAGE =================
     if (req.files?.image) {
-
-      deleteFile(
-        deliveryBoy.image
-      );
-
       updateData.image =
-        req.files.image[0].filename;
+        req.files.image[0].path;
     }
 
-    // ================= AADHAAR FRONT =================
     if (req.files?.aadhaarFront) {
-
-      deleteFile(
-        deliveryBoy.aadhaarFront
-      );
-
       updateData.aadhaarFront =
-        req.files.aadhaarFront[0]
-          .filename;
+        req.files.aadhaarFront[0].path;
     }
 
-    // ================= AADHAAR BACK =================
     if (req.files?.aadhaarBack) {
-
-      deleteFile(
-        deliveryBoy.aadhaarBack
-      );
-
       updateData.aadhaarBack =
-        req.files.aadhaarBack[0]
-          .filename;
+        req.files.aadhaarBack[0].path;
     }
 
-    // ================= LICENSE IMAGE =================
-    if (
-      req.files?.drivingLicenseImage
-    ) {
-
-      deleteFile(
-        deliveryBoy.drivingLicenseImage
-      );
-
+    if (req.files?.drivingLicenseImage) {
       updateData.drivingLicenseImage =
-        req.files
-          .drivingLicenseImage[0]
-          .filename;
+        req.files.drivingLicenseImage[0].path;
     }
 
-    // ================= VEHICLE IMAGE =================
     if (req.files?.vehicleImage) {
-
-      deleteFile(
-        deliveryBoy.vehicleImage
-      );
-
       updateData.vehicleImage =
-        req.files.vehicleImage[0]
-          .filename;
-    }
-
-    // ================= PASSWORD =================
-    if (req.body.password) {
-
-      updateData.password =
-        await bcrypt.hash(
-          req.body.password,
-          12
-        );
+        req.files.vehicleImage[0].path;
     }
 
     const updatedDeliveryBoy =
@@ -314,8 +258,6 @@ async (req, res) => {
 
   } catch (error) {
 
-    console.log(error);
-
     res.status(500).json({
       success: false,
       message: error.message,
@@ -327,9 +269,20 @@ async (req, res) => {
 // ======================================================
 // DELETE DELIVERY BOY
 // ======================================================
-exports.deleteDeliveryBoy =
-async (req, res) => {
+exports.deleteDeliveryBoy = async (req, res) => {
+
   try {
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        req.params.id
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Id"
+      });
+    }
 
     const deliveryBoy =
       await DeliveryBoy.findById(
@@ -339,45 +292,23 @@ async (req, res) => {
     if (!deliveryBoy) {
       return res.status(404).json({
         success: false,
-        message:
-          "Delivery boy not found",
+        message: "Delivery Boy Not Found"
       });
     }
 
-    // ================= DELETE FILES =================
-    deleteFile(deliveryBoy.image);
-
-    deleteFile(
-      deliveryBoy.aadhaarFront
-    );
-
-    deleteFile(
-      deliveryBoy.aadhaarBack
-    );
-
-    deleteFile(
-      deliveryBoy.drivingLicenseImage
-    );
-
-    deleteFile(
-      deliveryBoy.vehicleImage
-    );
-
-    await DeliveryBoy.findByIdAndDelete(
-      req.params.id
-    );
+    await deliveryBoy.deleteOne();
 
     res.status(200).json({
       success: true,
       message:
-        "Delivery boy deleted successfully",
+        "Delivery Boy Deleted Successfully"
     });
 
   } catch (error) {
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message
     });
 
   }
@@ -386,11 +317,23 @@ async (req, res) => {
 // ======================================================
 // TOGGLE ONLINE / OFFLINE
 // ======================================================
-exports.toggleDeliveryStatus =
-async (req, res) => {
+exports.toggleDeliveryStatus = async (req, res) => {
   try {
 
     const { status } = req.body;
+
+    const allowedStatus = [
+      "ONLINE",
+      "OFFLINE",
+      "ON_DELIVERY"
+    ];
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Status"
+      });
+    }
 
     const deliveryBoy =
       await DeliveryBoy.findByIdAndUpdate(
@@ -399,11 +342,17 @@ async (req, res) => {
         { new: true }
       );
 
+    if (!deliveryBoy) {
+      return res.status(404).json({
+        success: false,
+        message: "Delivery Boy Not Found"
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message:
-        "Status updated successfully",
-      deliveryBoy,
+      message: "Status Updated Successfully",
+      deliveryBoy
     });
 
   } catch (error) {
@@ -419,8 +368,7 @@ async (req, res) => {
 // ======================================================
 // VERIFY DELIVERY BOY
 // ======================================================
-exports.verifyDeliveryBoy =
-async (req, res) => {
+exports.verifyDeliveryBoy = async (req, res) => {
   try {
 
     const deliveryBoy =
@@ -433,6 +381,13 @@ async (req, res) => {
           new: true,
         }
       );
+
+    if (!deliveryBoy) {
+      return res.status(404).json({
+        success: false,
+        message: "Delivery Boy Not Found"
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -454,14 +409,20 @@ async (req, res) => {
 // ======================================================
 // BLOCK / UNBLOCK
 // ======================================================
-exports.blockDeliveryBoy =
-async (req, res) => {
+exports.blockDeliveryBoy = async (req, res) => {
   try {
 
     const deliveryBoy =
       await DeliveryBoy.findById(
         req.params.id
       );
+
+    if (!deliveryBoy) {
+      return res.status(404).json({
+        success: false,
+        message: "Delivery Boy Not Found"
+      });
+    }
 
     deliveryBoy.isBlocked =
       !deliveryBoy.isBlocked;
@@ -490,8 +451,7 @@ async (req, res) => {
 // ======================================================
 // DELIVERY ANALYTICS
 // ======================================================
-exports.getDeliveryStats =
-async (req, res) => {
+exports.getDeliveryStats = async (req, res) => {
   try {
 
     const totalDeliveryBoys =
@@ -515,10 +475,13 @@ async (req, res) => {
       });
 
     res.status(200).json({
-      totalDeliveryBoys,
-      onlineDeliveryBoys,
-      activeDeliveries,
-      completedDeliveries,
+      success: true,
+      data: {
+        totalDeliveryBoys,
+        onlineDeliveryBoys,
+        activeDeliveries,
+        completedDeliveries
+      }
     });
 
   } catch (error) {

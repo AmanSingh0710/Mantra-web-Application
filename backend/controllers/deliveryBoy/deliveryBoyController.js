@@ -9,52 +9,55 @@ const bcrypt = require("bcryptjs");
 // ======================================================
 // LOGIN
 // ======================================================
-exports.loginDeliveryBoy =
-async (req, res) => {
+exports.loginDeliveryBoy = async (req, res) => {
   try {
 
-    const { email, password } =
-      req.body;
+    const { email, password } = req.body;
 
-    // ================= CHECK USER =================
     const deliveryBoy =
       await DeliveryBoy.findOne({
         email,
-      });
+      }).select("+password");
 
     if (!deliveryBoy) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message:
-          "Delivery boy not found",
+        message: "Invalid credentials",
       });
     }
 
-    // ================= BLOCK CHECK =================
     if (deliveryBoy.isBlocked) {
       return res.status(403).json({
         success: false,
-        message:
-          "Account blocked by admin",
+        message: "Account blocked",
       });
     }
 
-    // ================= PASSWORD MATCH =================
     const isMatch =
-      await bcrypt.compare(
-        password,
-        deliveryBoy.password
+      await deliveryBoy.comparePassword(
+        password
       );
 
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message:
-          "Invalid credentials",
+        message: "Invalid credentials",
       });
     }
 
-    // ================= STATUS =================
+    const jwt = require("jsonwebtoken");
+
+    const token = jwt.sign(
+      {
+        id: deliveryBoy._id,
+        role: "DELIVERY",
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+
     deliveryBoy.lastLogin =
       new Date();
 
@@ -63,10 +66,12 @@ async (req, res) => {
 
     await deliveryBoy.save();
 
+    deliveryBoy.password =
+      undefined;
+
     res.status(200).json({
       success: true,
-      message:
-        "Login successful",
+      token,
       deliveryBoy,
     });
 
@@ -83,8 +88,7 @@ async (req, res) => {
 // ======================================================
 // GET MY PROFILE
 // ======================================================
-exports.getMyProfile =
-async (req, res) => {
+exports.getMyProfile = async (req, res) => {
   try {
 
     const deliveryBoy =
@@ -117,8 +121,7 @@ async (req, res) => {
 // ======================================================
 // GET MY ORDERS
 // ======================================================
-exports.getMyOrders =
-async (req, res) => {
+exports.getMyOrders = async (req, res) => {
   try {
 
     const orders =
@@ -147,8 +150,7 @@ async (req, res) => {
 // ======================================================
 // GET MY STATS
 // ======================================================
-exports.getMyStats =
-async (req, res) => {
+exports.getMyStats = async (req, res) => {
   try {
 
     const totalOrders =
@@ -207,8 +209,7 @@ async (req, res) => {
 // ======================================================
 // GET EARNINGS
 // ======================================================
-exports.getEarnings =
-async (req, res) => {
+exports.getEarnings = async (req, res) => {
   try {
 
     const profile =
@@ -240,14 +241,24 @@ async (req, res) => {
 // ======================================================
 // UPDATE LIVE LOCATION
 // ======================================================
-exports.updateLocation =
-async (req, res) => {
+exports.updateLocation = async (req, res) => {
   try {
 
     const {
-      longitude,
       latitude,
+      longitude,
     } = req.body;
+
+    if (
+      latitude === undefined ||
+      longitude === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Latitude and Longitude required",
+      });
+    }
 
     const deliveryBoy =
       await DeliveryBoy.findByIdAndUpdate(
@@ -255,7 +266,6 @@ async (req, res) => {
         {
           currentLocation: {
             type: "Point",
-
             coordinates: [
               longitude,
               latitude,
@@ -269,9 +279,8 @@ async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message:
-        "Location updated",
-      deliveryBoy,
+      location:
+        deliveryBoy.currentLocation,
     });
 
   } catch (error) {
@@ -287,8 +296,7 @@ async (req, res) => {
 // ======================================================
 // UPDATE ORDER STATUS
 // ======================================================
-exports.updateOrderStatus =
-async (req, res) => {
+exports.updateOrderStatus = async (req, res) => {
   try {
 
     const {
@@ -370,8 +378,7 @@ async (req, res) => {
 // ======================================================
 // TOGGLE ONLINE / OFFLINE
 // ======================================================
-exports.toggleOnlineStatus =
-async (req, res) => {
+exports.toggleOnlineStatus = async (req, res) => {
   try {
 
     const deliveryBoy =
@@ -406,8 +413,7 @@ async (req, res) => {
 // ======================================================
 // ACCEPT ORDER
 // ======================================================
-exports.acceptOrder =
-async (req, res) => {
+exports.acceptOrder = async (req, res) => {
   try {
 
     const order =
@@ -418,8 +424,15 @@ async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.deliveryBoy) {
+      return res.status(400).json({
+        success: false,
         message:
-          "Order not found",
+          "Order already assigned",
       });
     }
 
@@ -431,7 +444,6 @@ async (req, res) => {
 
     await order.save();
 
-    // update delivery boy status
     await DeliveryBoy.findByIdAndUpdate(
       req.user.id,
       {
@@ -443,8 +455,7 @@ async (req, res) => {
     res.status(200).json({
       success: true,
       message:
-        "Order accepted",
-      order,
+        "Order accepted successfully",
     });
 
   } catch (error) {
@@ -460,8 +471,7 @@ async (req, res) => {
 // ======================================================
 // VERIFY DELIVERY OTP
 // ======================================================
-exports.verifyDeliveryOTP =
-async (req, res) => {
+exports.verifyDeliveryOTP = async (req, res) => {
   try {
 
     const {
@@ -518,6 +528,56 @@ async (req, res) => {
       success: true,
       message:
         "Delivery completed successfully",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+
+// change password
+exports.changePassword = async (req, res) => {
+
+  try {
+
+    const {
+      currentPassword,
+      newPassword,
+    } = req.body;
+
+    const deliveryBoy =
+      await DeliveryBoy.findById(
+        req.user.id
+      ).select("+password");
+
+    const isMatch =
+      await deliveryBoy.comparePassword(
+        currentPassword
+      );
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Current password incorrect",
+      });
+    }
+
+    deliveryBoy.password =
+      newPassword;
+
+    await deliveryBoy.save();
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Password changed successfully",
     });
 
   } catch (error) {

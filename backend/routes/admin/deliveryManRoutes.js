@@ -8,122 +8,36 @@ const auth = require("../../middleware/auth");
 
 const isAdmin = require("../../middleware/isAdmin");
 
-const upload = require("../../middleware/upload");
+router.post("/add", auth, isAdmin("ADMIN"), controller.addDeliveryBoy);
 
-// ======================================================
-// MULTER FIELDS
-// ======================================================
-const cpUpload = upload.fields([
-    {
-        name: "image",
-        maxCount: 1,
-    },
+router.get("/list", auth, isAdmin("ADMIN"), controller.getAllDeliveryBoys);
 
-    {
-        name: "aadhaarFront",
-        maxCount: 1,
-    },
+router.get("/get/:id", auth, isAdmin("ADMIN"), controller.getSingleDeliveryBoy);
 
-    {
-        name: "aadhaarBack",
-        maxCount: 1,
-    },
+router.put("/update/:id", auth, isAdmin("ADMIN"), controller.updateDeliveryBoy);
 
-    {
-        name: "drivingLicenseImage",
-        maxCount: 1,
-    },
+router.put("/change-password/:id", auth, isAdmin("ADMIN"), controller.changePassword);
 
-    {
-        name: "vehicleImage",
-        maxCount: 1,
-    },
-]);
+router.delete("/delete/:id", auth, isAdmin("ADMIN"), controller.deleteDeliveryBoy);
 
-// ======================================================
-// ADD DELIVERY BOY
-// ======================================================
-router.post("/add",auth,isAdmin("ADMIN"),cpUpload,controller.addDeliveryBoy);
+router.put("/toggle-status/:id", auth, isAdmin("ADMIN"), controller.toggleDeliveryStatus);
 
-// ======================================================
-// GET ALL DELIVERY BOYS
-// ======================================================
-router.get(
-    "/list",
-    auth,
-    isAdmin("ADMIN"),
-    controller.getAllDeliveryBoys
-);
+router.put("/verify/:id", auth, isAdmin("ADMIN"), controller.verifyDeliveryBoy);
 
-// ======================================================
-// GET SINGLE DELIVERY BOY
-// ======================================================
-router.get(
-    "/get/:id",
-    auth,
-    isAdmin("ADMIN"),
-    controller.getSingleDeliveryBoy
-);
+router.put("/block/:id", auth, isAdmin("ADMIN"), controller.blockDeliveryBoy);
 
-// ======================================================
-// UPDATE DELIVERY BOY
-// ======================================================
-router.put(
-    "/update/:id",
-    auth,
-    isAdmin("ADMIN"),
-    cpUpload,
-    controller.updateDeliveryBoy
-);
+router.get("/stats", auth, isAdmin("ADMIN"), controller.getDeliveryStats);
 
-// ======================================================
-// DELETE DELIVERY BOY
-// ======================================================
-router.delete(
-    "/delete/:id",
-    auth,
-    isAdmin("ADMIN"),
-    controller.deleteDeliveryBoy
-);
+// Update live location
+router.put("/location/:id", auth, controller.updateLocation);
 
-// ======================================================
-// TOGGLE STATUS
-// ======================================================
-router.put(
-    "/toggle-status/:id",
-    auth,
-    isAdmin("ADMIN"),
-    controller.toggleDeliveryStatus
-);
+// Delivery boy profile
+router.get("/profile/:id", auth, controller.getProfile);
 
-// ======================================================
-// VERIFY DELIVERY BOY
-// ======================================================
-router.put(
-    "/verify/:id",
-    auth,
-    isAdmin("ADMIN"),
-    controller.verifyDeliveryBoy
-);
+// Wallet details
+router.get("/wallet/:id", auth, controller.getWallet);
 
-// ======================================================
-// BLOCK / UNBLOCK
-// ======================================================
-router.put(
-    "/block/:id",
-    auth,
-    isAdmin("ADMIN"),
-    controller.blockDeliveryBoy
-);
-
-// ======================================================
-// DELIVERY ANALYTICS
-// ======================================================
-router.get(
-    "/stats",
-    auth,
-    isAdmin("ADMIN"),
-    controller.getDeliveryStats
-);
+// Earnings history
+router.get("/earnings/:id", auth, controller.getEarnings);
 
 module.exports = router;
