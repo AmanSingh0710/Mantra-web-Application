@@ -1,4 +1,4 @@
-// controllers/admin/deliveryBoyController.js
+// controllers/admin/deliveryManController.js
 
 const mongoose = require("mongoose");
 const DeliveryBoy = require("../../../models/Deliveryman/DeliveryMan");
