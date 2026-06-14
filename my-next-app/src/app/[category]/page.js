@@ -1,5 +1,5 @@
 "use client";
-
+//src/app/[category]/page.js
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { fetchFromAPI, getImageUrl } from "@/utils/api";

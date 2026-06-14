@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchFromAPI } from "@/utils/api";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { FaShoppingBag, FaBolt, FaStar, FaShieldAlt, FaTruck, FaUndo, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -23,11 +23,11 @@ export default function ProductPage() {
                 const res = await fetchFromAPI(`/Adminproducts/public/${id}`);
                 if (res?.product) {
                     setProduct(res.product);
-                    setSelectedImage(res.product.thumbnail);
+                    setSelectedImage(res.product.thumbnail.url);
                 }
                 else if (res?.data?.product) {
                     setProduct(res.data.product);
-                    setSelectedImage(res.data.product.thumbnail);
+                    setSelectedImage(res.data.product.thumbnail.url);
                 }
             } catch (err) {
                 console.error("Error fetching product:", err);
@@ -40,16 +40,6 @@ export default function ProductPage() {
         }
     }, [id]);
 
-    const getImageUrl = (imgName) => {
-        if (!imgName) return "";
-        if (imgName.startsWith("http://") || imgName.startsWith("https://") || imgName.startsWith("/")) {
-            return imgName;
-        }
-        const cleanPath = imgName.replace(/\\/g, "/");
-        return cleanPath.startsWith("uploads/")
-            ? `${BASE_URL}/${cleanPath}`
-            : `${BASE_URL}/uploads/${cleanPath}`;
-    };
 
     if (!product) {
         return (
@@ -181,10 +171,10 @@ export default function ProductPage() {
                                 {product.thumbnail.map((img, idx) => (
                                     <button
                                         key={idx}
-                                        onClick={() => setSelectedImage(img)}
-                                        className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === img ? 'border-amber-500' : 'border-gray-200'}`}
+                                        onClick={() => setSelectedImage(img.url)}
+                                        className={`w-20 h-20 border-2 rounded-md p-1 bg-white flex-shrink-0 ${selectedImage === img.url ? 'border-amber-500' : 'border-gray-200'}`}
                                     >
-                                        <img src={getImageUrl(img)} className="w-full h-full object-contain mix-blend-multiply" alt="gallery thumb" />
+                                        <img src={getImageUrl(img.url)} className="w-full h-full object-contain mix-blend-multiply" alt="gallery thumb" />
                                     </button>
                                 ))}
                             </div>
