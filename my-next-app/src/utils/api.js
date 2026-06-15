@@ -60,7 +60,6 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
   // 🔴 Access Token Expired (401) → Silent cookie refresh flow
   if (res.status === 401) {
     try {
-      // Hit your backend refresh endpoint. 
       // It reads 'refreshToken' from cookies and sets a fresh 'accessToken' cookie via response headers.
       const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
         method: "POST",

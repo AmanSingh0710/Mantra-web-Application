@@ -42,17 +42,13 @@ export default function Hero() {
           heroes.map((hero, index) => (
             <div
               key={hero._id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
             >
-              <Image
-                src={getImageUrl(hero.image)}
-                alt="Banner Image"
-                fill
-                priority={index === 0}
-                sizes="100vw"
-                className="object-cover object-center"
+              <img
+                src={hero.image?.url}
+                alt="Hero Image"
+                className="w-full h-full object-cover"
               />
               {/* Optional: Remove this overlay div if you want the images to be bright/original */}
               <div className="absolute inset-0 bg-black/10 z-10" />
