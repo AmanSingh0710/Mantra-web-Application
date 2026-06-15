@@ -73,7 +73,9 @@ export default function DynamicCategoryPage() {
 
                 // 4. Set beautiful dynamic display names
                 if (fetchedProducts.length > 0 && fetchedProducts[0].category) {
-                    setCategoryDisplayName(fetchedProducts[0].category);
+                    setCategoryDisplayName(
+                        fetchedProducts[0]?.category?.name || targetCategory
+                    );
                 } else {
                     setCategoryDisplayName(
                         targetCategory.replace(/\b\w/g, (char) => char.toUpperCase())
@@ -216,7 +218,7 @@ export default function DynamicCategoryPage() {
                                     <div className="p-2.5 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2">
                                         <div className="space-y-1">
                                             <p className="text-[9px] sm:text-[10px] font-bold tracking-wider text-amber-600 uppercase truncate">
-                                                {product.category}
+                                                {product.category?.name}
                                             </p>
 
                                             <Link href={`/product/${product._id}`} className="block">
