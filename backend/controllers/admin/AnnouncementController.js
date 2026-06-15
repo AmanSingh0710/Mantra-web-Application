@@ -1,5 +1,55 @@
 const Announcement = require("../../models/Announcement");
 
+// ================= GET ALL =================
+exports.getAnnouncements = async (req, res) => {
+  try {
+    const announcements = await Announcement.find()
+      .sort({
+        priority: -1,
+        createdAt: -1,
+      });
+
+    return res.status(200).json({
+      success: true,
+      count: announcements.length,
+      announcements,
+    });
+  } catch (error) {
+    console.error("Get Announcements Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// ================= GET SINGLE =================
+exports.getSingleAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      announcement,
+    });
+  } catch (error) {
+    console.error("Get Single Announcement Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // Create
 exports.createAnnouncement = async (req, res) => {
     try {
