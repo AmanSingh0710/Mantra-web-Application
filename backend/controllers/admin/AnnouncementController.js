@@ -190,3 +190,46 @@ exports.deleteAnnouncement = async (req, res) => {
         });
 
     };
+
+// Active tooggle status
+exports.toggleAnnouncementStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const announcement = await Announcement.findById(id);
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    if (!announcement.isActive) {
+      // Disable all active announcements first
+      await Announcement.updateMany(
+        { isActive: true },
+        { $set: { isActive: false } }
+      );
+    }
+
+    announcement.isActive = !announcement.isActive;
+
+    await announcement.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Announcement ${
+        announcement.isActive ? "activated" : "deactivated"
+      } successfully`,
+      announcement,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

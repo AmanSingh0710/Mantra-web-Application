@@ -3,29 +3,37 @@
 import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState } from "react";
 import { Send, Trash2, Edit3, Bell, Megaphone, Search, X, CheckCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
-export default function AdminNotifications() {
-  const [notifications, setNotifications] = useState([]);
-  const [formData, setFormData] = useState({ title: "", message: "" });
+export default function AdminAnnouncements() {
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ title: "", message: "", priority: 0, });
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // ================= FETCH =================
-  const fetchNotifications = async () => {
+  const fetchAnnouncements = async () => {
     try {
-      const data = await fetchFromAPI("/announcement", {
-        method: "GET",
-      });
+      setLoading(true);
 
-      setNotifications(Array.isArray(data) ? data : data?.data || []);
+      const res = await fetchFromAPI("/announcement");
+
+      if (res?.success) {
+        setAnnouncements(res.announcements || []);
+      }
     } catch (err) {
-      console.error("Fetch error:", err.message);
+      toast.error("Data Fetching Failed !!!");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotifications();
+    fetchAnnouncements();
   }, []);
+
 
   // ================= SUBMIT (CREATE / UPDATE) =================
   const handleSubmit = async (e) => {
@@ -34,46 +42,84 @@ export default function AdminNotifications() {
     try {
       const endpoint = editingId
         ? `/announcement/${editingId}`
-        : "/announcement";
+        : "/announcement/add";
 
-      await fetchFromAPI(endpoint, {
-        method: editingId ? "PUT" : "POST",
+      const method = editingId
+        ? "PUT"
+        : "POST";
+
+      const res = await fetchFromAPI(endpoint, {
+        method,
         body: JSON.stringify(formData),
       });
 
-      setFormData({ title: "", message: "" });
-      setEditingId(null);
-      fetchNotifications();
+      if (res.success) {
+        fetchAnnouncements();
+
+        setEditingId(null);
+
+        setFormData({
+          title: "",
+          message: "",
+          priority: 0,
+        });
+      }
     } catch (err) {
-      alert(err.message);
+      toast.error("Updation Failed !!!");
+      console.error(err);
     }
   };
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    if (!confirm("Permanently delete this announcement?")) return;
-
     try {
+      if (!confirm("Delete this announcement?")) return;
+
       await fetchFromAPI(`/announcement/${id}`, {
         method: "DELETE",
       });
 
-      fetchNotifications();
+      fetchAnnouncements();
     } catch (err) {
-      alert(err.message);
+      toast.error("Deleteion Failed !!!");
+      console.error(err);
     }
   };
 
   // ================= EDIT =================
   const handleEdit = (n) => {
     setEditingId(n._id);
-    setFormData({ title: n.title, message: n.message });
+    setFormData({
+      title: n.title || "",
+      message: n.message || "",
+      priority: n.priority || 0,
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleToggle = async (id) => {
+    try {
+      const res = await fetchFromAPI(
+        `/announcement/toggle/${id}`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      if (res.success) {
+        fetchAnnouncements();
+      }
+    } catch (err) {
+      toast.error("Toggle Failed !!!");
+      console.error(err);
+    }
+  };
+
   // ================= FILTER =================
-  const filteredNotifications = notifications.filter((n) =>
-    n.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAnnouncements = announcements.filter((item) =>
+    item.title
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -136,55 +182,107 @@ export default function AdminNotifications() {
                   />
                 </div>
 
+                <div>
+                  <label className="block mb-2 text-sm font-medium">
+                    Priority
+                  </label>
+
+                  <input
+                    type="number"
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value, })}
+                    className="w-full border rounded-lg p-3"
+                  />
+                </div>
+
                 <button className={`w-full py-4 rounded-lg font-black text-sm tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 ${editingId ? "bg-orange-500 hover:bg-orange-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}>
                   <Send size={18} /> {editingId ? "UPDATE BROADCAST" : "SEND TO ALL USERS"}
                 </button>
+
+
               </form>
             </div>
           </div>
 
-          {/* RIGHT: LIST VIEW */}
           <div className="lg:col-span-7">
             <div className="space-y-4">
-              {filteredNotifications.length === 0 ? (
-                <div className="bg-white p-12 text-center rounded-xl border-2 border-dashed border-gray-200">
-                  <Bell className="mx-auto text-gray-200 mb-2" size={48} />
-                  <p className="text-gray-400 font-medium">No announcements found</p>
-                </div>
-              ) : (
-                filteredNotifications.map((n) => (
-                  <div key={n._id} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all flex flex-col md:flex-row justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle size={16} className="text-green-500" />
-                        <h3 className="font-bold text-gray-900">{n.title}</h3>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">{n.message}</p>
-                      <div className="mt-3 flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                        <span>Sent to: All Users</span>
-                        <span>•</span>
-                        <span>Status: Live</span>
+
+              {filteredAnnouncements.map((n) => (
+                <div
+                  key={n._id}
+                  className="bg-white rounded-xl border p-5 shadow-sm"
+                >
+                  <div className="flex justify-between items-start">
+
+                    <div>
+                      <h3 className="font-bold text-lg">
+                        {n.title}
+                      </h3>
+
+                      <p className="text-gray-600 mt-2">
+                        {n.message}
+                      </p>
+
+                      <div className="flex gap-2 mt-3">
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${n.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                            }`}
+                        >
+                          {n.isActive
+                            ? "Active"
+                            : "Inactive"}
+                        </span>
+
+                        <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                          Priority {n.priority}
+                        </span>
+
                       </div>
                     </div>
 
-                    <div className="flex md:flex-col gap-2 shrink-0">
+                    <div className="flex gap-2">
+
                       <button
                         onClick={() => handleEdit(n)}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-bold transition-all"
+                        className="bg-blue-600 text-white px-3 py-2 rounded-lg"
                       >
-                        <Edit3 size={14} /> Edit
+                        <Edit3 size={16} />
                       </button>
+
+                      <button
+                        onClick={() => handleToggle(n._id)}
+                        className={`px-3 py-2 rounded-lg text-white ${n.isActive
+                          ? "bg-orange-500"
+                          : "bg-green-600"
+                          }`}
+                      >
+                        {n.isActive
+                          ? "Deactivate"
+                          : "Activate"}
+                      </button>
+
                       <button
                         onClick={() => handleDelete(n._id)}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 rounded-lg text-sm font-bold transition-all"
+                        className="bg-red-600 text-white px-3 py-2 rounded-lg"
                       >
-                        <Trash2 size={14} /> Delete
+                        <Trash2 size={16} />
                       </button>
+
                     </div>
                   </div>
-                ))
+                </div>
+              ))}
+
+              {filteredAnnouncements.length === 0 && (
+                <div className="bg-white p-10 rounded-xl text-center text-gray-500">
+                  No announcements found
+                </div>
               )}
+
             </div>
           </div>
 

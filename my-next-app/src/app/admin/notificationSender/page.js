@@ -1,4 +1,4 @@
-import AdminNotifications from "@/components/admin/AdminAnnouncements";
+import AdminAnnouncements from "@/components/admin/AdminAnnouncements";
 export default function PageNotification(){
-    return<AdminNotifications />
+    return<AdminAnnouncements />
 }
