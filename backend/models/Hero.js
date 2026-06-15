@@ -2,37 +2,34 @@
 
 const mongoose = require("mongoose");
 
-const heroSchema = new mongoose.Schema(
-  {
-   
-
-    image: {
+const heroSchema = new mongoose.Schema({
+  image: {
+    publicId: {
       type: String,
-      required: true,
-      trim: true,
+      required: true
     },
-
-    mobileImage: {
+    url: {
       type: String,
-      default: "",
-      trim: true,
-    },
-
-    position: {
-      type: Number,
-      default: 0,
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+      required: true
+    }
   },
-  {
-    timestamps: true,
+
+  mobileImage: {
+    publicId: String,
+    url: String
+  },
+
+  position: {
+    type: Number,
+    default: 0,
+    index: true
+  },
+
+  isActive: {
+    type: Boolean,
+    default: true,
+    index: true
   }
-);
-
-heroSchema.index({ position: 1 });
-
-module.exports = mongoose.model("Hero", heroSchema);
+}, {
+  timestamps: true
+});

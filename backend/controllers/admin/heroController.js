@@ -2,37 +2,41 @@
 
 const fs = require("fs");
 const path = require("path");
+const { cloudinary, deleteCloudinaryFile } = require("../../utils/cloudinary");
 
 const Hero = require("../../models/Hero");
 
 // ================= CREATE HERO =================
 exports.createHero = async (req, res) => {
-  console.log("Request hit createHero"); // LOG 1
   try {
-    console.log("File received:", req.file); // LOG 2
+
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Hero image is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Hero image required"
+      });
     }
 
-    const { title, subtitle, buttonText, buttonLink, position } = req.body;
-    console.log("Body received:", req.body); // LOG 3
-
     const hero = await Hero.create({
-      position,
-      image: req.file.filename,
+      position: Number(req.body.position || 0),
+
+      image: {
+        publicId: req.file.filename,
+        url: req.file.path
+      }
     });
 
-    console.log("Hero created in DB"); // LOG 4
     return res.status(201).json({
       success: true,
-      message: "Hero banner created successfully",
-      hero,
+      hero
     });
+
   } catch (error) {
-    console.error("Backend Error:", error); // LOG ERROR
+    console.error(error);
+
     return res.status(500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: error.message
     });
   }
 };
@@ -91,33 +95,31 @@ exports.getSingleHero = async (req, res) => {
 // ================= UPDATE HERO =================
 exports.updateHero = async (req, res) => {
   try {
+
     const hero = await Hero.findById(req.params.id);
 
     if (!hero) {
       return res.status(404).json({
         success: false,
-        message: "Hero banner not found",
+        message: "Hero not found"
       });
     }
 
     const updateData = {
       position: req.body.position,
-      isActive: req.body.isActive,
+      isActive: req.body.isActive
     };
 
-    // New image upload
     if (req.file) {
-      const oldImagePath = path.join(
-        __dirname,
-        "../uploads",
-        hero.image
-      );
 
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      if (hero.image?.publicId) {
+        await deleteCloudinaryFile(hero.image.publicId);
       }
 
-      updateData.image = req.file.filename;
+      updateData.image = {
+        publicId: req.file.filename,
+        url: req.file.path
+      };
     }
 
     const updatedHero = await Hero.findByIdAndUpdate(
@@ -125,60 +127,59 @@ exports.updateHero = async (req, res) => {
       updateData,
       {
         new: true,
-        runValidators: true,
+        runValidators: true
       }
     );
 
     return res.status(200).json({
       success: true,
-      message: "Hero banner updated successfully",
-      hero: updatedHero,
+      hero: updatedHero
     });
-  } catch (error) {
-    console.log("Update Hero Error:", error);
+  }
+  catch (error) {
+    console.error(error);
 
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: error.message
     });
   }
-};
+
+}
+
 
 // ================= DELETE HERO =================
 exports.deleteHero = async (req, res) => {
   try {
+
     const hero = await Hero.findById(req.params.id);
 
     if (!hero) {
       return res.status(404).json({
         success: false,
-        message: "Hero banner not found",
+        message: "Hero not found"
       });
     }
 
-    // Delete image from uploads folder
-    const imagePath = path.join(
-      __dirname,
-      "../uploads",
-      hero.image
-    );
+    if (hero.image?.publicId) {
 
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+      await deleteCloudinaryFile(hero.image.publicId);
+
     }
 
     await Hero.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({
       success: true,
-      message: "Hero banner deleted successfully",
+      message: "Deleted successfully"
     });
+
   } catch (error) {
-    console.log("Delete Hero Error:", error);
+    console.error(error);
 
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: error.message
     });
   }
 };
