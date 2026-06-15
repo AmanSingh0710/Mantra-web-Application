@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
-import AnnouncementBar from "./AnnouncementBar";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 export default function Header() {
   const router = useRouter();

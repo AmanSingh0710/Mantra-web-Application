@@ -4,20 +4,26 @@ import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState } from "react";
 import { Send, Trash2, Edit3, Bell, Megaphone, Search, X, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
-
+//src/components/admin/AdminAnnouncemennts.js
 export default function AdminAnnouncements() {
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ title: "", message: "", priority: 0, });
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [desktopImage, setDesktopImage] = useState(null);
+  const [mobileImage, setMobileImage] = useState(null);
+
+  const [desktopPreview, setDesktopPreview] = useState("");
+  const [mobilePreview, setMobilePreview] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   // ================= FETCH =================
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
 
-      const res = await fetchFromAPI("/announcement");
+      const res = await fetchFromAPI("/announcement/list");
 
       if (res?.success) {
         setAnnouncements(res.announcements || []);
@@ -36,10 +42,13 @@ export default function AdminAnnouncements() {
 
 
   // ================= SUBMIT (CREATE / UPDATE) =================
+  // ================= SUBMIT (CREATE / UPDATE) =================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      setLoading(true);
+
       const endpoint = editingId
         ? `/announcement/${editingId}`
         : "/announcement/add";
@@ -48,12 +57,34 @@ export default function AdminAnnouncements() {
         ? "PUT"
         : "POST";
 
+      const data = new FormData();
+
+      data.append("title", formData.title);
+      data.append("message", formData.message);
+      data.append("priority", formData.priority || 0);
+
+      // Desktop Image
+      if (desktopImage) {
+        data.append("desktopImage", desktopImage);
+      }
+
+      // Mobile Image
+      if (mobileImage) {
+        data.append("mobileImage", mobileImage);
+      }
+
       const res = await fetchFromAPI(endpoint, {
         method,
-        body: JSON.stringify(formData),
+        body: data,
       });
 
-      if (res.success) {
+      if (res?.success) {
+        toast.success(
+          editingId
+            ? "Announcement updated successfully"
+            : "Announcement created successfully"
+        );
+
         fetchAnnouncements();
 
         setEditingId(null);
@@ -63,10 +94,21 @@ export default function AdminAnnouncements() {
           message: "",
           priority: 0,
         });
+
+        setDesktopImage(null);
+        setMobileImage(null);
+
+        setDesktopPreview("");
+        setMobilePreview("");
       }
     } catch (err) {
-      toast.error("Updation Failed !!!");
+      toast.error(
+        err?.message || "Announcement operation failed"
+      );
+
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
