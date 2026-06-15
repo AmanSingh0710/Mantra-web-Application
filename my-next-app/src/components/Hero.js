@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FaTruck, FaLock, FaUserMd } from "react-icons/fa";
 import { fetchFromAPI, getImageUrl } from "@/utils/api";

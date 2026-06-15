@@ -13,7 +13,7 @@ export default function AdminNotifications() {
   // ================= FETCH =================
   const fetchNotifications = async () => {
     try {
-      const data = await fetchFromAPI("/notifications/list", {
+      const data = await fetchFromAPI("/announcement", {
         method: "GET",
       });
 
@@ -33,8 +33,8 @@ export default function AdminNotifications() {
 
     try {
       const endpoint = editingId
-        ? `/notifications/${editingId}`
-        : "/notifications";
+        ? `/announcement/${editingId}`
+        : "/announcement";
 
       await fetchFromAPI(endpoint, {
         method: editingId ? "PUT" : "POST",
@@ -54,7 +54,7 @@ export default function AdminNotifications() {
     if (!confirm("Permanently delete this announcement?")) return;
 
     try {
-      await fetchFromAPI(`/notifications/${id}`, {
+      await fetchFromAPI(`/announcement/${id}`, {
         method: "DELETE",
       });
 

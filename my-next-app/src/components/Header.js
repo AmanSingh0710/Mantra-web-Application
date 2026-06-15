@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
+import AnnouncementBar from "./AnnouncementBar";
 
 export default function Header() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function Header() {
   return (
     <>
       <div className="announcement-bar" role="alert">
-        NEW GST 2.0 APPLIED – LOWER PRICES FOR YOU!
+        <AnnouncementBar />
       </div>
 
       <header className="main-header">

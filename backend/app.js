@@ -95,6 +95,7 @@ app.use("/support", require("./routes/admin/Help&Support/supportRoutes"));
 app.use("/hero", require("./routes/admin/heroRoutes"));
 app.use("/subscribers", require("./routes/admin/subscriberRoutes"));
 app.use("/stories", require("./routes/admin/storyRoutes"));
+app.use("/announcement" , require("./routes/admin/AnnouncementRoutes"))
 
 /* ==========================================
    4. GLOBAL FALLBACK ERROR CATCHERS
