@@ -127,8 +127,8 @@ export default function AdminLayout({ children }) {
       case "rejected":
         return <Rejected />;
 
-        case "stories":
-          return<OurStory />
+      case "stories":
+        return <OurStory />
 
       case "profile":
       case "settings":
@@ -139,6 +139,9 @@ export default function AdminLayout({ children }) {
 
       case "notification_setup":
         return <PushNotificationSetup />;
+
+      case "AdminAnnouncements":
+        return <AdminAnnouncements />
 
       case "add_deliveryman":
         return <AddDeliveryManPage />

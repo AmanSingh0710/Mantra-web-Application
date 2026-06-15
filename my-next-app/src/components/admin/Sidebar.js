@@ -445,7 +445,7 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
                     </div>
 
                     {/* Announcment*/}
-                    <button onClick={() => setActiveTab("announcements")} className={`flex items-center gap-3 px-4 py-2.5 rounded-md hover:bg-[#ffffff10] transition ${activeTab === "announcements" ? 'bg-amber-600 text-white' : ''}`}>
+                    <button onClick={() => setActiveTab("AdminAnnouncements")} className={`flex items-center gap-3 px-4 py-2.5 rounded-md hover:bg-[#ffffff10] transition ${activeTab === "announcements" ? 'bg-amber-600 text-white' : ''}`}>
                         <FaImage size={16} className="text-[#90c090]" />
                         <span className="text-sm font-medium">Announcement</span>
                     </button>
