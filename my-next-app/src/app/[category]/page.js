@@ -6,6 +6,7 @@ import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import Link from "next/link";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaSpinner, FaBoxes } from "react-icons/fa";
 
+//src/app/[category]/page.js
 export default function DynamicCategoryPage() {
     const params = useParams();
     const slug = params?.category;
