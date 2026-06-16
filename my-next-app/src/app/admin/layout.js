@@ -35,6 +35,8 @@ import SupportTicketsPage from "@/components/admin/helpSupport/SupportTicketsPag
 import AdminSettings from "@/components/admin/adminSetting/AdminSettings";
 import Newsletter from "@/components/admin/Newsletter/NewsletterList";
 import OurStory from "@/components/admin/OurStory";
+import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
+import AdminBlogList from "@/components/admin/blog/AdminBlogList";
 
 import { useState, useEffect } from "react";
 
