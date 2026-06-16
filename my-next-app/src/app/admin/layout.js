@@ -143,6 +143,12 @@ export default function AdminLayout({ children }) {
       case "AdminAnnouncements":
         return <AdminAnnouncements />
 
+        case "blog_add":
+           return<AdminAddBlog />
+
+           case "blog_list":
+            return<AdminBlogList />
+
       case "add_deliveryman":
         return <AddDeliveryManPage />
 

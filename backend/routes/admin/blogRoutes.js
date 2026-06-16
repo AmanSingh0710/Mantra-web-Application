@@ -16,8 +16,8 @@ router.get("/slug/:slug", contentLimiter, blogController.getSingleBlog);
 
 
 // Admin
-router.get("/admin", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"), blogController.getBlogs);
-router.get("/admin/:id", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"),blogController.getSingleBlog);
+router.get("/admin", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"), blogController.getAllBlogsAdmin);
+router.get("/admin/:id", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"),blogController.getSingleBlogAdmin);
 router.post("/admin/add", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.createBlog);
 router.put("/admin/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.updateBlog);
 router.delete("/admin/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), blogController.deleteBlog);

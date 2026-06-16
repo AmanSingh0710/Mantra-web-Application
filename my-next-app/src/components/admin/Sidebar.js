@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     FaChevronDown, FaThLarge, FaShoppingCart, FaBoxOpen, FaTags, FaUsers, FaChartBar, FaBullhorn, FaMoneyBillWave, FaImage, FaPercentage, FaUser, FaChevronUp, FaPaperPlane,
-    FaHome, FaBell, FaCog, FaQuestionCircle, FaComments, FaEnvelope, FaHeadset, FaChartLine, FaFileAlt, FaExchangeAlt, FaUserFriends, FaBiking, FaUserShield, FaRss, FaHistory
+    FaHome, FaBell, FaCog, FaQuestionCircle, FaComments, FaEnvelope, FaHeadset, FaChartLine, FaFileAlt, FaExchangeAlt, FaUserFriends, FaBiking, FaUserShield, FaRss, FaHistory, FaBlog
 } from "react-icons/fa";
 
 const SidebarSubItem = ({ label, tabKey, activeTab, setActiveTab }) => {
@@ -395,7 +395,7 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
 
                     </div>
 
-                   {/* Story */}
+                    {/* Story */}
                     <button
                         onClick={() => { setActiveTab("stories"); setIsOpen(false); }}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md hover:bg-[#2d3748] transition text-left ${activeTab === "stories" ? 'bg-amber-600 text-white font-bold' : ''}`}
@@ -449,6 +449,59 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
                         <FaImage size={16} className="text-[#90c090]" />
                         <span className="text-sm font-medium">Announcement</span>
                     </button>
+
+
+                    {/* Blog Management */}
+                    <div>
+                        <button
+                            onClick={() => toggleSubMenu('blogs')}
+                            className="w-full flex items-center justify-between px-4 py-2.5 rounded-md hover:bg-[#ffffff10] transition"
+                        >
+                            <div className="flex items-center gap-3">
+                                <FaFileAlt size={16} className="text-[#90c090]" />
+                                <span className="text-sm font-medium">
+                                    Blog Management
+                                </span>
+                            </div>
+
+                            <FaChevronDown
+                                size={10}
+                                className={`transition-transform ${openSubMenu === "blogs"
+                                    ? "rotate-180"
+                                    : ""
+                                    }`}
+                            />
+                        </button>
+
+                        {openSubMenu === "blogs" && (
+                            <div className="ml-9 mt-1 space-y-1 border-l border-gray-700">
+
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("blog_add");
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-[#3d4b5f] rounded-md transition"
+                                >
+                                    Add Blog
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("blog_list");
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-[#3d4b5f] rounded-md transition"
+                                >
+                                    <FaBlog size={16} className="text-[#90c090]" />
+                                    <span className="text-sm font-medium">
+                                        Blogs
+                                    </span>
+                                </button>
+
+                            </div>
+                        )}
+                    </div>
 
                     {/* --- HELP & SUPPORT SECTION --- */}
                     <p className="text-[10px] font-bold text-gray-400 uppercase px-4 mt-6 mb-2 tracking-[2px]">

@@ -8,7 +8,7 @@ const slugify = require("slugify");
 // ======================================================
 exports.createBlog = async (req, res) => {
   try {
-    const { title, description, content, author } = req.body;
+    const { title, description, content, author,  status } = req.body;
 
     if (!title || !description || !content) {
       return res.status(400).json({
@@ -48,6 +48,7 @@ exports.createBlog = async (req, res) => {
       description,
       content,
       author: author || "Admin",
+      status: status || "active",
       image: uploadedImage.secure_url,
       imagePublicId: uploadedImage.public_id
     });
@@ -73,9 +74,7 @@ exports.createBlog = async (req, res) => {
 // ======================================================
 exports.getBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({
-      status: "active"
-    })
+    const blogs = await Blog.find({status: "active"})
       .select(
         "title slug description image author status createdAt"
       )
@@ -94,6 +93,54 @@ exports.getBlogs = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+// ======================================================
+// GET ALL BLOG ADMIN
+// ======================================================
+exports.getAllBlogsAdmin = async (req, res) => {
+  try {
+    const blogs = await Blog.find()
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: blogs.length,
+      blogs
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// ======================================================
+// GET SINGLE BLOG ADMIN
+// ======================================================
+exports.getSingleBlogAdmin = async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      blog,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };
@@ -184,9 +231,7 @@ exports.updateBlog = async (req, res) => {
       });
     }
 
-    const updatedBlog =
-      await Blog.findByIdAndUpdate(
-        id,
+    const updatedBlog =await Blog.findByIdAndUpdate(id,
         {
           ...req.body,
           slug,
