@@ -12,14 +12,14 @@ const uploadLimiter = require("../../middleware/uploadLimiter");
 
 // Public
 router.get("/", contentLimiter, blogController.getBlogs);
-router.get("/:id", contentLimiter, blogController.getSingleBlog);
+router.get("/slug/:slug", contentLimiter, blogController.getSingleBlog);
 
 
 // Admin
-router.get("/", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"), blogController.getBlogs);
-router.get("/:id", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"),blogController.getSingleBlog);
-router.post("/add", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.createBlog);
-router.put("/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.updateBlog);
-router.delete("/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), blogController.deleteBlog);
+router.get("/admin", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"), blogController.getBlogs);
+router.get("/admin/:id", adminLimiter, uploadLimiter, contentLimiter,auth, isAdmin("ADMIN"),blogController.getSingleBlog);
+router.post("/admin/add", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.createBlog);
+router.put("/admin/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), upload.single("image"), blogController.updateBlog);
+router.delete("/admin/:id", adminLimiter, uploadLimiter, auth, isAdmin("ADMIN"), blogController.deleteBlog);
 
 module.exports = router;
