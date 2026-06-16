@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
-
+//src/components/Blogs.js
 export default function Blogs() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,13 +77,10 @@ export default function Blogs() {
             >
               {/* Image Container with fixed Aspect Ratio like Amazon listings */}
               <div className="relative w-full aspect-video bg-gray-100 overflow-hidden border-b border-gray-100">
-                <Image
+                <img
                   src={blog.image}
                   alt={blog.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-102"
-                  priority={false}
+                  className="w-full h-full object-cover"
                 />
               </div>
 
@@ -98,7 +95,7 @@ export default function Blogs() {
                 <p className="text-xs md:text-sm text-gray-600 line-clamp-3 leading-relaxed mt-auto">
                   {blog.description}
                 </p>
-                
+
                 {/* Read More layout footer resembling retail item details */}
                 <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-blue-600 group-hover:underline">
                   <span>Read full story</span>
