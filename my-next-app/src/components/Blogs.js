@@ -54,8 +54,8 @@ export default function Blogs() {
     <section className="max-w-7xl mx-auto px-4 py-8 md:py-12 bg-gray-50 min-h-screen">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-gray-200">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-          Featured Stories & Updates
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight text-center">
+          Blogs
         </h2>
         <span className="text-sm text-gray-500 hidden sm:inline">
           Showing {blogs.length} articles
