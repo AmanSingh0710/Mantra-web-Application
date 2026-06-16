@@ -1,5 +1,5 @@
 const Blog = require("../../models/Blog");
-const {cloudinary, deleteCloudinaryFile} = require("../../utils/cloudinary");
+const { cloudinary, deleteCloudinaryFile } = require("../../utils/cloudinary");
 const slugify = require("slugify");
 
 
@@ -8,7 +8,7 @@ const slugify = require("slugify");
 // ======================================================
 exports.createBlog = async (req, res) => {
   try {
-    const { title, description, content, author,  status } = req.body;
+    const { title, description, content, author, status } = req.body;
 
     if (!title || !description || !content) {
       return res.status(400).json({
@@ -74,7 +74,7 @@ exports.createBlog = async (req, res) => {
 // ======================================================
 exports.getBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({status: "active"})
+    const blogs = await Blog.find({ status: "active" })
       .select(
         "title slug description image author status createdAt"
       )
@@ -150,10 +150,18 @@ exports.getSingleBlogAdmin = async (req, res) => {
 // ======================================================
 exports.getSingleBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne({
-      slug: req.params.slug,
-      status: "active"
-    });
+    const blog = await Blog.findOne(
+      {
+        slug: req.params.slug,
+        status: "active"
+      },
+      {
+        $inc: { views: 1 }
+      },
+      {
+        new: true
+      }
+    );
 
     if (!blog) {
       return res.status(404).json({
@@ -231,18 +239,18 @@ exports.updateBlog = async (req, res) => {
       });
     }
 
-    const updatedBlog =await Blog.findByIdAndUpdate(id,
-        {
-          ...req.body,
-          slug,
-          image,
-          imagePublicId
-        },
-        {
-          new: true,
-          runValidators: true
-        }
-      );
+    const updatedBlog = await Blog.findByIdAndUpdate(id,
+      {
+        ...req.body,
+        slug,
+        image,
+        imagePublicId
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
 
     return res.status(200).json({
       success: true,

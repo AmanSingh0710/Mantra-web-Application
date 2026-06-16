@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
-import { Component } from "lucide-react";
+import AdminAddBlog from "./AdminAddBlog";
 //src/components/admin/blog/AdminBlogList.js
 export default function AdminBlogList() {
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [editingBlog, setEditingBlog] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -102,8 +103,18 @@ export default function AdminBlogList() {
         blog.title?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    if (showAddForm) {
+        return (
+            <AdminAddBlog
+                onBack={() => setShowAddForm(false)}
+            />
+        );
+    }
+
     return (
+
         <div className="min-h-screen bg-gray-100 text-gray-900 font-sans antialiased">
+
             {/* Top Navbar Hub */}
             <header className="bg-slate-900 text-white px-4 py-3 shadow-md flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -111,12 +122,12 @@ export default function AdminBlogList() {
                     <span className="text-gray-300 text-sm hidden sm:inline">|</span>
                     <h1 className="text-sm md:text-base font-medium text-gray-200">Blog Content Dashboard</h1>
                 </div>
-                <Link
-                    href="/admin/blogs/add"
+                <button
+                    onClick={() => setShowAddForm(true)}
                     className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-1.5 rounded text-xs md:text-sm shadow transition-colors"
                 >
                     + Add New Article
-                </Link>
+                </button>
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-6 md:py-8">
@@ -285,7 +296,6 @@ export default function AdminBlogList() {
                                                 <div className="inline-flex space-x-3">
                                                     <Link
                                                         href={`/blogs/${blog.slug}`}
-                                                        target="_blank"
                                                         className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                                                     >
                                                         View

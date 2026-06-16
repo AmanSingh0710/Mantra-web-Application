@@ -5,7 +5,7 @@ import { useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
 import toast from "react-hot-toast";
 
-export default function AdminAddBlog() {
+export default function AdminAddBlog({ onBack }) {
 
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState("");
@@ -56,6 +56,9 @@ export default function AdminAddBlog() {
             );
 
             toast.success(data?.message || "Blog created successfully");
+            if (onBack) {
+                onBack();
+            }
 
             setFormData({
                 title: "",
@@ -85,12 +88,13 @@ export default function AdminAddBlog() {
                     <span className="text-gray-300 text-sm hidden sm:inline">|</span>
                     <h1 className="text-sm md:text-base font-medium text-gray-200">Catalog New Listing</h1>
                 </div>
-                <Link
-                    href="/admin/blog"
+                <button
+                    type="button"
+                    onClick={onBack}
                     className="text-xs md:text-sm text-gray-300 hover:text-white transition-colors"
                 >
                     ← Cancel & Go Back
-                </Link>
+                </button>
             </header>
 
             <main className="max-w-3xl mx-auto px-4 py-8">
@@ -141,7 +145,7 @@ export default function AdminAddBlog() {
                                     setImage(file);
                                     setPreview(URL.createObjectURL(file));
                                 }}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                             />
                             {preview && (
                                 <img

@@ -26,6 +26,11 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    
+    category: {
+      type: String,
+      default: "General"
+    },
 
     image: {
       type: String,
