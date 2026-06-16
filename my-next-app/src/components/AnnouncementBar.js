@@ -16,15 +16,10 @@ export default function AnnouncementBar() {
 
       try {
 
-        const res =
-          await fetchFromAPI(
-            "/announcement/active"
-          );
+        const res = await fetchFromAPI("/announcement/active");
 
         if (res?.success) {
-          setAnnouncement(
-            res.announcement
-          );
+          setAnnouncement(res.announcement);
         }
 
       } catch (err) {
@@ -39,27 +34,22 @@ export default function AnnouncementBar() {
   if (!announcement) return null;
 
   return (
-    <div
-      className="
-      w-full
-      text-center
-      py-2
-      text-sm
-      font-semibold
-      tracking-wide
-      overflow-hidden
-      whitespace-nowrap
-      "
-      style={{
-        backgroundColor:
-          announcement.backgroundColor,
-        color:
-          announcement.textColor,
-      }}
+  <div
+    className="w-full py-2 overflow-hidden"
+    style={{
+      backgroundColor: announcement.backgroundColor || "#131921",
+      color: announcement.textColor || "#fff",
+    }}
+  >
+    <marquee
+      behavior="scroll"
+      direction="left"
+      scrollAmount="5"
     >
-      <div className="animate-marquee">
-        {announcement.text}
-      </div>
-    </div>
-  );
+      <strong>{announcement.title}</strong>
+      {" • "}
+      {announcement.message}
+    </marquee>
+  </div>
+);
 }

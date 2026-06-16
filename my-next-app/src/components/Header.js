@@ -61,9 +61,7 @@ export default function Header() {
 
   return (
     <>
-      <div className="announcement-bar" role="alert">
         <AnnouncementBar />
-      </div>
 
       <header className="main-header">
         <div className="header-top">
