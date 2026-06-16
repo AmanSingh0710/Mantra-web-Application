@@ -150,7 +150,7 @@ exports.getSingleBlogAdmin = async (req, res) => {
 // ======================================================
 exports.getSingleBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne(
+    const blog = await Blog.findOneAndUpdate(
       {
         slug: req.params.slug,
         status: "active"
