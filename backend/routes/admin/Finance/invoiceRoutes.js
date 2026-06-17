@@ -2,7 +2,7 @@ const express = require("express");
 const auth = require("../../../middleware/auth");
 const isAdmin = require("../../../middleware/isAdmin");
 const authLimiter = require("../../../middleware/authLimiter");
-const invoiceController = require("../../../controllers/admin/Finance/invoiceController");
+const invoiceController = require("../../../controllers/admin/Finance/InvoiceController");
 
 const router = express.Router();
 
