@@ -1,4 +1,4 @@
-const VendorOrder = require("../../../models/VendorOrder");
+const VendorOrder = require("../../../models/Finance/VendorOrder");
 
 // VENDOR ORDER SUMMARY
 exports.getVendorOrderSummary = async (req, res) => {
