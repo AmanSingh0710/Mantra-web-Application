@@ -464,10 +464,6 @@ const orderSchema = new mongoose.Schema(
 );
 
 
-orderSchema.index({
-  orderNumber: 1
-});
-
 
 orderSchema.index({
   "payment.status": 1

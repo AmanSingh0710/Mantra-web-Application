@@ -9,6 +9,7 @@ const { sendMobileOTP } = require("../../utils/sendMobileOTP");
 const generateOTP = require("../../utils/generateOTP");
 const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
+const cloudinary = require("../../utils/cloudinary");
 
 /**
  * Helper to generate cookie options dynamically based on environment.
@@ -391,7 +392,8 @@ exports.updateAdmin = async (req, res) => {
     const updateData = { name, email, mobile };
 
     if (req.file) {
-      updateData.image = `/uploads/${req.file.filename}`;
+      updateData.image = req.file.path;
+      updateData.imagePublicId = req.file.filename;
     }
 
     if (
@@ -510,7 +512,7 @@ exports.updateLanguage = async (req, res) => {
 
     const { language } = req.body;
 
-    const allowedLanguages = ["en","hi","fr","es"];
+    const allowedLanguages = ["en", "hi", "fr", "es"];
 
     if (!allowedLanguages.includes(language)) {
       return res.status(400).json({
@@ -520,8 +522,8 @@ exports.updateLanguage = async (req, res) => {
     }
 
     const admin = await User.findByIdAndUpdate(req.user.id,
-      {language},
-      {new: true}
+      { language },
+      { new: true }
     );
 
     res.status(200).json({

@@ -1,21 +1,15 @@
 //routes/admin/authRoutes.js
 
 const express = require("express");
-const multer = require("multer");
 const isAdmin = require("../../middleware/isAdmin");
 const auth = require("../../middleware/auth");
 const authLimiter = require("../../middleware/authLimiter");
 const uploadLimiter = require("../../middleware/uploadLimiter");
 const authController = require("../../controllers/admin/authController");
-
+const upload = require("../../middleware/upload");
 const router = express.Router();
 
-// MULTER
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
-const upload = multer({ storage });
+
 
 // ================= AUTH =================
 router.post("/register", authLimiter, uploadLimiter, upload.single("image"), authController.register);
