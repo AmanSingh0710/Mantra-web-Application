@@ -1,4 +1,4 @@
-//models/Finance/Order.js
+//models/Order.js
 
 const mongoose = require("mongoose");
 
@@ -392,7 +392,11 @@ const orderSchema = new mongoose.Schema(
     // =====================================
     productRating: {
 
-      productId,
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vendor-Product",
+        default: null
+      },
 
       rating: {
         type: Number,
