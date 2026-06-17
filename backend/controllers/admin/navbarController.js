@@ -7,7 +7,7 @@ exports.getNavbarData = async (req, res) => {
     try {
 
         const admin = await User.findById(req.user.id)
-            .select("name email image imagePublicId role");
+            .select("name email image imagePublicId language role");
 
         if (!admin) {
             return res.status(404).json({
@@ -51,12 +51,6 @@ exports.getNavbarData = async (req, res) => {
                 $gte: new Date(Date.now() - 15 * 60 * 1000)
             }
         });
-
-        // language
-        const admin = await User.findById(req.user.id)
-            .select(
-                "name email image language role"
-            );
 
         res.status(200).json({
             success: true,
