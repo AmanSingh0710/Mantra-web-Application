@@ -7,6 +7,7 @@ const statusHistorySchema = new mongoose.Schema(
   {
     status: {
       type: String,
+      index: true,
       required: true,
     },
     note: {
@@ -462,18 +463,11 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-orderSchema.index({
-  userId: 1,
-  createdAt: -1
-});
 
 orderSchema.index({
   orderNumber: 1
 });
 
-orderSchema.index({
-  status: 1
-});
 
 orderSchema.index({
   "payment.status": 1
