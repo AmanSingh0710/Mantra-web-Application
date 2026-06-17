@@ -1,0 +1,15 @@
+{
+  "dashboard": "Tableau de bord",
+  "orders": "Commandes",
+  "products": "Produits",
+  "customers": "Clients",
+  "vendors": "Vendeurs",
+  "notifications": "Notifications",
+  "settings": "Paramètres",
+  "logout": "Déconnexion",
+  "search": "Rechercher...",
+  "todayVisitors": "Aujourd'hui",
+  "liveUsers": "Utilisateurs en ligne",
+  "pendingOrders": "Commandes en attente",
+  "masterAdmin": "Administrateur principal"
+}

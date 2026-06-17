@@ -1,0 +1,15 @@
+{
+  "dashboard": "Panel",
+  "orders": "Pedidos",
+  "products": "Productos",
+  "customers": "Clientes",
+  "vendors": "Vendedores",
+  "notifications": "Notificaciones",
+  "settings": "Configuración",
+  "logout": "Cerrar sesión",
+  "search": "Buscar...",
+  "todayVisitors": "Hoy",
+  "liveUsers": "Usuarios en línea",
+  "pendingOrders": "Pedidos pendientes",
+  "masterAdmin": "Administrador principal"
+}

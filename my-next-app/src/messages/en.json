@@ -1,0 +1,15 @@
+{
+  "dashboard": "Dashboard",
+  "orders": "Orders",
+  "products": "Products",
+  "customers": "Customers",
+  "vendors": "Vendors",
+  "notifications": "Notifications",
+  "settings": "Settings",
+  "logout": "Logout",
+  "search": "Search anything...",
+  "todayVisitors": "Today",
+  "liveUsers": "Live Users",
+  "pendingOrders": "Pending Orders",
+  "masterAdmin": "Master Admin"
+}

@@ -103,8 +103,6 @@ exports.register = async (req, res) => {
   }
 };
 
-
-
 // LOGIN
 exports.login = async (req, res) => {
   try {
@@ -209,8 +207,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
-
 // Get All Users
 exports.getAllUsers = async (req, res) => {
   try {
@@ -249,8 +245,6 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-
-
 // UPDATE USER PROFILE
 exports.updateUser = async (req, res) => {
   try {
@@ -282,7 +276,6 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-
 // DELETE USER
 exports.deleteUser = async (req, res) => {
   try {
@@ -299,7 +292,6 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 // GET SINGLE PROFILE
 exports.getProfile = async (req, res) => {
@@ -318,7 +310,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-
 // Get Current Admin Info
 exports.getAdminProfile = async (req, res) => {
   try {
@@ -331,7 +322,6 @@ exports.getAdminProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 //admin update password
 exports.updatePassword = async (req, res) => {
@@ -386,7 +376,6 @@ exports.updatePassword = async (req, res) => {
     });
   }
 };
-
 
 exports.updateAdmin = async (req, res) => {
   try {
@@ -448,7 +437,6 @@ exports.updateAdmin = async (req, res) => {
   }
 };
 
-
 // REFRESH TOKEN (Modified to read and set tokens via cookies instead of body payloads)
 exports.refreshToken = async (req, res) => {
   try {
@@ -490,7 +478,6 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-
 // LOGOUT (sweep and clear client engine cookies)
 exports.logout = async (req, res) => {
   try {
@@ -514,5 +501,41 @@ exports.logout = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// update launguage
+exports.updateLanguage = async (req, res) => {
+  try {
+
+    const { language } = req.body;
+
+    const allowedLanguages = ["en","hi","fr","es"];
+
+    if (!allowedLanguages.includes(language)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid language"
+      });
+    }
+
+    const admin = await User.findByIdAndUpdate(req.user.id,
+      {language},
+      {new: true}
+    );
+
+    res.status(200).json({
+      success: true,
+      language: admin.language,
+      message: "Language updated successfully"
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
   }
 };

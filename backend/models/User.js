@@ -64,7 +64,16 @@ const userSchema = new mongoose.Schema(
 
     image: {
       type: String,
-      default: ""
+    },
+
+    imagePublicId: {
+      type: String,
+    },
+
+    language: {
+      type: String,
+      enum: ["en", "hi", "fr", "es"],
+      default: "en"
     },
 
     wishlist: [

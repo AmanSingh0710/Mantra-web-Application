@@ -201,7 +201,7 @@ export default function AdminLayout({ children }) {
 
       {/* Top Navbar fix rahega */}
       <Navbar
-        data={null}
+        
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         setActiveTab={setActiveTab}
       />

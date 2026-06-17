@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+//models/Notification/SendNotification.js
 const notificationSchema = new mongoose.Schema(
   {
     title: {

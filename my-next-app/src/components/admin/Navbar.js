@@ -2,15 +2,12 @@
 
 import { fetchFromAPI } from "@/utils/api";
 import { useState, useRef, useEffect } from "react";
-import useVisitor from "@/utils/useVisitor";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
+
 import "react-phone-input-2/lib/style.css";
-import {
-  FaBell, FaShoppingCart, FaGlobe, FaSearch, FaBars,
-  FaCog, FaSignOutAlt, FaChevronDown, FaCheck, FaUser, FaLock, FaCamera, FaEye, FaEyeSlash, FaSpinner
-} from "react-icons/fa";
+import { FaBell, FaShoppingCart, FaGlobe, FaSearch, FaBars, FaCog, FaSignOutAlt, FaChevronDown, FaCheck } from "react-icons/fa";
 
 
 
@@ -19,16 +16,21 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
-  const { onlineUsers, stats } = useVisitor();
+  const [navbarData, setNavbarData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const profileRef = useRef(null);
   const langRef = useRef(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
 
-  const languageFlags = {
-    English: "/en.png",
-    Hindi: "/hi.png",
-    Spanish: "/es.png",
-    French: "/fr.png",
-  };
+  const languages = [{ code: "en", name: "English", flag: "/flags/en.png" },
+  { code: "hi", name: "हिन्दी", flag: "/flags/in.png" },
+  { code: "fr", name: "Français", flag: "/flags/fr.png" },
+  { code: "es", name: "Español", flag: "/flags/es.png" }
+  ];
+
+  const currentLanguage = languages.find(item => item.code === selectedLanguage) || languages[0];
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,6 +40,88 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    loadNavbar();
+  }, []);
+
+  const loadNavbar = async () => {
+    try {
+      const res = await fetchFromAPI("/admin/navbar");
+
+      if (res.success) {
+        setNavbarData(res);
+      }
+
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //Auto Refresh screen after 30 second
+  useEffect(() => {
+    loadNavbar();
+    const interval = setInterval(() => {
+      loadNavbar();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+
+  // language
+  useEffect(() => {
+    if (navbarData?.language) {
+      setSelectedLanguage(
+        navbarData.language
+      );
+    }
+  }, [navbarData]);
+
+  const changeLanguage = async (lang) => {
+  try {
+
+    const res = await fetchFromAPI(
+      "/admin/language",
+      {
+        method:"PATCH",
+        body:JSON.stringify({
+          language:lang.code
+        })
+      }
+    );
+
+    if(res.success){
+
+      setSelectedLanguage(lang.code);
+
+      setNavbarData(prev=>({
+        ...prev,
+        admin:{
+          ...prev.admin,
+          language:lang.code
+        }
+      }));
+
+    }
+
+  } catch(error){
+    console.log(error);
+  }
+};
+
+const handleSearch = (e) => {
+
+  if(e.key==="Enter"){
+
+    setActiveTab(
+      `search:${search}`
+    );
+
+  }
+};
+
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -51,8 +135,12 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
     });
 
     if (result.isConfirmed) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      await fetchFromAPI("/auth/logout",
+        {
+          method: "POST"
+        }
+      );
+
       router.push("/login");
     }
   };
@@ -69,7 +157,7 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
 
       <div className="hidden md:flex flex-1 max-w-md mx-4">
         <div className="relative w-full">
-          <input type="text" placeholder="Search anything..." className="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg pl-10 pr-4 py-2 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={handleSearch} type="text" placeholder="Search anything..." className="w-full bg-gray-50 border border-gray-300 text-sm rounded-lg pl-10 pr-4 py-2 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
           <FaSearch className="absolute left-3 top-2.5 text-gray-400" size={14} />
         </div>
       </div>
@@ -78,17 +166,53 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
         {/* Language Selector */}
         <div className="relative" ref={langRef}>
           <button onClick={() => setIsLangOpen(!isLangOpen)} className="flex items-center gap-1 p-1.5 sm:p-2 hover:bg-gray-100 rounded-md transition border border-transparent">
-            <Image src={languageFlags[data?.language] || "/en.png"} alt="Lang" width={18} height={12} className="rounded-sm" />
-            <span className="hidden sm:block text-xs font-medium text-gray-700">{data?.language || "English"}</span>
+            <Image
+              src={currentLanguage.flag}
+              alt={currentLanguage.name}
+              width={18}
+              height={12}
+              className="rounded-sm"
+            />
+            <span className="hidden sm:block text-xs font-medium text-gray-700">
+              {currentLanguage.name}
+            </span>
             <FaChevronDown size={8} className="text-gray-400" />
           </button>
           {isLangOpen && (
             <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-100 rounded-lg shadow-xl py-1 z-50">
-              {Object.keys(languageFlags).map((lang) => (
-                <button key={lang} onClick={() => setIsLangOpen(false)} className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-amber-50 transition">
-                  <div className="flex items-center gap-2"><Image src={languageFlags[lang]} alt={lang} width={16} height={10} /> {lang}</div>
-                  {(data?.language || "English") === lang && <FaCheck size={8} className="text-amber-600" />}
+              {languages.map((lang) => (
+
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    changeLanguage(lang);
+                    setIsLangOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-700 hover:bg-amber-50 transition"
+                >
+
+                  <div className="flex items-center gap-2">
+
+                    <Image
+                      src={lang.flag}
+                      alt={lang.name}
+                      width={16}
+                      height={10}
+                    />
+
+                    {lang.name}
+
+                  </div>
+
+                  {selectedLanguage === lang.code && (
+                    <FaCheck
+                      size={8}
+                      className="text-amber-600"
+                    />
+                  )}
+
                 </button>
+
               ))}
             </div>
           )}
@@ -99,7 +223,7 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
           {/* 🔴 Live Users */}
           <div className="flex items-center gap-1 text-green-600 font-semibold text-xs">
             <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-            Live: {onlineUsers}
+            Live: {navbarData?.onlineUsers}
           </div>
 
           {/* Divider */}
@@ -107,7 +231,7 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
 
           {/* 📊 Today Visitors */}
           <div className="text-gray-700 text-xs font-medium">
-            Today: {stats.todayVisitors}
+            Today: {navbarData?.stats?.todayVisitors}
           </div>
 
         </div>
@@ -116,12 +240,12 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
 
         <button onClick={() => setActiveTab("notifications")} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative transition">
           <FaBell size={18} />
-          {data?.notifications > 0 && <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[8px] px-1 rounded-full border border-white">{data.notifications}</span>}
+          {navbarData?.notifications > 0 && <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[8px] px-1 rounded-full border border-white">{navbarData?.notifications}</span>}
         </button>
 
         <button onClick={() => setActiveTab("orders_pending")} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative transition">
           <FaShoppingCart size={18} />
-          {data?.pendingOrders > 0 && <span className="absolute top-1 right-1 bg-amber-600 text-white text-[8px] px-1 rounded-full border border-white">{data.pendingOrders}</span>}
+          {navbarData?.pendingOrders > 0 && <span className="absolute top-1 right-1 bg-amber-600 text-white text-[8px] px-1 rounded-full border border-white">{navbarData?.pendingOrders}</span>}
         </button>
 
         <div className="h-6 w-[1px] bg-gray-200 mx-1 hidden xs:block"></div>
@@ -130,11 +254,15 @@ export default function AdminNavbar({ data, toggleSidebar, activeTab, setActiveT
         <div className="relative" ref={profileRef}>
           <div onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 md:gap-3 pl-1 cursor-pointer group">
             <div className="text-right hidden lg:block leading-none">
-              <p className="text-sm font-bold text-gray-800 group-hover:text-amber-600 transition">{data?.admin?.name || "Lebrostone"}</p>
+              <p className="text-sm font-bold text-gray-800 group-hover:text-amber-600 transition">{navbarData?.admin?.name || "Not Found"}</p>
               <span className="text-[10px] text-gray-500 uppercase tracking-widest">Master Admin</span>
             </div>
             <div className="relative h-9 w-9 border-2 border-amber-100 rounded-full overflow-hidden shadow-sm group-hover:border-amber-400 transition">
-              <Image src={data?.admin?.avatar || "/Lebrostone logo.png"} alt="Admin" fill className="object-cover" />
+              <img
+                src={navbarData?.admin?.image || "Image not found"}
+                alt={navbarData?.admin?.name || "Admin"}
+                className="h-full w-full object-cover"
+              />
             </div>
           </div>
 
