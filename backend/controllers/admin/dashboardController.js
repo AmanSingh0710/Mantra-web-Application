@@ -1,9 +1,14 @@
-const mongoose = require("mongoose");
+//controllers/admin/dashboardController.js
 const Order = require("../../models/Order");
 const User = require("../../models/User");
 const Store = require("../../models/Store");
 const Product = require("../../models/VendorProduct");
 const DeliveryMan = require("../../models/Deliveryman/DeliveryMan");
+const Commission = require("../../models/Finance/Commission");
+const Wallet = require("../../models/Finance/Wallet");
+const Settlement = require("../../models/Finance/Settlement");
+const Refund = require("../../models/Finance/Refund");
+const WalletTransaction = require("../../models/Finance/WalletTransaction");
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -86,7 +91,7 @@ exports.getDashboard = async (req, res) => {
       delivered: 0,
       returned: 0,
       failed: 0,
-      canceled: 0,
+      cancelled: 0,
     };
 
     orderStatusAgg.forEach((item) => {
@@ -103,7 +108,7 @@ exports.getDashboard = async (req, res) => {
       else if (status === "delivered")
         orderStatus.delivered += item.count;
       else if (["cancelled", "canceled"].includes(status))
-        orderStatus.canceled += item.count;
+        orderStatus.cancelled += item.count;
       else if (status === "returned")
         orderStatus.returned += item.count;
       else if (status === "failed")
@@ -112,30 +117,109 @@ exports.getDashboard = async (req, res) => {
 
 
     /* =========================
-       3️⃣ WALLET
-    ========================== */
-    const earningsAgg = await Order.aggregate([
-      { $match: dateFilter },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$totalAmount" },
-          totalCommission: { $sum: "$adminCommission" },
-          totalDeliveryCharge: { $sum: "$deliveryCharge" },
-          totalTax: { $sum: "$tax" },
+      3️⃣ FINANCE
+========================== */
+
+
+    const [
+      commissionAgg,
+      refundAgg,
+      settlementAgg,
+      walletAgg
+    ] = await Promise.all([
+
+
+      Commission.aggregate([
+        {
+          $group: {
+            _id: null,
+            amount: {
+              $sum: "$commissionAmount"
+            }
+          }
+        }
+      ]),
+
+
+
+      Refund.aggregate([
+        {
+          $match: {
+            ...dateFilter,
+            status: "Processed"
+          }
         },
-      },
+        {
+          $group: {
+            _id: null,
+            amount: {
+              $sum: "$amount"
+            }
+          }
+        }
+      ]),
+
+
+
+      Settlement.aggregate([
+        {
+          $match: {
+            ...dateFilter,
+            status: "Released"
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            amount: {
+              $sum: "$netAmount"
+            }
+          }
+        }
+      ]),
+
+
+
+      WalletTransaction.aggregate([
+        {
+          $match: {
+            ...dateFilter,
+            type: "CREDIT",
+            source:"SETTLEMENT"
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            amount: {
+              $sum: "$amount"
+            }
+          }
+        }
+      ])
+
     ]);
 
-    const walletData = earningsAgg[0] || {
-      totalRevenue: 0,
-      totalCommission: 0,
-      totalDeliveryCharge: 0,
-      totalTax: 0,
+
+    const finance = {
+
+      commission:
+        commissionAgg[0]?.amount || 0,
+
+
+      refund:
+        refundAgg[0]?.amount || 0,
+
+
+      settlement:
+        settlementAgg[0]?.amount || 0,
+
+
+      wallet:
+        walletAgg[0]?.amount || 0
+
     };
 
-    const netInhouse =
-      walletData.totalRevenue - walletData.totalCommission;
 
     /* =========================
        4️⃣ TOP CUSTOMERS
@@ -146,7 +230,7 @@ exports.getDashboard = async (req, res) => {
         $group: {
           _id: "$userId",
           orderCount: { $sum: 1 },
-          totalSpent: { $sum: "$totalAmount" }
+          totalSpent: { $sum: "$pricing.grandTotal" }
         }
       },
       { $sort: { totalSpent: -1 } },
@@ -190,7 +274,7 @@ exports.getDashboard = async (req, res) => {
       { $limit: 5 },
       {
         $lookup: {
-          from: "deliverymen",
+          from: "DeliveryMan",
           localField: "_id",
           foreignField: "_id",
           as: "m"
@@ -209,7 +293,7 @@ exports.getDashboard = async (req, res) => {
 
     /* =========================
    6️⃣ ORDER CHART
-========================= */
+  ========================= */
     const orderStats = await Order.aggregate([
       { $match: dateFilter },
       {
@@ -229,27 +313,70 @@ exports.getDashboard = async (req, res) => {
     });
 
     /* =========================
-   7️⃣ EARNING CHART
-========================= */
-    const earningStats = await Order.aggregate([
-      { $match: dateFilter },
+      7️⃣ EARNING CHART
+   ========================= */
+
+
+    const earningStats =
+      await Order.aggregate([
+
+        {
+          $match: dateFilter
+        },
+
+        {
+          $group: {
+            _id: {
+              $month: "$createdAt"
+            },
+
+            revenue: {
+              $sum: "$pricing.grandTotal"
+            }
+          }
+        },
+
+        {
+          $sort: {
+            "_id": 1
+          }
+        }
+
+      ]);
+
+
+
+    const commissionStats = await Commission.aggregate([
       {
         $group: {
-          _id: { $month: "$createdAt" },
-          revenue: { $sum: "$totalAmount" },
-          commission: { $sum: "$adminCommission" }
+          _id: {
+            $month: "$createdAt"
+          },
+          commission: {
+            $sum: "$commissionAmount"
+          }
         }
-      },
-      { $sort: { "_id": 1 } }
-    ]);
+      }
+    ])
 
     const earningLabels = labels;
     const inhouseEarningData = new Array(12).fill(0);
     const commissionData = new Array(12).fill(0);
 
     earningStats.forEach(item => {
-      inhouseEarningData[item._id - 1] = item.revenue - item.commission;
-      commissionData[item._id - 1] = item.commission;
+
+      inhouseEarningData[item._id - 1] =
+        item.revenue -
+        (commissionData[item._id - 1] || 0);
+
+    });
+
+
+    commissionStats.forEach(item => {
+
+      commissionData[item._id - 1] =
+        item.commission;
+
     });
 
     /* =========================
@@ -279,12 +406,7 @@ exports.getDashboard = async (req, res) => {
       vendorEarningData: [],
       commissionData,
 
-      wallet: {
-        inHouseEarning: netInhouse,
-        commissionEarned: walletData.totalCommission,
-        deliveryCharge: walletData.totalDeliveryCharge,
-        taxCollected: walletData.totalTax,
-      },
+      finance,
 
       topCustomers,
       topDeliveryMen

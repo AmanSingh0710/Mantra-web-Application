@@ -9,11 +9,11 @@ const storeSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  
+
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  mobile: { type: String, required: true,trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true,trim: true },
+  mobile: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   shopName: { type: String, required: true },
   shopAddress: { type: String, required: true },
@@ -21,128 +21,149 @@ const storeSchema = new mongoose.Schema({
   shopLogo: { type: String },    // Stores file path
   shopBanner: { type: String },  // Stores file path
   // ================= GST =================
-gstNumber: {
-  type: String,
-  default: "",
-},
+  gstNumber: {
+    type: String,
+    default: "",
+  },
 
-panNumber: {
-  type: String,
-  default: "",
-},
+  panNumber: {
+    type: String,
+    default: "",
+  },
 
-// ================= BANK =================
-bankName: {
-  type: String,
-  default: "",
-},
+  // ================= BANK =================
+  bankName: {
+    type: String,
+    default: "",
+  },
 
-accountHolderName: {
-  type: String,
-  default: "",
-},
+  accountHolderName: {
+    type: String,
+    default: "",
+  },
 
-accountNumber: {
-  type: String,
-  default: "",
-},
+  accountNumber: {
+    type: String,
+    default: "",
+  },
 
-ifscCode: {
-  type: String,
-  default: "",
-},
+  ifscCode: {
+    type: String,
+    default: "",
+  },
 
-// ================= SHIPPING =================
-shippingCharge: {
-  type: Number,
-  default: 0,
-},
+  // ================= SHIPPING =================
+  shippingCharge: {
+    type: Number,
+    default: 0,
+  },
 
-freeShippingLimit: {
-  type: Number,
-  default: 0,
-},
+  freeShippingLimit: {
+    type: Number,
+    default: 0,
+  },
 
-// ================= ADDRESS =================
-address: {
-  type: String,
-  default: "",
-},
+  // ================= ADDRESS =================
+  address: {
+    type: String,
+    default: "",
+  },
 
-city: {
-  type: String,
-  default: "",
-},
+  city: {
+    type: String,
+    default: "",
+  },
 
-state: {
-  type: String,
-  default: "",
-},
+  state: {
+    type: String,
+    default: "",
+  },
 
-pincode: {
-  type: String,
-  default: "",
-},
+  pincode: {
+    type: String,
+    default: "",
+  },
 
-// ================= SOCIAL LINKS =================
-facebook: {
-  type: String,
-  default: "",
-},
+  // ================= SOCIAL LINKS =================
+  facebook: {
+    type: String,
+    default: "",
+  },
 
-instagram: {
-  type: String,
-  default: "",
-},
+  instagram: {
+    type: String,
+    default: "",
+  },
 
-twitter: {
-  type: String,
-  default: "",
-},
+  twitter: {
+    type: String,
+    default: "",
+  },
 
-youtube: {
-  type: String,
-  default: "",
-},
+  youtube: {
+    type: String,
+    default: "",
+  },
 
-// ================= PAYMENT =================
-codEnabled: {
-  type: Boolean,
-  default: true,
-},
+  // ================= PAYMENT =================
+  codEnabled: {
+    type: Boolean,
+    default: true,
+  },
 
-upiId: {
-  type: String,
-  default: "",
-},
+  upiId: {
+    type: String,
+    default: "",
+  },
 
-// ================= STORE TIMING =================
-openTime: {
-  type: String,
-  default: "",
-},
+  // ================= STORE TIMING =================
+  openTime: {
+    type: String,
+    default: "",
+  },
 
-closeTime: {
-  type: String,
-  default: "",
-},
+  closeTime: {
+    type: String,
+    default: "",
+  },
 
-// ================= THEME =================
-primaryColor: {
-  type: String,
-  default: "#000000",
-},
+  // ================= THEME =================
+  primaryColor: {
+    type: String,
+    default: "#000000",
+  },
 
-secondaryColor: {
-  type: String,
-  default: "#ffffff",
-},
+  secondaryColor: {
+    type: String,
+    default: "#ffffff",
+  },
 
-// ================= STORE DESCRIPTION =================
-description: {
-  type: String,
-  default: "",
-},
+  // ================= WALLET =================
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
+
+  totalEarnings: {
+    type: Number,
+    default: 0
+  },
+
+  pendingEarnings: {
+    type: Number,
+    default: 0
+  },
+
+  totalWithdrawn: {
+    type: Number,
+    default: 0
+  },
+
+  // ================= STORE DESCRIPTION =================
+  description: {
+    type: String,
+    default: "",
+  },
   status: { type: String, default: "Active", enum: ["Active", "Inactive"] }
 }, { timestamps: true });
 

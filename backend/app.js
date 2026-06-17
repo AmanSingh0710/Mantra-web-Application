@@ -95,7 +95,16 @@ app.use("/support", require("./routes/admin/Help&Support/supportRoutes"));
 app.use("/hero", require("./routes/admin/heroRoutes"));
 app.use("/subscribers", require("./routes/admin/subscriberRoutes"));
 app.use("/stories", require("./routes/admin/storyRoutes"));
-app.use("/announcement" , require("./routes/admin/AnnouncementRoutes"));
+app.use("/announcement", require("./routes/admin/AnnouncementRoutes"));
+app.use("/analytics", require("./routes/admin/Finance/analyticsRoutes"));
+app.use("/commission", require("./routes/admin/Finance/commissionRoutes"));
+app.use("/payout", require("./routes/admin/Finance/payoutRoutes"));
+app.use("/refund" , require("./routes/admin/Finance/refundRoutes"));
+app.use("/settlement" , require("./routes/admin/Finance/settlementRoutes"));
+app.use("/vendor-order", require("./routes/admin/Finance/vendorOrderRoutes"));
+app.use("/wallet", require("./routes/admin/Finance/walletRoutes"));
+app.use("/wallet-Transaction", require("./routes/admin/Finance/walletTransactionRoutes"));
+app.use("/invoice", require("./routes/admin/Finance/invoiceRoutes"));
 
 /* ==========================================
    4. GLOBAL FALLBACK ERROR CATCHERS

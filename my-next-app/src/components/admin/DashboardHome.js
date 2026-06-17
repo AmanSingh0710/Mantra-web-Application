@@ -158,7 +158,7 @@ export default function DashboardHome({ setActiveTab }) {
       {/* Header Section */}
       <div className="mb-6 flex justify-between items-end">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-[#334257]">Welcome MS Flower Family</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-[#334257]">Welcome Mantra Family</h1>
           <p className="text-sm text-gray-500 font-medium">Monitor your business analytics and statistics.</p>
         </div>
       </div>
@@ -600,7 +600,7 @@ export default function DashboardHome({ setActiveTab }) {
 
           {/* Copyright Section: Centered on mobile, Left-aligned on desktop */}
           <div className="text-gray-500 text-[10px] md:text-sm font-medium text-center sm:text-left order-2 sm:order-1">
-            MS Flower Family. CopyRight MS Flower Family @2025
+            @ CopyRight Mantra   2025
           </div>
 
           {/* Navigation Links: Centered on mobile, Right-aligned on desktop */}
