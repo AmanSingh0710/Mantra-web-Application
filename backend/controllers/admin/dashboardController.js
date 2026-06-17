@@ -12,7 +12,6 @@ const WalletTransaction = require("../../models/Finance/WalletTransaction");
 
 exports.getDashboard = async (req, res) => {
   try {
-
     // 🔐 EXTRA SECURITY
     if (req.user.role !== "ADMIN") {
       return res.status(403).json({ message: "Access denied" });
@@ -21,7 +20,7 @@ exports.getDashboard = async (req, res) => {
     const { period = "monthly", from, to } = req.query;
 
     /* =========================
-       🔹 DATE FILTER
+        🔹 DATE FILTER
     ========================== */
     let dateFilter = {};
 
@@ -51,7 +50,7 @@ exports.getDashboard = async (req, res) => {
     }
 
     /* =========================
-       1️⃣ TOTAL COUNTS
+        1️⃣ TOTAL COUNTS
     ========================== */
     const [
       totalOrders,
@@ -70,7 +69,7 @@ exports.getDashboard = async (req, res) => {
     ]);
 
     /* =========================
-       2️⃣ ORDER STATUS
+        2️⃣ ORDER STATUS
     ========================== */
     const orderStatusAgg = await Order.aggregate([
       { $match: dateFilter },
@@ -115,33 +114,23 @@ exports.getDashboard = async (req, res) => {
         orderStatus.failed += item.count;
     });
 
-
     /* =========================
-      3️⃣ FINANCE
-========================== */
-
-
+       3️⃣ FINANCE
+    ========================== */
     const [
       commissionAgg,
       refundAgg,
       settlementAgg,
       walletAgg
     ] = await Promise.all([
-
-
       Commission.aggregate([
         {
           $group: {
             _id: null,
-            amount: {
-              $sum: "$commissionAmount"
-            }
+            amount: { $sum: "$commissionAmount" }
           }
         }
       ]),
-
-
-
       Refund.aggregate([
         {
           $match: {
@@ -152,15 +141,10 @@ exports.getDashboard = async (req, res) => {
         {
           $group: {
             _id: null,
-            amount: {
-              $sum: "$amount"
-            }
+            amount: { $sum: "$amount" }
           }
         }
       ]),
-
-
-
       Settlement.aggregate([
         {
           $match: {
@@ -171,58 +155,36 @@ exports.getDashboard = async (req, res) => {
         {
           $group: {
             _id: null,
-            amount: {
-              $sum: "$netAmount"
-            }
+            amount: { $sum: "$netAmount" }
           }
         }
       ]),
-
-
-
       WalletTransaction.aggregate([
         {
           $match: {
             ...dateFilter,
             type: "CREDIT",
-            source:"SETTLEMENT"
+            source: "SETTLEMENT"
           }
         },
         {
           $group: {
             _id: null,
-            amount: {
-              $sum: "$amount"
-            }
+            amount: { $sum: "$amount" }
           }
         }
       ])
-
     ]);
 
-
     const finance = {
-
-      commission:
-        commissionAgg[0]?.amount || 0,
-
-
-      refund:
-        refundAgg[0]?.amount || 0,
-
-
-      settlement:
-        settlementAgg[0]?.amount || 0,
-
-
-      wallet:
-        walletAgg[0]?.amount || 0
-
+      commission: commissionAgg[0]?.amount || 0,
+      refund: refundAgg[0]?.amount || 0,
+      settlement: settlementAgg[0]?.amount || 0,
+      wallet: walletAgg[0]?.amount || 0
     };
 
-
     /* =========================
-       4️⃣ TOP CUSTOMERS
+        4️⃣ TOP CUSTOMERS
     ========================== */
     const topCustomers = await Order.aggregate([
       { $match: dateFilter },
@@ -254,7 +216,7 @@ exports.getDashboard = async (req, res) => {
     ]);
 
     /* =========================
-       5️⃣ TOP DELIVERY MEN
+        5️⃣ TOP DELIVERY MEN
     ========================== */
     const topDeliveryMen = await Order.aggregate([
       {
@@ -290,10 +252,9 @@ exports.getDashboard = async (req, res) => {
       }
     ]);
 
-
     /* =========================
-   6️⃣ ORDER CHART
-  ========================= */
+       6️⃣ ORDER CHART
+    ========================= */
     const orderStats = await Order.aggregate([
       { $match: dateFilter },
       {
@@ -313,105 +274,65 @@ exports.getDashboard = async (req, res) => {
     });
 
     /* =========================
-      7️⃣ EARNING CHART
-   ========================= */
-
-
-    const earningStats =
-      await Order.aggregate([
-
-        {
-          $match: dateFilter
-        },
-
-        {
-          $group: {
-            _id: {
-              $month: "$createdAt"
-            },
-
-            revenue: {
-              $sum: "$pricing.grandTotal"
-            }
-          }
-        },
-
-        {
-          $sort: {
-            "_id": 1
-          }
+       7️⃣ EARNING CHART
+    ========================= */
+    const earningStats = await Order.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          revenue: { $sum: "$pricing.grandTotal" }
         }
-
-      ]);
-
-
+      },
+      { $sort: { "_id": 1 } }
+    ]);
 
     const commissionStats = await Commission.aggregate([
       {
         $group: {
-          _id: {
-            $month: "$createdAt"
-          },
-          commission: {
-            $sum: "$commissionAmount"
-          }
+          _id: { $month: "$createdAt" },
+          commission: { $sum: "$commissionAmount" }
         }
       }
-    ])
+    ]);
 
     const earningLabels = labels;
     const inhouseEarningData = new Array(12).fill(0);
     const commissionData = new Array(12).fill(0);
 
     earningStats.forEach(item => {
-
-      inhouseEarningData[item._id - 1] =
-        item.revenue -
-        (commissionData[item._id - 1] || 0);
-
+      inhouseEarningData[item._id - 1] = item.revenue - (commissionData[item._id - 1] || 0);
     });
 
-
     commissionStats.forEach(item => {
-
-      commissionData[item._id - 1] =
-        item.commission;
-
+      commissionData[item._id - 1] = item.commission;
     });
 
     /* =========================
-       🚀 RESPONSE
+        🚀 RESPONSE
     ========================== */
     res.status(200).json({
       totalStores,
       totalProducts,
       totalCustomers,
       totalOrders,
-
-
       vendors: totalVendors,
       delivery: totalDeliveryMan,
       customers: totalCustomers,
-
       orderStatus,
-
       // ✅ ORDER CHART
       labels,
       inhouseData,
       vendorData: [],
-
       // ✅ EARNING CHART
       earningLabels,
       inhouseEarningData,
       vendorEarningData: [],
       commissionData,
-
       finance,
-
       topCustomers,
       topDeliveryMen
-    });
-
+  });
   } catch (error) {
     console.error("Dashboard Error:", error);
     res.status(500).json({ message: "Dashboard error" });
