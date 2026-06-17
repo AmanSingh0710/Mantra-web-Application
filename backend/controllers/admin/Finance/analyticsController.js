@@ -1,12 +1,12 @@
 // controllers/admin/Finance/analyticsController.js
 
 const Order = require("../../../models/Order");
-const User = require("../../../models/User/User");
-const Vendor = require("../../../models/Vendor/Store");
-const Product = require("../../../models/Product/Product");
+const User = require("../../../models/User");
+const Vendor = require("../../../models/Store");
+const Product = require("../../../models/VendorProduct");
 const Commission = require("../../../models/Finance/Commission");
 const VendorOrder = require("../../../models/Finance/VendorOrder");
-const Store = require("../../../models/Vendor/Store");
+const Store = require("../../../models/Store");
 
 
 // ====================================================
