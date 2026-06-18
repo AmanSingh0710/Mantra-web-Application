@@ -18,6 +18,10 @@ router.get("/admin/list", auth, isAdmin("ADMIN"), manualCtrl.getAllNotifications
 // Send to specific user
 router.post("/send-to-user", auth, isAdmin("ADMIN"), manualCtrl.sendToUser);
 
+router.post("/resend/:id",auth,isAdmin("ADMIN"),manualCtrl.resendNotification);
+
+router.delete( "/:id", auth, isAdmin("ADMIN"), manualCtrl.deleteNotification);
+
 
 // ================= USER =================
 

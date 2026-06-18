@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 export default function NotificationPage() {
     const [filteredNotifications, setFilteredNotifications] = useState([]);
     const [notifications, setNotifications] = useState([]);
+    const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [imagePreview, setImagePreview] = useState(null);
     const [formData, setFormData] = useState({
@@ -18,37 +19,31 @@ export default function NotificationPage() {
     });
 
     // 1. Fetch Notifications from Backend
+    const fetchNotifications = async () => {
+        try {
+            setLoading(true);
+
+            const res = await fetch(`${BASE_URL}/notifications/admin/list`,
+                { credentials: "include" }
+            );
+
+            const data = await res.json();
+
+            const list = Array.isArray(data?.data)
+                ? data.data
+                : [];
+
+            setNotifications(list);
+            setFilteredNotifications(list);
+
+        } catch (err) {
+            toast.error("Failed to load notifications");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        // ✅ Fetch Notifications
-        const fetchNotifications = async () => {
-            try {
-                setLoading(true);
-
-                const res = await fetch(`${BASE_URL}/notifications/admin/list`, {
-                    credentials: "include"
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message);
-
-                const list =
-                    Array.isArray(data)
-                        ? data
-                        : Array.isArray(data.data)
-                            ? data.data
-                            : Array.isArray(data.notifications)
-                                ? data.notifications
-                                : [];
-
-                setNotifications(list);
-                setFilteredNotifications(list);
-            } catch (err) {
-                toast.error("Failed to load notifications");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchNotifications();
     }, []);
 
@@ -88,22 +83,39 @@ export default function NotificationPage() {
         }
     };
 
+    const handleSearch = () => {
+        const filtered = notifications.filter(item =>
+            item.title
+                ?.toLowerCase()
+                .includes(search.toLowerCase())
+        );
+
+        setFilteredNotifications(filtered);
+    };
+
     const handleDelete = async (id) => {
-        if (!confirm("Delete this notification?")) return;
-
         try {
-            const res = await fetch(`${BASE_URL}/notifications/${id}`, {
-                method: "DELETE",
-                credentials: "include"
-            });
 
-            if (res.ok) {
-                setNotifications(prev => prev.filter(n => n._id !== id));
-                toast.success("Deleted");
-            }
+            if (!window.confirm("Are you sure you want to delete this notification?")) return;
+            const res = await fetch(`${BASE_URL}/notifications/${id}`,
+                {
+                    method: "DELETE",
+                    credentials: "include"
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error();
+
+
+            toast.success(data.message);
+            await fetchNotifications();
+
         } catch {
             toast.error("Delete failed");
         }
+
     };
 
     // ✅ Resend
@@ -115,6 +127,7 @@ export default function NotificationPage() {
             });
 
             if (res.ok) toast.success("Resent Successfully");
+            await fetchNotifications();
         } catch {
             toast.error("Resend failed");
         }
@@ -220,10 +233,12 @@ export default function NotificationPage() {
                             </div>
                             <input
                                 type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search by title"
                                 className="p-2 outline-none text-sm w-full md:w-64"
                             />
-                            <button className="bg-[#0082cc] text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-all">
+                            <button onClick={handleSearch} className="bg-[#0082cc] text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-all">
                                 Search
                             </button>
                         </div>
@@ -258,14 +273,14 @@ export default function NotificationPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    notifications.map((item, index) => (
+                                    filteredNotifications.map((item, index) => (
                                         <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="p-4">{index + 1}</td>
                                             <td className="p-4 font-medium">{item.title}</td>
                                             <td className="p-4 text-slate-500 max-w-xs truncate">{item.description}</td>
                                             <td className="p-4">
                                                 <div className="w-10 h-10 rounded border border-slate-100 overflow-hidden bg-slate-50">
-                                                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                                    <img src={item.image || "/no-image.png"} alt={item.title} className="w-full h-full object-cover" />
                                                 </div>
                                             </td>
                                             <td className="p-4 text-center">{item.count || 0}</td>
@@ -273,10 +288,10 @@ export default function NotificationPage() {
                                                 <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-[10px] font-bold">SENT</span>
                                             </td>
                                             <td className="p-4 text-center">
-                                                <button className="text-blue-500 hover:text-blue-700"><FaRedo size={14} /></button>
+                                                <button onClick={() => handleResend(item._id)} className="text-blue-500 hover:text-blue-700"><FaRedo size={14} /></button>
                                             </td>
                                             <td className="p-4 text-center">
-                                                <button className="text-red-400 hover:text-red-600"><FaTrash size={14} /></button>
+                                                <button onClick={() => handleDelete(item._id)} className="text-red-400 hover:text-red-600"><FaTrash size={14} /></button>
                                             </td>
                                         </tr>
                                     ))

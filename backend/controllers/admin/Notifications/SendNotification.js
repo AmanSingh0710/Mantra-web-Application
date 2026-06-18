@@ -1,23 +1,44 @@
-
+const cloudinary = require("../../../utils/cloudinary");
 const Notification = require("../../../models/Notification/SendNotification");
 
 exports.createNotification = async (req, res) => {
   try {
-    const { title, description, type, isGlobal } = req.body;
-    const imagePath = req.file ? `/uploads/notifications/${req.file.filename}` : "";
+    const {title,description,type = "GENERAL",isGlobal = true,} = req.body;
 
-    const newNotif = new Notification({
-      title,
-      description,
-      image: imagePath,
-      type: type || "GENERAL",
-      isGlobal: isGlobal === 'true'
+    if (!title || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and description are required",
+      });
+    }
+
+    const notification = await Notification.create({
+      title: title.trim(),
+      description: description.trim(),
+
+
+      image: req.file?.path || "",
+      imagePublicId: req.file?.filename || "",
+
+      type,
+      isGlobal:
+        isGlobal === true ||
+        isGlobal === "true",
     });
 
-    await newNotif.save();
-    res.status(201).json({ success: true, message: "Manual Notification Sent!", data: newNotif });
+    return res.status(201).json({
+      success: true,
+      message: "Notification sent successfully",
+      data: notification,
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Create Notification Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create notification"
+    });
   }
 };
 
@@ -76,6 +97,79 @@ exports.getUserNotifications = async (req, res) => {
     });
   }
 };
+
+
+exports.deleteNotification = async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    // Delete image from cloudinary
+    if (notification.imagePublicId) {
+      await cloudinary.uploader.destroy(
+        notification.imagePublicId
+      );
+    }
+
+    await notification.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Notification deleted successfully",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resendNotification =async (req, res) => {
+
+    try {
+
+      const oldNotification = await Notification.findById( req.params.id);
+
+      if (!oldNotification) {
+        return res.status(404).json({
+          success: false,
+          message: "Notification not found"
+        });
+      }
+
+      const newNotification = await Notification.create({
+          title: oldNotification.title,
+          description: oldNotification.description,
+          image: oldNotification.image,
+          type: oldNotification.type,
+          isGlobal: oldNotification.isGlobal,
+          user: oldNotification.user,
+          isRead: false,
+        });
+
+      res.status(200).json({
+        success: true,
+        message: "Notification resent",
+        data: newNotification
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+
+    }
+  };
 
 exports.markAsRead = async (req, res) => {
   try {
