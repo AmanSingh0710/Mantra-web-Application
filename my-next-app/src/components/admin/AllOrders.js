@@ -22,12 +22,21 @@ export default function AllOrders({ filter }) {
   // ================= FETCH ORDERS =================
   const fetchMyOrders = async () => {
     try {
-      const data = await fetchFromAPI("/order/admin/all", {
-        method: "GET",
-      });
+      setLoading(true);
 
-      setOrders(data || []);
+      const response = await fetchFromAPI("/order/admin/all",
+        {
+          method: "GET",
+        }
+      );
+
+      if (response.success) {
+        setOrders(response.orders || []);
+      } else {
+        toast.error(response.message);
+      }
     } catch (err) {
+      console.error(err);
       toast.error("Failed to load orders");
     } finally {
       setLoading(false);
@@ -282,10 +291,12 @@ export default function AllOrders({ filter }) {
                     >
                       <option value="Pending">Pending</option>
                       <option value="Confirmed">Confirmed</option>
-                      <option value="Packaging">Packaging</option>
-                      <option value="Out for delivery">Out for delivery</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Packed">Packed</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Out For Delivery">Out For Delivery</option>
                       <option value="Delivered">Delivered</option>
-                      <option value="Canceled">Canceled</option>
+                      <option value="Cancelled">Cancelled</option>
                     </select>
                   </td>
 
