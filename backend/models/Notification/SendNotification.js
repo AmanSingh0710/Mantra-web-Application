@@ -44,12 +44,6 @@ const notificationSchema = new mongoose.Schema(
       index: true   // 🔥 performance boost
     },
 
-    isRead: {
-      type: Boolean,
-      default: false,
-      index: true   // 🔥 fast filtering
-    }
-
   },
   { timestamps: true }
 );

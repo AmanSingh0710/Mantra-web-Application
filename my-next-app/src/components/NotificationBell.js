@@ -7,19 +7,12 @@ import { Bell, Inbox, X, Circle } from "lucide-react";
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
-  const [token, setToken] = useState(null);
   const dropdownRef = useRef(null);
 
-  // ✅ Load token
-  useEffect(() => {
-    const t = localStorage.getItem("token");
-    if (t) setToken(t);
-  }, []);
+
 
   // ✅ Fetch notifications
   const fetchNotifications = async () => {
-    if (!token) return;
-
     try {
       const data = await fetchFromAPI("/notifications/user/list");
       setNotifications(data.data || []);
@@ -28,12 +21,18 @@ export default function NotificationBell() {
     }
   };
 
-  // ✅ Fetch ONLY when dropdown opens
   useEffect(() => {
-    if (token && open) {
+    fetchNotifications();
+    fetchNotifications();
+
+    const interval = setInterval(() => {
       fetchNotifications();
-    }
-  }, [token, open]);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
 
   // ✅ Close dropdown on outside click
   useEffect(() => {
@@ -51,8 +50,6 @@ export default function NotificationBell() {
 
   // ✅ Mark as read
   const handleMarkAsRead = async (id) => {
-    if (!token) return;
-
     try {
       await fetchFromAPI(`/notifications/read/${id}`, {
         method: "PUT",
@@ -68,6 +65,13 @@ export default function NotificationBell() {
       console.error("Mark as read failed:", err);
     }
   };
+
+  // ✅ Fetch ONLY when dropdown opens
+  useEffect(() => {
+    if (open) {
+      fetchNotifications();
+    }
+  }, [open]);
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
@@ -125,6 +129,13 @@ export default function NotificationBell() {
                   <div>
                     <p className="text-sm font-semibold">{n.title}</p>
                     <p className="text-xs text-gray-500">{n.description}</p>
+                    {n.image && (
+                      <img
+                        src={n.image}
+                        alt={n.title}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               ))

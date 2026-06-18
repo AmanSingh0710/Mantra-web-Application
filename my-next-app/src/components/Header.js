@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getUser } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
@@ -25,23 +26,18 @@ export default function Header() {
     }
   }, []);
 
-    const handleUserClick = () => {
-      const token = localStorage.getItem("accessToken");
+  const handleUserClick = async () => {
 
-      if (!token) {
-        return router.push("/login");
+    try {
+
+      const user = await getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
       }
-
-      const savedUser = localStorage.getItem("user");
-
-      if (!savedUser) {
-        return router.push("/login");
-      }
-
-      const user = JSON.parse(savedUser);
 
       switch (user.role) {
-
         case "ADMIN":
           router.push("/admin");
           break;
@@ -57,11 +53,15 @@ export default function Header() {
         default:
           router.push("/account");
       }
-    };
+
+    } catch {
+      router.push("/login");
+    }
+  };
 
   return (
     <>
-        <AnnouncementBar />
+      <AnnouncementBar />
 
       <header className="main-header">
         <div className="header-top">
