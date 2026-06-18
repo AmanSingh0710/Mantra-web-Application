@@ -225,7 +225,7 @@ export default function AdminNavbar({ toggleSidebar, setActiveTab }) {
             </div>
             <div className="relative h-9 w-9 border-2 border-amber-100 rounded-full overflow-hidden shadow-sm group-hover:border-amber-400 transition">
               <img
-                src={navbarData?.admin?.image || "/default-avatar.png"}
+                src={navbarData?.admin?.image || "Noimage found"}
                 alt={navbarData?.admin?.name || "Admin Profile"}
                 className="h-full w-full object-cover"
               />

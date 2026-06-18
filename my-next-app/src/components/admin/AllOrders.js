@@ -22,7 +22,7 @@ export default function AllOrders({ filter }) {
   // ================= FETCH ORDERS =================
   const fetchMyOrders = async () => {
     try {
-      const data = await fetchFromAPI("/order", {
+      const data = await fetchFromAPI("/order/admin/all", {
         method: "GET",
       });
 
