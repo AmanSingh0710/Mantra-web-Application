@@ -209,6 +209,8 @@ exports.markAsRead = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
+    const notification = await Notification.findById(id);
+
     if (!notification) {
       return res.status(404).json({
         success: false,
