@@ -78,7 +78,7 @@ export default function AllOrders({ filter }) {
   const handleAssign = async (orderId, deliveryManId) => {
     try {
       const res = await fetchFromAPI(
-        "/order/assign-deliveryman",
+        "/order/assign-delivery-boy",
         {
           method: "PUT",
           body: JSON.stringify({ orderId, deliveryManId }),
@@ -95,7 +95,7 @@ export default function AllOrders({ filter }) {
   // ================= STATUS CHANGE =================
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await fetchFromAPI(`/order/status/${orderId}`, {
+      await fetchFromAPI(`/order/${orderId}/status`, {
         method: "PUT",
         body: JSON.stringify({ status: newStatus }),
       });
