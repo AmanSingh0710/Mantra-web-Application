@@ -12,8 +12,6 @@ const PushNotificationSetup = () => {
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState("Customer");
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   // 🔥 Fetch Settings
   const fetchSettings = async () => {
@@ -25,7 +23,7 @@ const PushNotificationSetup = () => {
       );
 
       const data = await res.json();
-      setFormData(data || {});
+      setFormData(data.data || {});
     } catch (error) {
       console.error("Error fetching settings:", error);
     } finally {

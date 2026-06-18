@@ -7,6 +7,7 @@ import { FaBell, FaSearch, FaTrash, FaPaperPlane, FaRedo, FaImage } from "react-
 import toast from "react-hot-toast";
 
 export default function NotificationPage() {
+    const [filteredNotifications, setFilteredNotifications] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imagePreview, setImagePreview] = useState(null);
@@ -30,7 +31,14 @@ export default function NotificationPage() {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message);
 
-                const list = Array.isArray(data) ? data : data.notifications || [];
+                const list =
+                    Array.isArray(data)
+                        ? data
+                        : Array.isArray(data.data)
+                            ? data.data
+                            : Array.isArray(data.notifications)
+                                ? data.notifications
+                                : [];
 
                 setNotifications(list);
                 setFilteredNotifications(list);
