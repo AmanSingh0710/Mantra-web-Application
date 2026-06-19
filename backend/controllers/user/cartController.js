@@ -38,11 +38,11 @@ exports.addToCart = async (req, res) => {
 
     // 🌟 2. RESILIENT IMAGE FALLBACK CHECK:
     // This scans every possible field name where your image string might live.
-    let rawImage = product.image || product.thumbnail || product.imageUrl || product.imagePath;
+    let rawImage = product.image || product.thumbnail?.url || product.imageUrl || product.imagePath;
 
     // 🚨 Safety Check: If it's still empty, try checking inside product.data or nested fields if any
     if (!rawImage && product.images && product.images.length > 0) {
-      rawImage = product.images[0]; // fallback to first image in a gallery array
+      rawImage = product.images[0]?.url; // fallback to first image in a gallery array
     }
 
     // If completely missing from the database record, assign a production placeholder so it NEVER crashes Mongoose

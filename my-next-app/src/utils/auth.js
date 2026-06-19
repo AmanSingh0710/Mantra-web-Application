@@ -1,3 +1,4 @@
+//src/utils/auth.js
 export const getUser = async () => {
   if (typeof window === "undefined") return null;
 

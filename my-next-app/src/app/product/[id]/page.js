@@ -55,57 +55,31 @@ export default function ProductPage() {
         if (type === "dec" && quantity > 1) setQuantity(prev => prev - 1);
         if (type === "inc" && quantity < (product.stock || 10)) setQuantity(prev => prev + 1);
     };
-    
+
 
     const addToCart = async (redirectToCheckout = false) => {
         setIsAdding(true);
 
-        const targetProductId = product?._id || product?.id || id;
-        const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-
-        if (!token) {
-            toast.error("login before add to cart");
-            router.push("/login");
-            setIsAdding(false);
-            return;
-        }
-
-        if (!targetProductId || targetProductId.length !== 24) {
-            toast.error("Invalid product tracking data. Please refresh.");
-            setIsAdding(false);
-            return;
-        }
-
         try {
-            // Direct Native Fetch Call to bypass custom Axios/Fetch wrapper header-dropping bugs
-            const response = await fetch(`${BASE_URL}/cart/add`, {
+            await fetchFromAPI("/cart/add", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
                 body: JSON.stringify({
-                    productId: targetProductId,
-                    quantity: quantity,
+                    productId: product._id,
+                    quantity,
                 }),
             });
 
-            const result = await response.json();
-
-            if (response.ok) {
-                if (redirectToCheckout) {
-                    toast.success("Redirecting to checkout...");
-                    router.push("/cart?checkout=true");
-                } else {
-                    toast.success("Product add to cart! 🎉");
-                    router.push("/cart");
-                }
+            if (redirectToCheckout) {
+                toast.success("Redirecting to checkout...");
+                router.push("/cart?checkout=true");
             } else {
-                toast.error(result.message || "Cart update failed.");
+                toast.success("Added to cart successfully");
+                router.push("/cart");
             }
+
         } catch (err) {
-            console.error("Cart error trace:", err);
-            toast.error("Network error: Could not complete cart sync.");
+            console.error(err);
+            toast.error(err.message || "Failed to add product");
         } finally {
             setIsAdding(false);
         }
@@ -217,7 +191,7 @@ export default function ProductPage() {
                                 {renderStars(product.averageRating)}
                             </div>
 
-                            {(product.totalReviews > 0 ) ? (
+                            {(product.totalReviews > 0) ? (
                                 <span className="text-gray-500 font-medium hover:underline cursor-pointer">
                                     {Number(product.averageRating || 0).toLocaleString()} Ratings &{' '}
                                     {Number(product.totalReviews || 0).toLocaleString()} Reviews
