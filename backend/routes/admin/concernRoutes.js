@@ -2,11 +2,11 @@
 const express = require("express");
 const router = express.Router();
 const concern = require("../../controllers/admin/concernController");
-const auth = require("../../middlewares/auth");
-const isAdmin = require("../../middlewares/isAdmin");
-const authLmiter = require("../../middlewares/authLmiter");
-const adminLimiter = require("../../middlewares/adminLimiter");
-const upload = require("../../middlewares/upload");
+const auth = require("../../middleware/auth");
+const isAdmin = require("../../middleware/isAdmin");
+const authLmiter = require("../../middleware/authLmiter");
+const adminLimiter = require("../../middleware/adminLimiter");
+const upload = require("../../middleware/upload");
 
 // PUBLIC ROUTES
 router.get("/public/all", rateLimiter, concern.getPublicConcerns);
