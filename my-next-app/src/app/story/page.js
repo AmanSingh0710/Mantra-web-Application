@@ -33,15 +33,16 @@ export default function StoryPage() {
     loadPublicStories();
   }, []);
 
-  // Amazon/Flipkart Elegant Circle Skeleton Loading
+  // Elegant Rounded Card Skeleton Loading
   if (loading) {
     return (
       <div className="w-full bg-white py-6 border-b border-gray-100 max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 overflow-x-auto px-4 pb-2 scrollbar-none">
-          {[1, 2, 3, 4, 5, 6].map((n) => (
-            <div key={n} className="flex flex-col items-center gap-2 animate-pulse shrink-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200" />
-              <div className="w-12 h-3 bg-gray-200 rounded" />
+        <div className="flex items-center gap-5 overflow-x-auto px-4 pb-2 scrollbar-none">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="flex flex-col items-center gap-3 animate-pulse shrink-0">
+              <div className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] rounded-2xl bg-gray-200" />
+              <div className="w-24 h-4 bg-gray-200 rounded mt-1" />
+              <div className="w-12 h-3 bg-gray-100 rounded" />
             </div>
           ))}
         </div>
@@ -52,11 +53,11 @@ export default function StoryPage() {
   if (stories.length === 0) return null;
 
   return (
-    <section className="w-full bg-white py-4 sm:py-6 border-b border-gray-100 select-none overflow-hidden">
+    <section className="w-full bg-white py-6 sm:py-8 border-b border-gray-100 select-none overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         
         {/* SECTION TRADEMARK TITLE */}
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center justify-between mb-4 px-1">
           <h2 className="text-xs sm:text-sm font-extrabold text-gray-900 uppercase tracking-wider">
             Trending Stories & Offers
           </h2>
@@ -65,8 +66,8 @@ export default function StoryPage() {
           </span>
         </div>
 
-        {/* AMAZON/FLIPKART HORIZONTAL TRAY LAYOUT (Ultra responsive slider) */}
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 pt-1 scroll-smooth snap-x touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* RECTANGULAR CARD HORIZONTAL TRAY LAYOUT */}
+        <div className="flex items-center gap-5 overflow-x-auto pb-4 pt-1 scroll-smooth snap-x touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {stories.map((story) => {
             const isVideo = story.imageUrl?.match(/\.(mp4|webm|ogg|mov)$/i);
 
@@ -74,35 +75,36 @@ export default function StoryPage() {
               <div 
                 key={story._id} 
                 onClick={() => setActiveStory(story)}
-                className="flex flex-col items-center text-center shrink-0 cursor-pointer snap-start group"
+                className="flex flex-col items-center text-center shrink-0 cursor-pointer snap-start group w-[170px] sm:w-[220px]"
               >
-                {/* Marketplace Circular Story Ring Gradient Wrapper */}
-                <div className="p-[2.5px] rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-pink-600 transition-transform duration-200 transform group-hover:scale-105 active:scale-95 shadow-sm">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[2.5px] border-white overflow-hidden bg-gray-900 relative">
-                    {isVideo ? (
-                      <video 
-                        src={getImageUrl(story.imageUrl)} 
-                        className="w-full h-full object-cover pointer-events-none" 
-                        muted 
-                        playsInline 
-                      />
-                    ) : (
-                      <img 
-                        src={getImageUrl(story.imageUrl)} 
-                        alt={story.title} 
-                        className="w-full h-full object-cover pointer-events-none"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/150x150?text=Mantra";
-                        }}
-                      />
-                    )}
-                  </div>
+                {/* Image/Video Rounded Container Frame */}
+                <div className="w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 relative shadow-sm transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-md">
+                  {isVideo ? (
+                    <video 
+                      src={getImageUrl(story.imageUrl)} 
+                      className="w-full h-full object-cover pointer-events-none" 
+                      muted 
+                      playsInline 
+                    />
+                  ) : (
+                    <img 
+                      src={getImageUrl(story.imageUrl)} 
+                      alt={story.title} 
+                      className="w-full h-full object-cover pointer-events-none"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = "https://placehold.co/220x220?text=Mantra";
+                      }}
+                    />
+                  )}
                 </div>
 
-                {/* Micro Meta Title */}
-                <span className="text-[11px] font-medium text-gray-700 mt-1.5 max-w-[76px] sm:max-w-[88px] truncate leading-tight group-hover:text-orange-600 transition-colors">
+                {/* Typography Labels Block mirroring the screenshot style */}
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 mt-3 px-1 truncate w-full group-hover:text-blue-600 transition-colors">
                   {story.title}
+                </h3>
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5 hover:text-gray-600">
+                  Read More
                 </span>
               </div>
             );
@@ -140,14 +142,13 @@ export default function StoryPage() {
 
             {/* TOP BAR: CONTINUOUS TIMELINE STATUS INDICATOR & META */}
             <div className="relative z-20 w-full space-y-3">
-              {/* Instagram/Flipkart style top ticker status line bar */}
               <div className="w-full h-[3px] bg-white/30 rounded-full overflow-hidden">
                 <div className="h-full bg-white w-full animate-[loading_5s_linear_infinite] origin-left" />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full border-2 border-orange-500 overflow-hidden bg-slate-800 shrink-0">
+                  <div className="w-8 h-8 rounded-lg border border-white/20 overflow-hidden bg-slate-800 shrink-0">
                     <img src={getImageUrl(activeStory.imageUrl)} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div>
@@ -191,7 +192,7 @@ export default function StoryPage() {
                 {activeStory.description}
               </p>
               
-              {/* Swipe/Click up Action Box */}
+              {/* Action Box */}
               <div className="pt-1">
                 <div className="w-full bg-[#fb641b] hover:bg-[#e1530f] active:scale-[0.99] text-center text-xs font-bold py-2.5 rounded-lg text-white flex items-center justify-center gap-1 cursor-pointer transition shadow-lg shadow-orange-700/20 uppercase tracking-wide">
                   Shop Deal <FaChevronRight size={9} />
