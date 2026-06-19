@@ -56,6 +56,7 @@ export default function ShopByConcern() {
 
   return (
     <section className="w-full bg-white py-10 md:py-16 border-b border-gray-100 overflow-hidden relative text-black">
+      <h2>Shop by concern</h2>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 mb-8 flex items-center justify-between">
         <div>
           <span className="text-xs font-bold text-amber-600 tracking-widest uppercase block mb-1">Targeted Solutions</span>
