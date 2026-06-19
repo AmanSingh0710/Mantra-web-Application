@@ -390,6 +390,10 @@ const vendorProductSchema = new mongoose.Schema(
       type: Date,
       default: Date.now
     },
+    concerns: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Concern"
+    }],
 
     // ================= SOFT DELETE =================
     isDeleted: {

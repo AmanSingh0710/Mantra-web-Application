@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { fetchFromAPI } from "@/utils/api";
 import toast from "react-hot-toast";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ShopByConcern() {
   const sliderRef = useRef(null);
@@ -17,11 +17,11 @@ export default function ShopByConcern() {
     const fetchLiveConcerns = async () => {
       try {
         // Hitting our newly written backend endpoint
-        const res = await fetch(`${BASE_URL}/Adminproducts/concerns`);
+        const res = await fetchFromAPI("/concerns/public/all");
         const result = await res.json();
-        
-        if (result.success && result.data) {
-          setConcerns(result.data);
+
+        if (result.success) {
+          setConcerns(result.concerns || []);
         }
       } catch (err) {
         console.error("Frontend concerns hydration failed:", err);
@@ -42,15 +42,6 @@ export default function ShopByConcern() {
     }
   };
 
-  const getImageUrl = (imgName) => {
-    if (!imgName) return "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&q=80"; // Global premium fallback image
-    if (imgName.startsWith("http://") || imgName.startsWith("https://")) return imgName;
-    
-    const cleanPath = imgName.replace(/\\/g, "/");
-    return cleanPath.startsWith("uploads/") 
-      ? `${BASE_URL}/${cleanPath}` 
-      : `${BASE_URL}/uploads/${cleanPath}`;
-  };
 
   if (loading) {
     return (
@@ -77,10 +68,10 @@ export default function ShopByConcern() {
 
       {/* CAROUSEL CONTROLS CONTAINER */}
       <div className="max-w-[1440px] mx-auto relative px-4 sm:px-8 lg:px-16 group select-none">
-        
+
         {/* LEFT TOGGLE ARROW */}
-        <button 
-          onClick={() => scroll("left")} 
+        <button
+          onClick={() => scroll("left")}
           className="absolute left-2 lg:left-10 top-1/2 -translate-y-1/2 z-30 bg-white border border-gray-200 shadow-lg rounded-full p-3 hidden sm:flex items-center justify-center hover:bg-black hover:text-white hover:border-black transition-all cursor-pointer opacity-0 group-hover:opacity-100"
           aria-label="Scroll left"
         >
@@ -88,23 +79,23 @@ export default function ShopByConcern() {
         </button>
 
         {/* HORIZONTAL SNAP CAROUSEL TRACK */}
-        <div 
-          ref={sliderRef} 
+        <div
+          ref={sliderRef}
           className="flex overflow-x-auto gap-4 md:gap-6 scroll-smooth no-scrollbar pb-4"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {concerns.map((item, i) => (
-            <div 
-              key={i} 
-              onClick={() => router.push(`/product?concern=${encodeURIComponent(item.title)}`)}
+            <div
+              key={i}
+              onClick={() => router.push(`/product?concern=${item._id}`)}
               className="flex-shrink-0 w-[42%] sm:w-[28%] md:w-[22%] lg:w-[11.5%] flex flex-col items-center group/card cursor-pointer"
               style={{ scrollSnapAlign: "start" }}
             >
               {/* Flipkart-Style Perfect Circle Mask Wrapper */}
               <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 bg-gray-50 rounded-full border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden mb-3 relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md group-hover/card:border-amber-500">
-                <img 
-                  src={getImageUrl(item.img)} 
-                  alt={item.title} 
+                <img
+                  src={item.image?.url}
+                  alt={item.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
@@ -119,8 +110,8 @@ export default function ShopByConcern() {
         </div>
 
         {/* RIGHT TOGGLE ARROW */}
-        <button 
-          onClick={() => scroll("right")} 
+        <button
+          onClick={() => scroll("right")}
           className="absolute right-2 lg:right-10 top-1/2 -translate-y-1/2 z-30 bg-white border border-gray-200 shadow-lg rounded-full p-3 hidden sm:flex items-center justify-center hover:bg-black hover:text-white hover:border-black transition-all cursor-pointer opacity-0 group-hover:opacity-100"
           aria-label="Scroll right"
         >

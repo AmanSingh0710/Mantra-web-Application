@@ -106,6 +106,7 @@ app.use("/wallet", require("./routes/admin/Finance/walletRoutes"));
 app.use("/wallet-Transaction", require("./routes/admin/Finance/walletTransactionRoutes"));
 app.use("/invoice", require("./routes/admin/Finance/invoiceRoutes"));
 app.use("/admin",require("./routes/admin/navbarRoutes"));
+app.use("/concerns" , require("./routes/admin/concernRoutes"));
 
 /* ==========================================
    4. GLOBAL FALLBACK ERROR CATCHERS
