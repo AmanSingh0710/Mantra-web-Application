@@ -1,8 +1,9 @@
 "use client";
-
+//src/components/NotificationBell.js
 import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState, useRef } from "react";
 import { Bell, Inbox, X, Circle } from "lucide-react";
+import Link from "next/link";
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -22,7 +23,7 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
-    
+
     fetchNotifications();
     const interval = setInterval(() => {
       fetchNotifications();
@@ -139,6 +140,15 @@ export default function NotificationBell() {
                 </div>
               ))
             )}
+          </div>
+
+          <div className="border-t p-3">
+            <Link
+              href="/notifications"
+              className="block text-center text-blue-600 font-medium"
+            >
+              View All Notifications
+            </Link>
           </div>
         </div>
       )}
