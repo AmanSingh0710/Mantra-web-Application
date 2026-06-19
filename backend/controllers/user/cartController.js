@@ -15,81 +15,80 @@ exports.getCart = async (req, res) => {
 // ADD / UPDATE product in cart
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
-    
-    // Fetch product profile
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found in system database" });
-    }
+    const { productId, quantity = 1 } = req.body;
 
-    // Dynamic base URL resolver for production vs local
-    const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`;
-
-    // 1. Safe Price Lookup
-    const targetPrice = product.price !== undefined ? product.price : product.unitPrice;
-    const targetStock = product.stock !== undefined ? product.stock : product.currentStock;
-
-    if (targetPrice === undefined || targetPrice === null) {
+    if (!productId) {
       return res.status(400).json({
-        message: "Validation failed: Selected product entry does not contain a price definition."
+        success: false,
+        message: "Product ID is required"
       });
     }
 
-    // 🌟 2. RESILIENT IMAGE FALLBACK CHECK:
-    // This scans every possible field name where your image string might live.
-    let rawImage = product.image || product.thumbnail?.url || product.imageUrl || product.imagePath;
+    const product = await Product.findById(productId);
 
-    // 🚨 Safety Check: If it's still empty, try checking inside product.data or nested fields if any
-    if (!rawImage && product.images && product.images.length > 0) {
-      rawImage = product.images[0]?.url; // fallback to first image in a gallery array
+    if (!product || product.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
     }
 
-    // If completely missing from the database record, assign a production placeholder so it NEVER crashes Mongoose
-    if (!rawImage) {
-      console.warn(`⚠️ Warning: Product ID ${productId} is missing an image asset field.`);
-      rawImage = "placeholder.jpg"; 
-    }
-
-    // Cleanly append upload directory path if it's a relative file string
-    let resolvedImage = rawImage;
-    if (resolvedImage && !resolvedImage.startsWith("http://") && !resolvedImage.startsWith("https://")) {
-      resolvedImage = `${baseUrl}/uploads/${resolvedImage}`;
+    if (product.stock <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Product is out of stock"
+      });
     }
 
     let cart = await Cart.findOne({ userId: req.user.id });
 
-    // Constructed payload mapping
     const itemData = {
       productId: product._id,
-      name: product.name,
-      price: Number(targetPrice), 
-      image: resolvedImage, // 🌟 Guaranteed to be a filled string token now!
-      quantity: Number(quantity) || 1,
+      name: product.productName,
+      price: product.discountPrice > 0
+        ? product.discountPrice
+        : product.price,
+      image: product.thumbnail?.url || "",
+      quantity: Number(quantity),
       discountAmount: product.discountAmount || 0,
-      discountType: product.discountType || 'Flat',
-      category: product.category || "General",
-      brand: product.brand || "Generic",
-      currentStock: targetStock !== undefined ? Number(targetStock) : 0
+      discountType: product.discountType || "Flat",
+      category: product.category,
+      brand: product.brand,
+      currentStock: product.stock
     };
 
     if (!cart) {
-      cart = new Cart({ userId: req.user.id, items: [itemData] });
+      cart = new Cart({
+        userId: req.user.id,
+        items: [itemData]
+      });
     } else {
-      const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
-      
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += (Number(quantity) || 1);
+      const existingItem = cart.items.find(
+        item => item.productId.toString() === productId
+      );
+
+      if (existingItem) {
+        existingItem.quantity += Number(quantity);
       } else {
         cart.items.push(itemData);
       }
     }
 
     await cart.save();
-    res.status(200).json({ message: "Cart updated successfully", cart });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product added to cart",
+      cart
+    });
+
   } catch (error) {
-    console.error("Backend Production AddToCart Error Trace:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Add To Cart Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
