@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const concernSchema = new mongoose.Schema({
   title: {
     type: String,
