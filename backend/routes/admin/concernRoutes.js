@@ -4,7 +4,7 @@ const router = express.Router();
 const concern = require("../../controllers/admin/concernController");
 const auth = require("../../middleware/auth");
 const isAdmin = require("../../middleware/isAdmin");
-const authLmiter = require("../../middleware/authLmiter");
+const authLmiter = require("../../middleware/authLimiter");
 const adminLimiter = require("../../middleware/adminLimiter");
 const upload = require("../../middleware/upload");
 
