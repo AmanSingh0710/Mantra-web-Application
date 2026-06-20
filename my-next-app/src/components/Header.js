@@ -2,11 +2,9 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
-import { getUser } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
@@ -16,38 +14,30 @@ export default function Header() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const handleUserClick = async () => {
+  const handleUserClick = () => {
 
-    try {
+  if (!user) {
+    router.push("/login");
+    return;
+  }
 
-      const user = await getUser();
+  switch (user.role) {
+    case "ADMIN":
+      router.push("/admin");
+      break;
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+    case "VENDOR":
+      router.push("/store");
+      break;
 
-      switch (user.role) {
-        case "ADMIN":
-          router.push("/admin");
-          break;
+    case "DELIVERY":
+      router.push("/delivery");
+      break;
 
-        case "VENDOR":
-          router.push("/store");
-          break;
-
-        case "DELIVERY":
-          router.push("/delivery");
-          break;
-
-        default:
-          router.push("/account");
-      }
-
-    } catch {
-      router.push("/login");
-    }
-  };
+    default:
+      router.push("/account");
+  }
+};
 
   return (
     <>
