@@ -32,7 +32,7 @@ export default function MyAccount() {
   //page protected
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/login?redirect=/account");
     }
   }, [authLoading, user, router]);
 

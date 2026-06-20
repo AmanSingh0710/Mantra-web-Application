@@ -4,15 +4,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
+
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
 import AnnouncementBar from "@/components/AnnouncementBar";
-
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function Header() {
   const router = useRouter();
   const { user } = useAuth();
+console.log("User:", user);
+ console.log("Clicked User:", user);
 
   const handleUserClick = () => {
 
