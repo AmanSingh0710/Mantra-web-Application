@@ -25,3 +25,5 @@ const concernSchema = new mongoose.Schema({
     default: true
   }
 }, { timestamps: true });
+
+module.exports = mongoose.model("Concern" , concernSchema);
