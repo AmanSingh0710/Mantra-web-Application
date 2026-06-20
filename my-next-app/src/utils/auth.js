@@ -1,4 +1,5 @@
 //src/utils/auth.js
+import { fetchFromAPI } from "./api";
 export const getUser = async () => {
   if (typeof window === "undefined") return null;
 
