@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
 import AnnouncementBar from "@/components/AnnouncementBar";
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function Header() {
   const router = useRouter();
   const { user } = useAuth();
