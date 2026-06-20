@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { fetchFromAPI } from "@/utils/api";
 import toast from "react-hot-toast";
-
+//src/components/ShopBy.js
 
 export default function ShopByConcern() {
   const sliderRef = useRef(null);
