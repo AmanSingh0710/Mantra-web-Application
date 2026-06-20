@@ -70,8 +70,7 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
 
       // If the refresh token itself is expired or manipulated, boot the user out
       if (!refreshRes.ok) {
-        await logoutUser();
-        return;
+        throw new Error("Unauthorized");
       }
 
       // 🔁 Refresh succeeded! Retry the original request immediately.

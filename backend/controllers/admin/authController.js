@@ -11,9 +11,8 @@ const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
 const cloudinary = require("../../utils/cloudinary");
 
-/**
- * Helper to generate cookie options dynamically based on environment.
- */
+
+// Helper to generate cookie options dynamically based on environment.
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
@@ -23,6 +22,18 @@ const getCookieOptions = () => {
     sameSite: isProduction ? "None" : "Lax",
     path: "/",
   };
+};
+
+//get me
+exports.getMe = async (req, res) => {
+
+   const user = await User.findById(req.user.id)
+      .select("-password -refreshToken");
+
+   res.status(200).json({
+      success: true,
+      user
+   });
 };
 
 // REGISTER

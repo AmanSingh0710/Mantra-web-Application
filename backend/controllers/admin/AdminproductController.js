@@ -325,7 +325,7 @@ exports.getPublicProductById = async (req, res) => {
     const averageRating =
       reviews.length > 0
         ? reviews.reduce((sum, r) => sum + r.rating, 0) /
-          reviews.length
+        reviews.length
         : 0;
 
     res.status(200).json({
@@ -616,6 +616,51 @@ exports.updateProduct = async (req, res) => {
   } catch (error) {
     console.error("Admin Product Update Route Failure:", error);
     res.status(500).json({ success: false, message: "Failed to update target product record" });
+  }
+};
+
+//  admin get concern prduct by id 
+exports.getProductsByConcern = async (req, res) => {
+  try {
+
+    const { concernId } = req.params;
+
+    const products = await Product.find({concerns: concernId}).populate("concerns");
+
+    return res.status(200).json({
+      success: true,
+      products
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// user get concern prduct by id 
+exports.getPublicProductsByConcern = async (req, res) => {
+  try {
+
+    const products = await Product.find({concerns: req.params.concernId,
+      status: "ACTIVE"
+    }).populate("concerns");;
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
   }
 };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { BASE_URL } from "@/utils/api";
 import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState } from "react";
@@ -9,11 +10,11 @@ import {
   FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt,
   FaHashtag, FaSignOutAlt, FaCamera, FaShieldAlt, FaSave, FaEdit
 } from "react-icons/fa";
-
+//src/app/account/apge.js
 export default function MyAccount() {
   const router = useRouter();
 
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading, refreshUser, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -21,35 +22,28 @@ export default function MyAccount() {
   const [imgSrc, setImgSrc] = useState("/default-avatar.png");
 
 
-  // ✅ AUTH CHECK + LOAD USER
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const storedUser = localStorage.getItem("user");
-
-    if (!token || !storedUser) {
-      handleLogout();
-      return;
+    if (user) {
+      setFormData(user);
     }
+  }, [user]);
 
-    const parsed = JSON.parse(storedUser);
 
-    if (!parsed || Object.keys(parsed).length === 0) {
-      handleLogout();
-      return;
+  //page protected
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
     }
+  }, [authLoading, user, router]);
 
-    const normalizedUser = {
-      ...parsed,
-      id: parsed._id || parsed.id,
-    };
+  if (authLoading) {
+    return <div className="p-20 text-center">Loading...</div>;
+  }
 
-    setUser(normalizedUser);
-    setFormData(normalizedUser);
+  if (!user) return null;
 
-    // ✅ optional fresh sync from DB
-    fetchFreshData();
 
-  }, []);
+
 
   // ✅ IMAGE HANDLING FIX
   useEffect(() => {
@@ -73,27 +67,11 @@ export default function MyAccount() {
   // ✅ FETCH PROFILE FROM SERVER
   const fetchFreshData = async () => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (!user?._id) return;
 
-      if (!storedUser?.id && !storedUser?._id) return;
+      const data = await fetchFromAPI(`/auth/profile/${user._id}`);
 
-      const userId = storedUser._id || storedUser.id;
-
-      const data = await fetchFromAPI(`/auth/profile/${userId}`);
-
-      const normalizedUser = {
-        ...data,
-        id: data._id,
-      };
-
-      setUser(normalizedUser);
-      setFormData(normalizedUser);
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(normalizedUser)
-      );
-
+      setFormData(data);
     } catch (err) {
       console.error(err.message);
     }
@@ -103,7 +81,7 @@ export default function MyAccount() {
   const handleUpdate = async () => {
     if (!user?.id) return toast.error("User ID missing");
 
-    setLoading(true);
+    setSaving(true);
 
     try {
       const form = new FormData();
@@ -128,9 +106,8 @@ export default function MyAccount() {
         id: updatedUser._id,
       };
 
-      setUser(normalizedUser);
+      await refreshUser();
       setFormData(normalizedUser);
-      localStorage.setItem("user", JSON.stringify(normalizedUser));
 
       setSelectedImage(null);
       setIsEditing(false);
@@ -143,7 +120,7 @@ export default function MyAccount() {
     } catch (err) {
       toast.error(err.message || "Server error");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -151,24 +128,7 @@ export default function MyAccount() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // LOGOUT
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
 
-    window.location.href = "/login";
-  };
-
-  const handleUserClick = () => {
-    const token = localStorage.getItem("accessToken");
-
-    if (token) {
-      router.push("/account");
-    } else {
-      router.push("/login");
-    }
-  };
 
   if (!user) return <div className="p-20 text-center">Loading...</div>;
 
@@ -225,7 +185,7 @@ export default function MyAccount() {
               >
                 <FaEdit /> {isEditing ? "Viewing Profile" : "Edit Profile"}
               </button>
-              <button onClick={handleLogout} className="w-full text-left p-4 hover:bg-red-50 flex items-center gap-3 text-sm font-bold text-red-500">
+              <button onClick={logout} className="w-full text-left p-4 hover:bg-red-50 flex items-center gap-3 text-sm font-bold text-red-500">
                 <FaSignOutAlt /> Logout
               </button>
             </div>
@@ -289,10 +249,10 @@ export default function MyAccount() {
                   <>
                     <button
                       onClick={handleUpdate}
-                      disabled={loading}
+                      disabled={saving}
                       className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700 transition shadow-lg shadow-green-200"
                     >
-                      <FaSave /> {loading ? "Saving..." : "Save Changes"}
+                      <FaSave /> {saving ? "Saving..." : "Save Changes"}
                     </button>
                     <button
                       onClick={() => { setIsEditing(false); setFormData(user); }}

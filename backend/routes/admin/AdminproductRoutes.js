@@ -3,34 +3,18 @@
 const express = require('express');
 const router = express.Router();
 
-// 🌟 Aligned path matching your real directory structure
+
 const productController = require('../../controllers/admin/AdminproductController');
 const adminUserController = require('../../controllers/admin/AdminUserController');
 const auth = require('../../middleware/auth');
 const isAdmin = require('../../middleware/isAdmin');
 const upload = require('../../middleware/upload');
 const validateId = require("../../middleware/validateId");
-const rateLimit = require("express-rate-limit");
+const adminLimiter = require("../../middleware/adminLimiter");
+const publicLimiter = require("../../middleware/publicLimiter");
 
 
-// 🔐 Admin Operations Rate Limiter (Protects mutations/bulk imports)
-const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minutes
-  max: 50,
-  message: { success: false, message: "Too many administrative modifications requested. Please retry shortly." }
-});
-
-// 🌍 High-Volume Public Storefront Traffic Rate Limiter
-const publicLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: { success: false, message: "Traffic threshold reached. System cooldown active." }
-});
-
-
-// =========================================================================
 // ========================= ADMINISTRATIVE ACTIONS =========================
-// =========================================================================
 
 // ✅ GET SYSTEM MASTER INVENTORY INDEX (Admin Management View)
 router.get('/', adminLimiter, auth, isAdmin("ADMIN"), productController.getProducts);
@@ -44,6 +28,8 @@ router.post('/add', adminLimiter, auth, isAdmin("ADMIN"),
   ]),
   productController.addProduct
 );
+
+router.get("/by-concern/:concernId", adminLimiter, auth, isAdmin("ADMIN"), productController.getProductsByConcern);
 
 // 🌟 ✅ VENDOR MARKETPLACE MODERATION (Approve / Reject items live)
 // Handles incoming payload mutations changing vendor listings to ACTIVE/INACTIVE
@@ -73,14 +59,14 @@ router.get('/vendors/pending', adminLimiter, auth, isAdmin("ADMIN"), adminUserCo
 router.patch('/vendors/review/:vendorId', adminLimiter, auth, isAdmin("ADMIN"), adminUserController.reviewVendorAccount);
 
 
-// =========================================================================
 // ============================ PUBLIC FRONTEND ============================
-// =========================================================================
 
 // 🌍 PUBLIC CATALOG VISUALIZATION (Aggregated pipeline output for user storefront)
 router.get('/public', publicLimiter, productController.getPublicProducts);
 
 router.get('/public/:id', publicLimiter, productController.getPublicProductById);
+
+router.get("/public/by-concern/:concernId",publicLimiter,productController.getPublicProductsByConcern);
 
 
 module.exports = router;

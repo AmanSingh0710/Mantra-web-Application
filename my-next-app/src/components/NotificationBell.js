@@ -1,11 +1,13 @@
 "use client";
 //src/components/NotificationBell.js
+import { useAuth } from "@/context/AuthContext";
 import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState, useRef } from "react";
 import { Bell, Inbox, X, Circle } from "lucide-react";
 import Link from "next/link";
 
 export default function NotificationBell() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -24,13 +26,15 @@ export default function NotificationBell() {
 
   useEffect(() => {
 
+    if (!user) return;
+
     fetchNotifications();
     const interval = setInterval(() => {
       fetchNotifications();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
 
 

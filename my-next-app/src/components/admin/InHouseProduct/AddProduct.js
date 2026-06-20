@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import { FaCloudUploadAlt, FaInfoCircle, FaYoutube, FaGlobe } from "react-icons/fa";
 import "react-quill-new/dist/quill.snow.css";
+import { useSearchParams } from "next/navigation";
 
 // Rich Text Editor ko dynamic import karna padta hai Next.js mein
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -21,9 +22,12 @@ export default function AddProduct() {
     const [additionalImages, setAdditionalImages] = useState([]); // Array for multiple images
     const additionalImagesRef = useRef(null);
     const [brands, setBrands] = useState([]);
+    const [concerns, setConcerns] = useState([]);
     const [metaImage, setMetaImage] = useState(null);
     const metaImageRef = useRef(null);
     const [stores, setStores] = useState([]);
+    const searchParams = useSearchParams();
+    const concernId = searchParams.get("concern");
 
     // Saare input fields ke liye main state
     const [formData, setFormData] = useState({
@@ -32,6 +36,7 @@ export default function AddProduct() {
         category: "",
         subCategory: "",
         subSubCategory: "",
+        concern: "",
         brand: "",
         productType: "Physical",
         sku: "",
@@ -92,9 +97,25 @@ export default function AddProduct() {
             } catch (err) { console.error("Brand Fetch Error:", err); }
         };
 
+        const fetchConcerns = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/concerns/public/all`
+                );
+
+                const data = await res.json();
+
+                if (data.success) {
+                    setConcerns(data.concerns);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
         fetchCategories();
         fetchStores();
         fetchBrands();
+        fetchConcerns();
     }, []);
 
     // Helper function input change handle karne ke liye
@@ -279,6 +300,23 @@ export default function AddProduct() {
                             >
                                 <option value="">Select Sub Sub Category</option>
                                 {subSubCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
+                            </select>
+                        </div>
+
+                        {/*concerns */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">
+                                Concern
+                            </label>
+
+                            <select
+                                name="concern"
+                                value={formData.concern}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none"
+                            >
+                                <option value="">Select Concern</option>
+                                {concerns.map((item) => (<option key={item._id} value={item._id}>{item.title}</option>))}
                             </select>
                         </div>
 

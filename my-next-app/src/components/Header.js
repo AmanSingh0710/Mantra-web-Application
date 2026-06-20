@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 import { getUser } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { FaUser, FaSearch, FaShoppingBag } from "react-icons/fa";
@@ -13,18 +14,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 
 export default function Header() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to parse user", e);
-      }
-    }
-  }, []);
+  const { user } = useAuth();
 
   const handleUserClick = async () => {
 

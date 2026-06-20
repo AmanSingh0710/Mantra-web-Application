@@ -382,7 +382,7 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
                             }`}
                     >
                         <FaTags size={16} className="text-[#90c090]" />
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-medium cursor-pointer">
                             Add Concern
                         </span>
                     </div>

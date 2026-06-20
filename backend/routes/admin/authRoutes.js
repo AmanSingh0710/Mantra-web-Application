@@ -26,6 +26,7 @@ router.patch("/admin/update-user/:id", authLimiter, uploadLimiter, auth, isAdmin
 router.patch("/language", authLimiter, auth, isAdmin("ADMIN"), authController.updateLanguage);
 
 // ================= USER =================
+router.get("/me", auth, authController.getMe);
 router.get("/profile/:id", auth, authLimiter, authController.getProfile);
 router.delete("/user/:id", auth, authLimiter, authController.deleteUser);
 router.patch("/user/:id", auth, authLimiter, uploadLimiter, upload.single("image"), authController.updateUser);

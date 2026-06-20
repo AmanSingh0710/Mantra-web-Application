@@ -37,7 +37,7 @@ import Newsletter from "@/components/admin/Newsletter/NewsletterList";
 import OurStory from "@/components/admin/OurStory";
 import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
 import AdminBlogList from "@/components/admin/blog/AdminBlogList";
-import ConcernsPage from "@/app/admin/concerns/page";
+import ConcernsPage from "@/app/admin/concerns/[id]/page";
 
 import { useState, useEffect } from "react";
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { fetchFromAPI } from "@/utils/api";
 import toast from "react-hot-toast";
-//src/components/ShopBy.js
 
 export default function ShopByConcern() {
   const sliderRef = useRef(null);
@@ -16,9 +15,7 @@ export default function ShopByConcern() {
   useEffect(() => {
     const fetchLiveConcerns = async () => {
       try {
-        // Hitting our newly written backend endpoint
         const result = await fetchFromAPI("/concerns/public/all");
-
         if (result.success) {
           setConcerns(result.concerns || []);
         }
@@ -41,7 +38,6 @@ export default function ShopByConcern() {
     }
   };
 
-
   if (loading) {
     return (
       <div className="w-full py-16 flex justify-center items-center bg-white">
@@ -50,12 +46,10 @@ export default function ShopByConcern() {
     );
   }
 
-  // Returns empty element safely if database has zero products or concerns mapped yet
   if (concerns.length === 0) return null;
 
   return (
     <section className="w-full bg-white py-10 md:py-16 border-b border-gray-100 overflow-hidden relative text-black">
-      <h2>Shop by concern</h2>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 mb-8 flex items-center justify-between">
         <div>
           <span className="text-xs font-bold text-amber-600 tracking-widest uppercase block mb-1">Targeted Solutions</span>
@@ -87,14 +81,14 @@ export default function ShopByConcern() {
           {concerns.map((item, i) => (
             <div
               key={i}
-              onClick={() => router.push(`/product?concern=${item._id}`)}
-              className="flex-shrink-0 w-[42%] sm:w-[28%] md:w-[22%] lg:w-[11.5%] flex flex-col items-center group/card cursor-pointer"
+              onClick={() =>router.push(`/concern/${item._id}`)}
+              className="flex-shrink-0 w-[40%] sm:w-[28%] md:w-[22%] lg:w-[15%] xl:w-[12.5%] flex flex-col items-center group/card cursor-pointer"
               style={{ scrollSnapAlign: "start" }}
             >
-              {/* Flipkart-Style Perfect Circle Mask Wrapper */}
-              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 bg-gray-50 rounded-full border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden mb-3 relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md group-hover/card:border-amber-500">
+              {/* Premium Square Mask Wrapper with Aspect Ratio Control */}
+              <div className="w-full aspect-square bg-gray-50 rounded-xl border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden mb-3 relative transition-all duration-300 group-hover/card:scale-105 group-hover/card:shadow-md group-hover/card:border-amber-500">
                 <img
-                  src={item.image?.url}
+                  src={item.image}
                   alt={item.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
