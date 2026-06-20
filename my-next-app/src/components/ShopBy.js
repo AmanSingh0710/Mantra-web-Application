@@ -17,8 +17,7 @@ export default function ShopByConcern() {
     const fetchLiveConcerns = async () => {
       try {
         // Hitting our newly written backend endpoint
-        const res = await fetchFromAPI("/concerns/public/all");
-        const result = await res.json();
+        const result = await fetchFromAPI("/concerns/public/all");
 
         if (result.success) {
           setConcerns(result.concerns || []);
