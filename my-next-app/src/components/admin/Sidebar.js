@@ -1,5 +1,5 @@
 "use client";
-
+//src/components/admin/Sidebar.js
 import { fetchFromAPI } from "@/utils/api";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -367,6 +367,23 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
 
                         <span className="text-sm font-medium cursor-pointer">
                             Hero Banner
+                        </span>
+                    </div>
+
+                    {/* Add Concern */}
+                    <div
+                        onClick={() => {
+                            setActiveTab("concerns");
+                            setIsOpen(false);
+                        }}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-md hover:bg-[#ffffff10] transition ${activeTab === "concerns"
+                            ? "bg-amber-600 text-white"
+                            : ""
+                            }`}
+                    >
+                        <FaTags size={16} className="text-[#90c090]" />
+                        <span className="text-sm font-medium">
+                            Add Concern
                         </span>
                     </div>
 

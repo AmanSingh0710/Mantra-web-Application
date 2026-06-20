@@ -37,6 +37,7 @@ import Newsletter from "@/components/admin/Newsletter/NewsletterList";
 import OurStory from "@/components/admin/OurStory";
 import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
 import AdminBlogList from "@/components/admin/blog/AdminBlogList";
+import ConcernsPage from "@/app/admin/concerns/page";
 
 import { useState, useEffect } from "react";
 
@@ -116,6 +117,9 @@ export default function AdminLayout({ children }) {
       case "hero_banner":
         return <AdminHeroesPage />;
 
+      case "concerns":
+        return <ConcernsPage />;
+
       // --- Refund TABS ---
       case "approved":
         return <Approved />;
@@ -145,11 +149,11 @@ export default function AdminLayout({ children }) {
       case "AdminAnnouncements":
         return <AdminAnnouncements />
 
-        case "blog_add":
-           return<AdminAddBlog />
+      case "blog_add":
+        return <AdminAddBlog />
 
-           case "blog_list":
-            return<AdminBlogList />
+      case "blog_list":
+        return <AdminBlogList />
 
       case "add_deliveryman":
         return <AddDeliveryManPage />
@@ -201,7 +205,7 @@ export default function AdminLayout({ children }) {
 
       {/* Top Navbar fix rahega */}
       <Navbar
-        
+
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         setActiveTab={setActiveTab}
       />

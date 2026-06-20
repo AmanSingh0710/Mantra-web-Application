@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { fetchFromAPI } from "@/utils/api";
-
+//src/app/admin/concerns/page.js
 export default function ConcernsPage() {
     const [concerns, setConcerns] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [editingId, setEditingId] = useState(null);
 
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState(0);
@@ -19,11 +20,9 @@ export default function ConcernsPage() {
 
     const fetchConcerns = async () => {
         try {
-            const res = await fetchFromAPI("/concerns/admin/all", {
+            const data = await fetchFromAPI("/concerns/admin/all", {
                 credentials: "include",
             });
-
-            const data = await res.json();
 
             if (data.success) {
                 setConcerns(data.concerns);
@@ -37,11 +36,10 @@ export default function ConcernsPage() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetchFromAPI("/categories/public", {
+            const data = await fetchFromAPI("/categories/public", {
                 credentials: "include",
             });
 
-            const data = await res.json();
 
             if (data.success) {
                 setCategories(data.categories || []);
@@ -75,21 +73,36 @@ export default function ConcernsPage() {
                 formData.append("categories", id);
             });
 
-            const res = await fetchFromAPI("/concerns/create", {
-                method: "POST",
-                credentials: "include",
-                body: formData,
-            });
+            let data;
 
-            const data = await res.json();
+            if (editingId) {
+                data = await fetchFromAPI(`/concerns/update/${editingId}`, {
+                    method: "PUT",
+                    body: formData,
+                });
+
+                toast.success("Concern Updated");
+            } else {
+                data = await fetchFromAPI("/concerns/create", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                toast.success("Concern Created");
+            }
 
             if (data.success) {
-                toast.success("Concern Created");
-
+                setEditingId(null);
                 setTitle("");
                 setPriority(0);
                 setImage(null);
+                setSelectedCategories(
+                    item.categories?.map(cat =>
+                        typeof cat === "object" ? cat._id : cat
+                    ) || []
+                );
                 setSelectedCategories([]);
+
 
                 fetchConcerns();
             } else {
@@ -106,15 +119,12 @@ export default function ConcernsPage() {
         if (!window.confirm("Delete this concern?")) return;
 
         try {
-            const res = await fetchFromAPI(
-                `/concerns/delete/${id}`,
+            const data = await fetchFromAPI(`/concerns/delete/${id}`,
                 {
                     method: "DELETE",
                     credentials: "include",
                 }
             );
-
-            const data = await res.json();
 
             if (data.success) {
                 toast.success("Deleted Successfully");
@@ -181,6 +191,7 @@ export default function ConcernsPage() {
                                 <input
                                     type="checkbox"
                                     value={cat._id}
+                                    checked={selectedCategories.includes(cat._id)}
                                     onChange={(e) => {
                                         if (e.target.checked) {
                                             setSelectedCategories([
@@ -207,7 +218,7 @@ export default function ConcernsPage() {
                     type="submit"
                     className="bg-black text-white px-5 py-2 rounded"
                 >
-                    Add Concern
+                    {editingId ? "Update Concern" : "Add Concern"}
                 </button>
             </form>
 
@@ -266,17 +277,27 @@ export default function ConcernsPage() {
                                     >
                                         Delete
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditingId(item._id);
+                                            setTitle(item.title);
+                                            setPriority(item.priority);
+                                        }}
+                                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                                    >
+                                        Edit
+                                    </button>
                                 </td>
                             </tr>
                         ))}
+                        {concerns.length === 0 && (
+                            <tr>
+                                <td colSpan="4" className="text-center py-8">
+                                    No concerns found
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
-                    {concerns.length === 0 && (
-                        <tr>
-                            <td colSpan="4" className="text-center py-8">
-                                No concerns found
-                            </td>
-                        </tr>
-                    )}
                 </table>
             </div>
         </div>
