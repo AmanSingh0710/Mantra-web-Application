@@ -191,7 +191,7 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
                                 {[
                                     { label: "Pending", count: data?.refunds?.pending, value: "pending", color: "text-pink-500" },
                                     { label: "Approved", count: data?.refunds?.approved, value: "approved", color: "text-cyan-400" },
-                                    { label: "Refunded", count: data?.refunds?.refunded, value: "refunded", color: "text-cyan-400" },
+                                    { label: "Refunded", count: data?.refunds?.processed, value: "processed", color: "text-cyan-400" },
                                     { label: "Rejected", count: data?.refunds?.rejected, value: "rejected", color: "text-pink-500" }
                                 ].map((item, i) => (
                                     <button

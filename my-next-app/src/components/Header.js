@@ -13,8 +13,6 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 export default function Header() {
   const router = useRouter();
   const { user } = useAuth();
-console.log("User:", user);
- console.log("Clicked User:", user);
 
   const handleUserClick = () => {
 

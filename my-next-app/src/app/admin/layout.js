@@ -38,6 +38,10 @@ import OurStory from "@/components/admin/OurStory";
 import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
 import AdminBlogList from "@/components/admin/blog/AdminBlogList";
 import ConcernsPage from "@/app/admin/concerns/[id]/page";
+import Approved from "@/components/admin/refundRequests/Approved";
+import Pending from "@/components/admin/refundRequests/Pending";
+import Processed from "@/components/admin/refundRequests/Processed";
+import Rejected from "@/components/admin/refundRequests/Rejected";
 
 import { useState, useEffect } from "react";
 
@@ -127,8 +131,8 @@ export default function AdminLayout({ children }) {
       case "pending":
         return <Pending />;
 
-      case "refunded":
-        return <Refunded />;
+      case "processed":
+        return <Processed />;
 
       case "rejected":
         return <Rejected />;
