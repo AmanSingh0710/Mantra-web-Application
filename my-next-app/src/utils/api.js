@@ -1,5 +1,5 @@
 // src/utils/api.js
-import { BASE_URL } from "./auth";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getImageUrl = (image) => {
   if (!image) return "/no-image.png";
