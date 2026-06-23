@@ -39,7 +39,7 @@ import Pending from "./admin/refunds/Pending";
 import Processed from "./admin/refunds/Processed";
 import Rejected from "./admin/refunds/Rejected";
 
-import { useState, useEffect } from "react";
+import { useState} from "react";
 
 
 export default function AdminLayout({ children }) {
@@ -47,7 +47,7 @@ export default function AdminLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
+
 
   const renderContent = () => {
     switch (activeTab) {
