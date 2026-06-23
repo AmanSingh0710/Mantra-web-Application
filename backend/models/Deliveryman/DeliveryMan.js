@@ -51,6 +51,38 @@ const deliveryManSchema = new mongoose.Schema(
       trim: true,
     },
 
+    licenseNumber: {
+      type: String,
+      trim: true,
+    },
+
+    bankName: {
+      type: String,
+      trim: true,
+    },
+
+    accountHolderName: {
+      type: String,
+      trim: true,
+    },
+
+    accountNumber: {
+      type: String,
+      trim: true,
+    },
+
+    ifscCode: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+
+    upiId: {
+      type: String,
+      lowercase: true,
+      trim: true,
+    },
+
     aadhaarNumber: {
       type: String,
       unique: true,

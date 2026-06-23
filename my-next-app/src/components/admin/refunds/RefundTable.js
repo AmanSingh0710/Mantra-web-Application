@@ -2,10 +2,7 @@
 
 import RefundStatusBadge from "./RefundStatusBadge";
 
-export default function RefundTable({
-    refunds = [],
-    onView,
-}) {
+export default function RefundTable({refunds = [], onView,}) {
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
 

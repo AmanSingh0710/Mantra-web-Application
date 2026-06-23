@@ -1,6 +1,4 @@
-export default function RefundStatusBadge({
-  status,
-}) {
+export default function RefundStatusBadge({status,}) {
   const styles = {
     pending:
       "bg-yellow-100 text-yellow-700",

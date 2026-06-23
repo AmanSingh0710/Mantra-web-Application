@@ -1,11 +1,11 @@
 "use client"
 
-import { fetchFromAPI , getImageUrl } from "@/utils/api";
+import { fetchFromAPI } from "@/utils/api";
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Plus, FileText, Eye, Trash2, Star } from 'lucide-react';
+import { Search, Download, Plus, FileText, Eye, Trash2, Bike } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
-
+//src/components/admin/DeliveryManList.js
 export default function DeliveryManList({ setActiveTab }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [deliveryMen, setDeliveryMen] = useState([]);
@@ -15,7 +15,7 @@ export default function DeliveryManList({ setActiveTab }) {
     const fetchDeliveryMen = async () => {
         try {
             const data = await fetchFromAPI("/deliveryman/list");
-            setDeliveryMen(Array.isArray(data) ? data : []);
+            setDeliveryMen(data?.data || []);
         } catch (error) {
             console.error("Fetch Error:", error);
         } finally {
@@ -54,40 +54,23 @@ export default function DeliveryManList({ setActiveTab }) {
     };
 
     const filteredList = deliveryMen.filter(man =>
-        man.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        man.phoneNumber?.includes(searchTerm)
+        man.name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+        man.mobile?.includes(searchTerm)
     );
 
-    const toggleStatus = async (id, currentStatus) => {
-        try {
-            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-
-            await fetchFromAPI(`/deliveryman/update-status/${id}`, {
-                method: "PUT",
-                body: JSON.stringify({ status: newStatus }),
-            });
-
-            toast.success(`Status updated to ${newStatus}`);
-
-            setDeliveryMen(prev =>
-                prev.map(man =>
-                    man._id === id ? { ...man, status: newStatus } : man
-                )
-            );
-
-        } catch (error) {
-            toast.error("Failed to update status");
-        }
-    };
 
     return (
         <div className="min-h-screen font-sans">
             {/* Page Title */}
             <div className="flex items-center gap-2 mb-6">
-                <img src="https://cdn-icons-png.flaticon.com/512/709/709722.png" alt="icon" className="w-6 h-6" />
+                <Bike className="w-6 h-6 text-blue-600" />
                 <h1 className="text-xl font-bold text-[#334257]">
                     Delivery Man
-                    <span className="bg-gray-200 text-sm px-2 py-0.5 rounded-full ml-2">{filteredList.length}</span>
+                    <span className="bg-gray-200 text-sm px-2 py-0.5 rounded-full ml-2">
+                        {filteredList.length}
+                    </span>
                 </h1>
             </div>
 
@@ -121,15 +104,13 @@ export default function DeliveryManList({ setActiveTab }) {
                                 <th className="px-6 py-4">SL</th>
                                 <th className="px-6 py-4">Name</th>
                                 <th className="px-6 py-4">Contact Info</th>
-                                <th className="px-6 py-4 text-center">Total Orders</th>
-                                <th className="px-6 py-4 text-center">Rating</th>
-                                <th className="px-6 py-4 text-center">Status</th>
+                                <th className="px-6 py-4 text-center">Total Deliveries</th>
                                 <th className="px-6 py-4 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="7" className="py-10 text-center">Loading...</td></tr>
+                                <tr><td colSpan="5" className="py-10 text-center">Loading...</td></tr>
                             ) : filteredList.length > 0 ? (
                                 filteredList.map((man, index) => (
                                     <tr key={man._id} className="hover:bg-gray-50 text-sm">
@@ -137,41 +118,26 @@ export default function DeliveryManList({ setActiveTab }) {
 
                                         <td className="px-6 py-4 flex items-center gap-2">
                                             <img
-                                                src={`${getImageUrl}/${man.deliveryman_image}`}
+                                                src={man.image?.url || "/no-image.png"}
                                                 className="w-8 h-8 rounded-full object-cover"
                                                 alt="delivery man"
                                             />
 
                                             <span className="font-bold text-gray-900">
-                                                {man.firstName} {man.lastName}
+                                                {man.name}
                                             </span>
                                         </td>
 
 
                                         <td className="px-6 py-4">
                                             <div className="text-gray-900 text-xs ">{man.email}</div>
-                                            <div className="font-bold text-black">{man.phoneNumber}</div>
+                                            <div className="font-bold text-black">{man.mobile}</div>
                                         </td>
                                         <td className="px-6 py-4 text-center font-bold text-gray-700">
-                                            {man.totalOrders || 0}
+                                            {man.totalDeliveries || 0}
                                         </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex justify-center items-center gap-1">
-                                                <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                                                <span className="font-bold text-black">{man.rating || '0.0'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button
-                                                onClick={() => toggleStatus(man._id, man.status)}
-                                                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all hover:scale-105 cursor-pointer ${man.status === "active"
-                                                    ? "bg-green-100 text-green-600 hover:bg-green-200"
-                                                    : "bg-red-100 text-red-500 hover:bg-red-200"
-                                                    }`}
-                                            >
-                                                {man.status || "active"}
-                                            </button>
-                                        </td>
+
+
                                         <td className="px-6 py-4">
                                             <div className="flex justify-center items-center gap-2">
 
@@ -197,7 +163,7 @@ export default function DeliveryManList({ setActiveTab }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="7" className="py-24 text-center">
+                                    <td colSpan="5" className="py-24 text-center">
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="bg-gray-50 p-8 rounded-2xl">
                                                 <FileText size={60} className="text-gray-200" />

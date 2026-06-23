@@ -2,10 +2,7 @@
 
 import { FaSearch } from "react-icons/fa";
 
-export default function RefundFilters({
-  search,
-  setSearch,
-}) {
+export default function RefundFilters({search, setSearch,}) {
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-6">
       <div className="flex gap-4 flex-wrap">

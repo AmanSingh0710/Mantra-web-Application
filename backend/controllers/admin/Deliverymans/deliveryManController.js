@@ -3,7 +3,7 @@
 const mongoose = require("mongoose");
 const DeliveryBoy = require("../../../models/Deliveryman/DeliveryMan");
 const Order = require("../../../models/Order");
-const cloudinary = require("../../../utils/cloudinary");
+const { cloudinary, deleteCloudinaryFile } = require("../../../middleware/cloudinary");
 const bcrypt = require("bcryptjs");
 
 
@@ -73,20 +73,40 @@ exports.addDeliveryBoy = async (req, res) => {
         ifscCode,
         upiId,
 
-        image:
-          req.files?.image?.[0]?.path || "",
+        image: req.files?.image?.[0]
+          ? {
+            url: req.files.image[0].path,
+            publicId: req.files.image[0].filename,
+          }
+          : undefined,
 
-        aadhaarFront:
-          req.files?.aadhaarFront?.[0]?.path || "",
+        aadhaarFront: req.files?.aadhaarFront?.[0]
+          ? {
+            url: req.files.aadhaarFront[0].path,
+            publicId: req.files.aadhaarFront[0].filename,
+          }
+          : undefined,
 
-        aadhaarBack:
-          req.files?.aadhaarBack?.[0]?.path || "",
+        aadhaarBack: req.files?.aadhaarBack?.[0]
+          ? {
+            url: req.files.aadhaarBack[0].path,
+            publicId: req.files.aadhaarBack[0].filename,
+          }
+          : undefined,
 
-        drivingLicenseImage:
-          req.files?.drivingLicenseImage?.[0]?.path || "",
+        drivingLicenseImage: req.files?.drivingLicenseImage?.[0]
+          ? {
+            url: req.files.drivingLicenseImage[0].path,
+            publicId: req.files.drivingLicenseImage[0].filename,
+          }
+          : undefined,
 
-        vehicleImage:
-          req.files?.vehicleImage?.[0]?.path || "",
+        vehicleImage: req.files?.vehicleImage?.[0]
+          ? {
+            url: req.files.vehicleImage[0].path,
+            publicId: req.files.vehicleImage[0].filename,
+          }
+          : undefined,
       });
 
     res.status(201).json({
@@ -196,10 +216,11 @@ exports.getSingleDeliveryBoy = async (req, res) => {
 exports.updateDeliveryBoy = async (req, res) => {
   try {
 
-    const deliveryBoy =
-      await DeliveryBoy.findById(
-        req.params.id
-      );
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password,12);
+    }
+
+    const deliveryBoy = await DeliveryBoy.findById(req.params.id);
 
     if (!deliveryBoy) {
       return res.status(404).json({
@@ -209,51 +230,90 @@ exports.updateDeliveryBoy = async (req, res) => {
       });
     }
 
-    const updateData = {
-      ...req.body,
-    };
+    const updateData = { ...req.body, };
 
-    if (req.files?.image) {
-      updateData.image =
-        req.files.image[0].path;
+    if (req.files?.image?.[0]) {
+
+      if (deliveryBoy.image?.publicId) {
+        await cloudinary.uploader.destroy(
+          deliveryBoy.image.publicId
+        );
+      }
+
+      updateData.image = {
+        url: req.files.image[0].path,
+        publicId: req.files.image[0].filename,
+      };
     }
 
-    if (req.files?.aadhaarFront) {
-      updateData.aadhaarFront =
-        req.files.aadhaarFront[0].path;
+    if (req.files?.aadhaarFront?.[0]) {
+
+      if (deliveryBoy.aadhaarFront?.publicId) {
+        await cloudinary.uploader.destroy(
+          deliveryBoy.aadhaarFront.publicId
+        );
+      }
+
+      updateData.aadhaarFront = {
+        url: req.files.aadhaarFront[0].path,
+        publicId: req.files.aadhaarFront[0].filename,
+      };
     }
 
-    if (req.files?.aadhaarBack) {
-      updateData.aadhaarBack =
-        req.files.aadhaarBack[0].path;
+    if (req.files?.aadhaarBack?.[0]) {
+
+      if (deliveryBoy.aadhaarBack?.publicId) {
+        await cloudinary.uploader.destroy(
+          deliveryBoy.aadhaarBack.publicId
+        );
+      }
+
+      updateData.aadhaarBack = {
+        url: req.files.aadhaarBack[0].path,
+        publicId: req.files.aadhaarBack[0].filename,
+      };
     }
 
-    if (req.files?.drivingLicenseImage) {
-      updateData.drivingLicenseImage =
-        req.files.drivingLicenseImage[0].path;
+    if (req.files?.drivingLicenseImage?.[0]) {
+
+      if (deliveryBoy.drivingLicenseImage?.publicId) {
+        await cloudinary.uploader.destroy(
+          deliveryBoy.drivingLicenseImage.publicId
+        );
+      }
+
+      updateData.drivingLicenseImage = {
+        url: req.files.drivingLicenseImage[0].path,
+        publicId: req.files.drivingLicenseImage[0].filename,
+      };
     }
 
-    if (req.files?.vehicleImage) {
-      updateData.vehicleImage =
-        req.files.vehicleImage[0].path;
+    if (req.files?.vehicleImage?.[0]) {
+
+      if (deliveryBoy.vehicleImage?.publicId) {
+        await cloudinary.uploader.destroy(
+          deliveryBoy.vehicleImage.publicId
+        );
+      }
+
+      updateData.vehicleImage = {
+        url: req.files.vehicleImage[0].path,
+        publicId: req.files.vehicleImage[0].filename,
+      };
     }
 
-    const updatedDeliveryBoy =
-      await DeliveryBoy.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+    const updatedDeliveryBoy = await DeliveryBoy.findByIdAndUpdate(req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
-      message:
-        "Delivery boy updated successfully",
-      deliveryBoy:
-        updatedDeliveryBoy,
+      message: "Delivery boy updated successfully",
+      deliveryBoy: updatedDeliveryBoy,
     });
 
   } catch (error) {
@@ -273,27 +333,34 @@ exports.deleteDeliveryBoy = async (req, res) => {
 
   try {
 
-    if (
-      !mongoose.Types.ObjectId.isValid(
-        req.params.id
-      )
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid Id"
       });
     }
 
-    const deliveryBoy =
-      await DeliveryBoy.findById(
-        req.params.id
-      );
+    const deliveryBoy = await DeliveryBoy.findById(req.params.id);
 
     if (!deliveryBoy) {
       return res.status(404).json({
         success: false,
         message: "Delivery Boy Not Found"
       });
+    }
+
+    const files = [
+      deliveryBoy.image,
+      deliveryBoy.aadhaarFront,
+      deliveryBoy.aadhaarBack,
+      deliveryBoy.drivingLicenseImage,
+      deliveryBoy.vehicleImage,
+    ];
+
+    for (const file of files) {
+      if (file?.publicId) {
+        await cloudinary.uploader.destroy(file.publicId);
+      }
     }
 
     await deliveryBoy.deleteOne();

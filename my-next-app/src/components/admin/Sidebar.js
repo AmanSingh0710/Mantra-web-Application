@@ -196,7 +196,7 @@ export default function AdminSidebar({ data, isOpen, setIsOpen, setActiveTab, ac
                                 ].map((item, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => setActiveTab(item.value)} // Yahan state update hogi
+                                        onClick={() => setActiveTab(item.value)}
                                         className={`flex w-full justify-between items-center px-3 py-1.5 text-xs rounded-r-md transition cursor-pointer ${activeTab === item.value ? "text-white bg-[#3d4b5f]" : "text-gray-400 hover:text-white hover:bg-[#3d4b5f]"
                                             }`}
                                     >

@@ -1,9 +1,6 @@
 "use client";
 
-export default function RefundDetailsModal({
-  refund,
-  onClose,
-}) {
+export default function RefundDetailsModal({refund, onClose,}) {
   if (!refund) return null;
 
   return (
