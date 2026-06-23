@@ -198,7 +198,11 @@ export default function AddDeliveryManPage() {
         </label>
     );
 
+    <div style={{ background: "red", color: "white", padding: "20px", fontSize: "40px" }}>
+        NEW UI TEST 123
+    </div>
     return (
+
         <div className="min-h-screen bg-[#F7F8FA] p-6 font-sans text-[#334257]">
             <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm">
                 <div className="flex items-center gap-4">
