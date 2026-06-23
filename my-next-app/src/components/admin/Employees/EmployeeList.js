@@ -1,9 +1,9 @@
 "use client";
 
-import { fetchFromAPI, BASE_URL } from "@/utils/api";
+import { fetchFromAPI} from "@/utils/api";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import Image from "next/image";
+
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);

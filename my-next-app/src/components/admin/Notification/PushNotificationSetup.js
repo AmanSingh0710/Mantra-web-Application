@@ -1,7 +1,7 @@
 //src/components/admin/Notification/PushNotificationSetup.js
 "use client";
 
-import { BASE_URL } from "@/utils/api";
+import { fetchFromAPI } from "@/utils/api";
 import React, { useState, useEffect } from "react";
 import { Bell, Cloud, Info, RotateCcw, Send } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,9 +18,7 @@ const PushNotificationSetup = () => {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${BASE_URL}/notifications/settings?userType=${userType}`
-      );
+      const res = await fetchFromAPI(`/notifications/settings?userType=${userType}`);
 
       const data = await res.json();
       setFormData(data.data || {});
@@ -46,8 +44,7 @@ const PushNotificationSetup = () => {
   // 🔥 Submit Settings
   const handleSubmit = async () => {
     try {
-      const res = await fetch(
-        `${BASE_URL}/notifications/settings/update`,
+      const res = await fetchFromAPI(`/notifications/settings/update`,
         {
           method: "POST",
           headers: {

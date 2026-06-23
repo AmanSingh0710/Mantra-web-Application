@@ -2,10 +2,7 @@
 
 import { fetchFromAPI } from "@/utils/api";
 import React, { useState, useEffect } from "react";
-import {
-  Search, Trash2, Edit3, CheckCircle,
-  Clock, AlertCircle, Filter, ChevronRight
-} from "lucide-react";
+import {Trash2, Edit3, CheckCircle, Filter} from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function SupportTicketsPage() {

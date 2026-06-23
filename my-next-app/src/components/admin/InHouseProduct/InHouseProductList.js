@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL , getImageUrl } from "@/utils/api";
+import { fetchFromAPI , getImageUrl } from "@/utils/api";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -48,8 +48,8 @@ export default function InHouseProductList() {
         const fetchMetadata = async () => {
             try {
                 const [catRes, brandRes] = await Promise.all([
-                    fetch(`${BASE_URL}/categories`, { credentials: "include" }),
-                    fetch(`${BASE_URL}/brand`, { credentials: "include" })
+                    fetchFromAPI(`/categories`, { credentials: "include" }),
+                    fetchFromAPI(`/brand`, { credentials: "include" })
                 ]);
                 const catResult = await catRes.json();
                 const brandResult = await brandRes.json();
@@ -77,7 +77,7 @@ export default function InHouseProductList() {
         }).toString();
 
         try {
-            const res = await fetch(`${BASE_URL}/Adminproducts?${query}`, {
+            const res = await fetchFromAPI(`/Adminproducts?${query}`, {
                 credentials: "include"
             });
             const data = await res.json();
@@ -104,7 +104,7 @@ export default function InHouseProductList() {
         if (!categoryId) return setSubCategories([]);
 
         try {
-            const res = await fetch(`${BASE_URL}/categories?parent=${categoryId}`, { credentials: "include" });
+            const res = await fetchFromAPI(`/categories?parent=${categoryId}`, { credentials: "include" });
             const result = await res.json();
             setSubCategories(result.data || result || []);
         } catch (err) { console.error(err); }
@@ -117,7 +117,7 @@ export default function InHouseProductList() {
         if (!subId) return setSubSubCategories([]);
 
         try {
-            const res = await fetch(`${BASE_URL}/categories?parent=${subId}`, { credentials: "include" });
+            const res = await fetchFromAPI(`/categories?parent=${subId}`, { credentials: "include" });
             const result = await res.json();
             setSubSubCategories(result.data || result || []);
         } catch (err) { console.error(err); }
@@ -140,7 +140,7 @@ export default function InHouseProductList() {
                 updatedValue = currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE";
             }
 
-            const res = await fetch(`${BASE_URL}/Adminproducts/toggle-status`, {
+            const res = await fetchFromAPI(`/Adminproducts/toggle-status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -167,7 +167,7 @@ export default function InHouseProductList() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`${BASE_URL}/Adminproducts/${editFormData.id}`, {
+            const res = await fetchFromAPI(`/Adminproducts/${editFormData.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -186,7 +186,7 @@ export default function InHouseProductList() {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this product listing from the master catalogue?")) {
             try {
-                const res = await fetch(`${BASE_URL}/Adminproducts/${id}`, {
+                const res = await fetchFromAPI(`/Adminproducts/${id}`, {
                     method: "DELETE",
                     credentials: "include"
                 });

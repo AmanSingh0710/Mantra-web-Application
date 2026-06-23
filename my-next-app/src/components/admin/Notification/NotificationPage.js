@@ -1,7 +1,7 @@
 //src/components/admin/Notification/NotificationPge.js
 "use client";
 
-import { BASE_URL } from "@/utils/api";
+import {fetchFromAPI} from "@/utils/api";
 import { useState, useEffect } from "react";
 import { FaBell, FaSearch, FaTrash, FaPaperPlane, FaRedo, FaImage } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -23,7 +23,7 @@ export default function NotificationPage() {
         try {
             setLoading(true);
 
-            const res = await fetch(`${BASE_URL}/notifications/admin/list`,
+            const res = await fetchFromAPI(`/notifications/admin/list`,
                 { credentials: "include" }
             );
 
@@ -59,7 +59,7 @@ export default function NotificationPage() {
             data.append("description", formData.description);
             if (formData.image) data.append("image", formData.image);
 
-            const res = await fetch(`${BASE_URL}/notifications/send`, {
+            const res = await fetchFromAPI(`/notifications/send`, {
                 method: "POST",
                 credentials: "include",
                 body: data
@@ -97,7 +97,7 @@ export default function NotificationPage() {
         try {
 
             if (!window.confirm("Are you sure you want to delete this notification?")) return;
-            const res = await fetch(`${BASE_URL}/notifications/${id}`,
+            const res = await fetchFromAPI(`/notifications/${id}`,
                 {
                     method: "DELETE",
                     credentials: "include"
@@ -121,7 +121,7 @@ export default function NotificationPage() {
     // ✅ Resend
     const handleResend = async (id) => {
         try {
-            const res = await fetch(`${BASE_URL}/notifications/resend/${id}`, {
+            const res = await fetchFromAPI(`/notifications/resend/${id}`, {
                 method: "POST",
                 credentials: "include"
             });

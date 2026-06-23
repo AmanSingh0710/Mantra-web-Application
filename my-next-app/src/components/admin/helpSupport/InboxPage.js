@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchFromAPI, BASE_URL } from "@/utils/api";
+import { fetchFromAPI} from "@/utils/api";
 import React, { useState, useEffect } from "react";
 import { Search, Filter, MoreVertical, CheckCheck, User } from "lucide-react";
 

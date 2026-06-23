@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL } from "@/utils/api";
+import { fetchFromAPI } from "@/utils/api";
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
@@ -62,7 +62,7 @@ export default function AddProduct() {
 
         const fetchCategories = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/categories`, {
+                const res = await fetchFromAPI(`/categories`, {
                     credentials: "include"
                 });
                 const result = await res.json();
@@ -79,7 +79,7 @@ export default function AddProduct() {
 
         const fetchStores = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/stores`, {
+                const res = await fetchFromAPI(`/stores`, {
                     credentials: "include"
                 });
                 const data = await res.json();
@@ -89,7 +89,7 @@ export default function AddProduct() {
 
         const fetchBrands = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/brand`, {
+                const res = await fetchFromAPI(`/brand`, {
                     credentials: "include"
                 });
                 const data = await res.json();
@@ -99,8 +99,7 @@ export default function AddProduct() {
 
         const fetchConcerns = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/concerns/public/all`
-                );
+                const res = await fetchFromAPI(`/concerns/public/all`);
 
                 const data = await res.json();
 
@@ -171,7 +170,7 @@ export default function AddProduct() {
         data.append("tags", JSON.stringify(tags.split(",").map(tag => tag.trim()))); // String to Array conversion
 
         try {
-            const res = await fetch(`${BASE_URL}/Adminproducts/add`, {
+            const res = await fetchFromAPI(`/Adminproducts/add`, {
                 method: "POST",
                 credentials: "include",
                 body: data

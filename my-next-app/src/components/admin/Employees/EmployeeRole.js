@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchFromAPI, BASE_URL } from "@/utils/api";
+import { fetchFromAPI} from "@/utils/api";
 import { useState, useEffect } from "react";
 import { ROLE_CONFIG } from "@/constants/roles";
 
