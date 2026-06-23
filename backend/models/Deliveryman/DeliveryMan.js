@@ -158,6 +158,26 @@ const deliveryManSchema = new mongoose.Schema(
     },
 
     lastLogin: Date,
+
+    isEmailVerified: {
+      type: Boolean,
+      default: true, // Admin create karta hai
+    },
+
+    refreshToken: {
+      type: String,
+      default: null,
+    },
+
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -177,15 +197,39 @@ deliveryManSchema.pre("save", async function () {
   );
 });
 
-deliveryManSchema.methods.comparePassword =
-  async function (password) {
-    return bcrypt.compare(
-      password,
-      this.password
-    );
+deliveryManSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(
+    password,
+    this.password
+  );
+};
+
+deliveryManSchema.methods.handleLoginAttempt = async function (isMatch) {
+
+  const MAX_ATTEMPTS = 5;
+  const LOCK_TIME = 15 * 60 * 1000; // 15 min
+
+  if (isMatch) {
+    this.loginAttempts = 0;
+    this.lockUntil = null;
+  } else {
+    this.loginAttempts += 1;
+
+    if (this.loginAttempts >= MAX_ATTEMPTS) {
+      this.lockUntil = Date.now() + LOCK_TIME;
+    }
+  }
+
+  await this.save();
+};
+
+deliveryManSchema.methods.toJSON = function () {
+    const obj = this.toObject();
+
+    delete obj.password;
+    delete obj.refreshToken;
+
+    return obj;
   };
 
-module.exports = mongoose.model(
-  "DeliveryMan",
-  deliveryManSchema
-);
+module.exports = mongoose.model("DeliveryMan", deliveryManSchema);

@@ -14,7 +14,7 @@ const storeSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   mobile: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false },
   shopName: { type: String, required: true },
   shopAddress: { type: String, required: true },
   vendorImage: { type: String }, // Stores file path
@@ -164,7 +164,37 @@ const storeSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  status: { type: String, default: "Active", enum: ["Active", "Inactive"] }
+  status: { type: String, default: "Active", enum: ["Active", "Inactive"] },
+
+  isEmailVerified: {
+    type: Boolean,
+    default: true, // admin create kar raha hai to true rakh sakte ho
+  },
+
+  refreshToken: {
+    type: String,
+    default: null,
+  },
+
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+
+  lockUntil: {
+    type: Date,
+    default: null,
+  },
+
+  blocked: {
+    type: Boolean,
+    default: false,
+  },
+
+  lastLogin: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 
@@ -177,6 +207,33 @@ storeSchema.pre("save", async function () {
 
 storeSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
+};
+
+storeSchema.methods.handleLoginAttempt = async function (isMatch) {
+  const MAX_ATTEMPTS = 5;
+  const LOCK_TIME = 15 * 60 * 1000;
+
+  if (isMatch) {
+    this.loginAttempts = 0;
+    this.lockUntil = null;
+  } else {
+    this.loginAttempts += 1;
+
+    if (this.loginAttempts >= MAX_ATTEMPTS) {
+      this.lockUntil = Date.now() + LOCK_TIME;
+    }
+  }
+
+  await this.save();
+};
+
+storeSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+
+  delete obj.password;
+  delete obj.refreshToken;
+
+  return obj;
 };
 
 module.exports = mongoose.model("Store", storeSchema);

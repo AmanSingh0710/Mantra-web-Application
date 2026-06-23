@@ -10,6 +10,7 @@ const generateOTP = require("../../utils/generateOTP");
 const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
 const cloudinary = require("../../utils/cloudinary");
+const DeliveryMan = require("../../models/DeliveryMan");
 
 
 // Helper to generate cookie options dynamically based on environment.
@@ -140,27 +141,51 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    let user = null;
+    let role = null;
 
-    if (!user)
-      return res.status(400).json({ message: "Invalid credentials" });
+    user = await User.findOne({ email }).select("+password");
 
-    // ✅ account blocked
-    if (user.blocked) {
-      return res.status(403).json({ message: "Account blocked" });
+    if (user) {
+      role = user.role;
     }
 
+    if (!user) {
+      user = await Store.findOne({ email }).select("+password");
+
+      if (user) {
+        role = "VENDOR";
+      }
+    }
+
+    if (!user) {
+      user = await DeliveryMan.findOne({ email }).select("+password");
+
+      if (user) { role = "DELIVERY"; }
+    }
+
+    if (!user) { return res.status(400).json({ message: "Invalid credentials" }); }
+
+    // ✅ account blocked
+    if (user.blocked || user.isBlocked) { return res.status(403).json({ message: "Account blocked" }); }
+
     // ✅ account locked
+
     if (user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ message: "Account locked. Try later" });
+      return res.status(403).json({
+        message: "Account locked. Try later"
+      });
     }
 
     const isMatch = await user.comparePassword(password);
 
     await user.handleLoginAttempt(isMatch);
 
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid credentials"
+      });
+    }
 
     if (!user.isEmailVerified) {
       return res.status(403).json({
@@ -179,8 +204,7 @@ exports.login = async (req, res) => {
 
     const payload = {
       id: user._id,
-      role: user.role,
-      storeId: user.storeId
+      role,
     };
 
     const accessToken = jwt.sign(
@@ -222,6 +246,8 @@ exports.login = async (req, res) => {
     });
 
     res.status(200).json({
+      success: true,
+      role,
       accessToken,
       refreshToken,
       user

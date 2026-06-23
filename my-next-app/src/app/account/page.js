@@ -1,15 +1,11 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { BASE_URL } from "@/utils/api";
 import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import {
-  FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt,
-  FaHashtag, FaSignOutAlt, FaCamera, FaShieldAlt, FaSave, FaEdit
-} from "react-icons/fa";
+import {FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt,FaHashtag, FaSignOutAlt, FaCamera, FaShieldAlt, FaSave, FaEdit} from "react-icons/fa";
 //src/app/account/apge.js
 export default function MyAccount() {
   const router = useRouter();
