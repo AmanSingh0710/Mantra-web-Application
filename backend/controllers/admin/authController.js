@@ -10,7 +10,7 @@ const generateOTP = require("../../utils/generateOTP");
 const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
 const cloudinary = require("../../utils/cloudinary");
-const DeliveryMan = require("../../models/DeliveryMan");
+const DeliveryMan = require("../../models/Deliveryman/DeliveryMan");
 
 
 // Helper to generate cookie options dynamically based on environment.
