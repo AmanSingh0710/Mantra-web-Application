@@ -34,10 +34,10 @@ import OurStory from "@/components/admin/OurStory";
 import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
 import AdminBlogList from "@/components/admin/blog/AdminBlogList";
 import ConcernsPage from "@/app/admin/concerns/[id]/page";
-import Approved from "./refunds/approved";
-import Pending from "./refunds/pending";
-import Processed from "./refunds/refunded";
-import Rejected from "./refunds/rejected";
+import Approved from "./refunds/approved/page";
+import Pending from "./refunds/pending/page";
+import Processed from "./refunds/refunded/page";
+import Rejected from "./refunds/rejected/page";
 
 import { useState} from "react";
 
