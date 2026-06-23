@@ -3,7 +3,7 @@
 const mongoose = require("mongoose");
 const DeliveryBoy = require("../../../models/Deliveryman/DeliveryMan");
 const Order = require("../../../models/Order");
-const { cloudinary, deleteCloudinaryFile } = require("../../../middleware/cloudinary");
+const { cloudinary, deleteCloudinaryFile } = require("../../../utils/cloudinary");
 const bcrypt = require("bcryptjs");
 
 
