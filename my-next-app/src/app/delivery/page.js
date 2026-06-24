@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import {useEffect,useState,} from "react";
 
-import {
-  fetchFromAPI,
-  getImageUrl,
-} from "@/utils/api";
+import {fetchFromAPI,getImageUrl,} from "@/utils/api";
 
 import DeliveryCard from "@/components/delivery/DeliveryCard";
 
-import {
-  Package,
-  Wallet,
-  CheckCircle2,
-  Clock3,
-} from "lucide-react";
+import {Package,Wallet,CheckCircle2,Clock3,} from "lucide-react";
 
 export default function DashboardPage() {
 

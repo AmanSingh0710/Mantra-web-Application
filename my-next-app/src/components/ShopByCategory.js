@@ -1,10 +1,10 @@
 "use client";
-import Image from "next/image";
+
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ShopByCategory() {
   const [categories, setCategories] = useState([]);
@@ -15,8 +15,7 @@ export default function ShopByCategory() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/categories/public`);
-        const data = await res.json();
+        const data = await fetchFromAPI("/categories/public");
 
         if (data.categories) {
           setCategories(data.categories);
@@ -31,13 +30,7 @@ export default function ShopByCategory() {
     fetchCategories();
   }, []);
 
-  const getImageUrl = (imgName) => {
-    if (!imgName || imgName.startsWith("/")) return imgName || "/placeholder.png";
-    const cleanPath = imgName.replace(/\\/g, "/");
-    return cleanPath.startsWith("uploads/")
-      ? `${BASE_URL}/${cleanPath}`
-      : `${BASE_URL}/uploads/${cleanPath}`;
-  };
+
 
   const scroll = (dir) => {
     if (sliderRef.current) {
@@ -104,12 +97,10 @@ export default function ShopByCategory() {
               style={{ scrollSnapAlign: "start" }}
             >
               <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-gray-50 rounded-full border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden mb-3 relative transition-transform duration-300 group-hover/card:scale-105 group-hover/card:shadow-md">
-                <Image
+                <img
                   src={getImageUrl(item.image)}
                   alt={item.name}
-                  fill
-                  className="object-cover p-1 rounded-full"
-                  sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, 160px"
+                  className="w-full h-full object-cover p-1 rounded-full"
                 />
               </div>
 
