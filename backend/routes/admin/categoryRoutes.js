@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../../middleware/upload");
 
 const auth = require("../../middleware/auth");
 const isAdmin = require("../../middleware/isAdmin");
@@ -12,8 +13,8 @@ router.get("/public", publicLimiter, categoryController.getPublicCategories);
 
 
 // Admin
-router.post("/", adminLimiter, auth, isAdmin("ADMIN"), categoryController.createCategory);
-router.put("/:id", adminLimiter, auth, isAdmin("ADMIN"), categoryController.updateCategory);
+router.post("/", adminLimiter, auth, isAdmin("ADMIN"), upload.single("image"),categoryController.createCategory);
+router.put("/:id", adminLimiter, auth, isAdmin("ADMIN"), upload.single("image"),categoryController.updateCategory);
 router.delete("/:id", adminLimiter, auth, isAdmin("ADMIN"), categoryController.deleteCategory);
 router.get("/", adminLimiter, auth, isAdmin("ADMIN"), categoryController.getCategories);
 

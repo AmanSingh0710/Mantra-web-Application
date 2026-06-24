@@ -12,7 +12,14 @@ const categorySchema = new mongoose.Schema({
   },
 
   image: {
-    type: String
+    publicId: {
+      type: String,
+      default: ""
+    },
+    url: {
+      type: String,
+      default: ""
+    }
   },
 
   parent: {
@@ -25,8 +32,8 @@ const categorySchema = new mongoose.Schema({
     type: Number,
     default: 1 // 1 = Category, 2 = Sub, 3 = Sub-Sub
   },
- 
-   priority: {
+
+  priority: {
     type: Number,
     default: 0
   }

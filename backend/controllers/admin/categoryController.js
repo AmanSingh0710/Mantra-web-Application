@@ -1,4 +1,5 @@
 const Category = require("../../models/Category");
+const {cloudinary,deleteCloudinaryFile}  = require("../../utils/cloudinary");
 //backend/controllers/admin/categoryController.js
 exports.getCategories = async (req, res) => {
   try {
@@ -23,7 +24,6 @@ exports.getCategories = async (req, res) => {
 
 exports.getPublicCategories = async (req, res) => {
   try {
-
     const categories = await Category.find({
       level: 1
     })
@@ -33,14 +33,13 @@ exports.getPublicCategories = async (req, res) => {
       })
       .select("name image");
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       categories
     });
 
   } catch (error) {
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message
     });
@@ -49,7 +48,7 @@ exports.getPublicCategories = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, description, image, parent, priority } = req.body;
+    const { name, description, parent, priority } = req.body;
 
     let level = 1;
 
@@ -57,21 +56,39 @@ exports.createCategory = async (req, res) => {
       const parentCategory = await Category.findById(parent);
 
       if (!parentCategory) {
-        return res.status(400).json({ message: "Parent category not found" });
+        return res.status(400).json({
+          success: false,
+          message: "Parent category not found"
+        });
       }
 
       if (parentCategory.level >= 3) {
-        return res.status(400).json({ message: "Maximum 3 levels allowed" });
+        return res.status(400).json({
+          success: false,
+          message: "Maximum 3 levels allowed"
+        });
       }
 
       level = parentCategory.level + 1;
+    }
+
+    let image = {
+      publicId: "",
+      url: ""
+    };
+
+    if (req.file) {
+      image = {
+        publicId: req.file.filename,
+        url: req.file.path
+      };
     }
 
     const category = await Category.create({
       name,
       description,
       image,
-      priority: priority || 0, // save priority
+      priority: Number(priority) || 0,
       parent: parent || null,
       level
     });
@@ -83,36 +100,68 @@ exports.createCategory = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 
 
 exports.updateCategory = async (req, res) => {
   try {
-    const { parent } = req.body;
+    const category = await Category.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found"
+      });
+    }
+
+    const { name, description, parent, priority } = req.body;
+
+    let level = 1;
 
     if (parent) {
       const parentCategory = await Category.findById(parent);
 
       if (!parentCategory) {
-        return res.status(400).json({ message: "Parent category not found" });
+        return res.status(400).json({
+          success: false,
+          message: "Parent category not found"
+        });
       }
 
       if (parentCategory.level >= 3) {
-        return res.status(400).json({ message: "Cannot move beyond 3 levels" });
+        return res.status(400).json({
+          success: false,
+          message: "Cannot move beyond 3 levels"
+        });
       }
 
-      req.body.level = parentCategory.level + 1;
-    } else {
-      req.body.level = 1;
+      level = parentCategory.level + 1;
     }
 
-    const category = await Category.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    let image = category.image;
+
+    if (req.file) {
+
+      if (category.image?.publicId) {
+        await deleteCloudinaryFile(category.image.publicId);
+      }
+
+      category.image = {publicId: req.file.filename,url: req.file.path};
+    }
+
+    category.name = name || category.name;
+    category.description = description || category.description;
+    category.priority = Number(priority) || 0;
+    category.parent = parent || null;
+    category.level = level;
+    category.image = image;
+
+    await category.save();
 
     return res.status(200).json({
       success: true,
@@ -121,7 +170,7 @@ exports.updateCategory = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(400).json({
+    return res.status(500).json({
       success: false,
       message: err.message
     });
@@ -131,12 +180,21 @@ exports.updateCategory = async (req, res) => {
 
 exports.deleteCategory = async (req, res) => {
   try {
-    const deleteWithChildren = async (categoryId) => {
-      const children = await Category.find({ parent: categoryId });
 
-      for (let child of children) {
+    const deleteWithChildren = async (categoryId) => {
+
+      const category = await Category.findById(categoryId);
+
+      if (!category) return;
+
+      const children = await Category.find({parent: categoryId});
+
+      for (const child of children) {
         await deleteWithChildren(child._id);
       }
+
+      // Delete image from Cloudinary
+      if (category.image?.publicId) { await deleteCloudinaryFile(category.image.publicId);}
 
       await Category.findByIdAndDelete(categoryId);
     };
@@ -145,10 +203,13 @@ exports.deleteCategory = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Category and subcategories deleted"
+      message: "Category and subcategories deleted successfully"
     });
 
   } catch (err) {
-    res.status(500).json({success: false, message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };

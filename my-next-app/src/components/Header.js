@@ -3,7 +3,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -16,28 +15,28 @@ export default function Header() {
 
   const handleUserClick = () => {
 
-  if (!user) {
-    router.push("/login");
-    return;
-  }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
 
-  switch (user.role) {
-    case "ADMIN":
-      router.push("/admin");
-      break;
+    switch (user.role) {
+      case "ADMIN":
+        router.push("/admin");
+        break;
 
-    case "VENDOR":
-      router.push("/store");
-      break;
+      case "VENDOR":
+        router.push("/store");
+        break;
 
-    case "DELIVERY":
-      router.push("/delivery");
-      break;
+      case "DELIVERY":
+        router.push("/delivery");
+        break;
 
-    default:
-      router.push("/account");
-  }
-};
+      default:
+        router.push("/account");
+    }
+  };
 
   return (
     <>
@@ -47,12 +46,11 @@ export default function Header() {
         <div className="header-top">
           {/* Left Side Logo */}
           <div className="header-left">
-            <Image
+            <img
               src="/sideogo.avif"
               alt="Brand Secondary Logo"
-              width={150}
-              height={50}
-              priority // High priority for LCP
+              width="150"
+              height="50"
               className="header-logo-img"
               style={{ height: "auto" }}
             />
@@ -60,12 +58,11 @@ export default function Header() {
 
           {/* Main Center Logo */}
           <Link href="/" className="header-logo" aria-label="Home">
-            <Image
+            <img
               src="/mantar.avif"
               alt="Mantar Official Logo"
-              width={150}
-              height={50}
-              priority
+              width="150"
+              height="50"
               className="header-logo-img"
               style={{ height: "auto" }}
             />

@@ -63,38 +63,12 @@ exports.getProducts = async (req, res) => {
 // ================= 2. GET PUBLIC STOREFRONT (Calculates Real-time Aggregate Ratings) =================
 exports.getPublicProducts = async (req, res) => {
   try {
-    const productsWithRatings = await Product.aggregate([
-      {
-        $match: {
-          status: "ACTIVE",
-          approvedByAdmin: true,
-          isDeleted: false,
-        },
-      },
+    const { category } = req.query;
 
-      // Reviews
-      {
-        $lookup: {
-          from: "reviews",
-          localField: "_id",
-          foreignField: "productId",
-          as: "productReviews",
-        },
-      },
+    const matchStage = {status: "ACTIVE",approvedByAdmin: true,isDeleted: false,};
 
-      {
-        $addFields: {
-          activeReviews: {
-            $filter: {
-              input: "$productReviews",
-              as: "review",
-              cond: {
-                $eq: ["$$review.status", "active"],
-              },
-            },
-          },
-        },
-      },
+    const pipeline = [
+      {$match: matchStage,},
 
       // Category
       {
@@ -134,14 +108,14 @@ exports.getPublicProducts = async (req, res) => {
           from: "categories",
           localField: "subSubCategory",
           foreignField: "_id",
-          as: "subSubCategoryData"
-        }
+          as: "subSubCategoryData",
+        },
       },
       {
         $unwind: {
           path: "$subSubCategoryData",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
 
       // Brand
@@ -160,6 +134,60 @@ exports.getPublicProducts = async (req, res) => {
         },
       },
 
+      // Reviews
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "productId",
+          as: "productReviews",
+        },
+      },
+
+      {
+        $addFields: {
+          activeReviews: {
+            $filter: {
+              input: "$productReviews",
+              as: "review",
+              cond: {
+                $eq: ["$$review.status", "active"],
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    // CATEGORY FILTER
+    if (category && category !== "all products") {
+      pipeline.push({
+        $match: {
+          $or: [
+            {
+              "category.name": {
+                $regex: category,
+                $options: "i",
+              },
+            },
+            {
+              "subCategory.name": {
+                $regex: category,
+                $options: "i",
+              },
+            },
+            {
+              "subSubCategoryData.name": {
+                $regex: category,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    pipeline.push(
       {
         $project: {
           _id: 1,
@@ -200,7 +228,7 @@ exports.getPublicProducts = async (req, res) => {
 
           subSubCategory: {
             _id: "$subSubCategoryData._id",
-            name: "$subSubCategoryData.name"
+            name: "$subSubCategoryData.name",
           },
 
           brand: {
@@ -231,14 +259,15 @@ exports.getPublicProducts = async (req, res) => {
         $sort: {
           createdAt: -1,
         },
-      },
-    ]);
+      }
+    );
+
+    const productsWithRatings = await Product.aggregate(pipeline);
 
     return res.status(200).json({
       success: true,
       products: productsWithRatings,
     });
-
   } catch (error) {
     console.error("Public Storefront Aggregation Error:", error);
 
@@ -625,7 +654,7 @@ exports.getProductsByConcern = async (req, res) => {
 
     const { concernId } = req.params;
 
-    const products = await Product.find({concerns: concernId}).populate("concerns");
+    const products = await Product.find({ concerns: concernId }).populate("concerns");
 
     return res.status(200).json({
       success: true,
@@ -644,7 +673,8 @@ exports.getProductsByConcern = async (req, res) => {
 exports.getPublicProductsByConcern = async (req, res) => {
   try {
 
-    const products = await Product.find({concerns: req.params.concernId,
+    const products = await Product.find({
+      concerns: req.params.concernId,
       status: "ACTIVE"
     }).populate("concerns");;
 

@@ -5,17 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { 
-  FaBell, 
-  FaShoppingCart, 
-  FaGlobe, 
-  FaSearch, 
-  FaBars, 
-  FaCog, 
-  FaSignOutAlt, 
-  FaChevronDown, 
-  FaCheck 
-} from "react-icons/fa";
+import { FaBell,  FaShoppingCart, FaGlobe, FaSearch, FaBars, FaCog, FaSignOutAlt, FaChevronDown, FaCheck } from "react-icons/fa";
 
 export default function AdminNavbar({ toggleSidebar, setActiveTab }) {
   const router = useRouter();

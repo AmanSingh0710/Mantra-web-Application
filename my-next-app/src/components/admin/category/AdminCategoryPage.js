@@ -4,12 +4,14 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fetchFromAPI } from '@/utils/api';
+import toast from 'react-hot-toast';
 
 const CategorySetup = () => {
     const [setupType, setSetupType] = useState('category');
     const [allCategories, setAllCategories] = useState([]);
     const [editId, setEditId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [previewImage, setPreviewImage] = useState("");
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -26,7 +28,7 @@ const CategorySetup = () => {
             const response = await fetchFromAPI("/categories");
 
             setAllCategories(response.data || []);
-            
+
         } catch (err) {
             console.error("Error fetching data", err);
         } finally {
@@ -38,52 +40,58 @@ const CategorySetup = () => {
         fetchData();
     }, []);
 
-    // ✅ 2. IMAGE
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () =>
-                setFormData({ ...formData, image: reader.result });
-            reader.readAsDataURL(file);
-        }
+
+        if (!file) return;
+
+        setFormData((prev) => ({
+            ...prev,
+            image: file
+        }));
+
+        setPreviewImage(URL.createObjectURL(file));
     };
 
-    // ✅ 3. CREATE / UPDATE
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const level =
-            setupType === 'category' ? 1 :
-                setupType === 'sub-category' ? 2 : 3;
-
         try {
+
+            const payload = new FormData();
+
+            payload.append("name", formData.name);
+            payload.append("priority", formData.priority || 0);
+
+            if (formData.parent) {
+                payload.append("parent", formData.parent);
+            }
+
+            if (formData.image instanceof File) {
+                payload.append("image", formData.image);
+            }
+
             if (editId) {
                 await fetchFromAPI(`/categories/${editId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        ...formData,
-                        level,
-                        parent: formData.parent || null
-                    })
+                    method: "PUT",
+                    body: payload,
                 });
             } else {
                 await fetchFromAPI(`/categories`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        ...formData,
-                        level,
-                        parent: formData.parent || null
-                    })
+                    method: "POST",
+                    body: payload,
                 });
             }
 
-            alert(editId ? "Updated!" : "Submitted!");
+            toast.success(editId ? "Category Updated" : "Category Created");
+
             resetForm();
+
             fetchData();
 
         } catch (err) {
-            alert("Action failed");
+            console.error(err);
+            toast.error("Action Failed")
         }
     };
 
@@ -104,6 +112,7 @@ const CategorySetup = () => {
     const resetForm = () => {
         setEditId(null);
         setFormData({ name: '', priority: '', parent: '', image: '' });
+        setPreviewImage("");
     };
 
     // FILTER
@@ -245,8 +254,8 @@ const CategorySetup = () => {
                         {/* Right Side: Preview */}
                         <div className="flex flex-col items-center justify-start">
                             <div className="w-full max-w-[280px] aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center bg-[#f8fafc] overflow-hidden">
-                                {formData.image ? (
-                                    <img src={formData.image} className="w-full h-full object-contain" alt="preview" />
+                                {previewImage ? (
+                                    <img src={previewImage} className="w-full h-full object-contain" alt="preview"/>
                                 ) : (
                                     <UploadCloud size={80} strokeWidth={1} className="text-gray-300" />
                                 )}
@@ -325,13 +334,13 @@ const CategorySetup = () => {
                                 <tr key={item._id} className="hover:bg-blue-50/30 transition">
                                     <td className="px-6 py-4 text-center text-gray-400">{index + 1}</td>
                                     <td className="px-6 py-4">
-                                        <img src={item.image || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-md border" alt="" />
+                                        <img src={item.image?.url || "/no-image.png"} className="w-10 h-10 rounded-md border object-cover" alt={item.name} />
                                     </td>
                                     <td className="px-6 py-4 font-bold text-[#475569]">{item.name}</td>
                                     <td className="px-6 py-4">{item.priority}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex justify-center gap-2">
-                                            <button onClick={() => { setEditId(item._id); setFormData(item); window.scrollTo(0, 0); }} className="p-2 text-blue-500 hover:bg-blue-100 rounded-md"><Edit size={16} /></button>
+                                            <button onClick={() => { setEditId(item._id); setFormData({ name: item.name, priority: item.priority, parent: item.parent?._id || "", image: null  }); setPreviewImage(item.image?.url || item.image || ""); window.scrollTo(0, 0); }} className="p-2 text-blue-500 hover:bg-blue-100 rounded-md"><Edit size={16} /></button>
                                             <button onClick={() => handleDelete(item._id)} className="p-2 text-red-500 hover:bg-red-100 rounded-md"><Trash2 size={16} /></button>
                                         </div>
                                     </td>
