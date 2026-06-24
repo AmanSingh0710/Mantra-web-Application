@@ -3,8 +3,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FaStar, FaSlidersH, FaTimes, FaShoppingBag } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 //src/app/product/page.js
 export default function ProductsPage() {
   return (
@@ -39,16 +38,15 @@ function ProductsContent() {
     const fetchFilteredProducts = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${BASE_URL}/Adminproducts/public`);
-        const data = await res.json();
+        const data = await fetchFromAPI(`/Adminproducts/public`);
 
         if (data.products) {
-          const cats = Array.from(new Set(data.products.map(p => p.category))).filter(Boolean);
+          const cats = Array.from(new Set(data.products.map(p => p.category?.name))).filter(Boolean);
           setAllCategories(cats);
 
           if (selectedCategory) {
             const filtered = data.products.filter(
-              (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
+              (p) => p.category?.name?.toLowerCase() === selectedCategory.toLowerCase()
             );
             setProducts(filtered);
           } else {
@@ -76,25 +74,14 @@ function ProductsContent() {
     }
   };
 
-  const getImageUrl = (thumbnail) => {
-    if (!thumbnail) return "/placeholder.png";
-    const cleanPath = thumbnail.replace(/\\/g, "/");
-    return cleanPath.startsWith("uploads/")
-      ? `${BASE_URL}/${cleanPath}`
-      : `${BASE_URL}/uploads/${cleanPath}`;
-  };
 
   const handleAddCart = async (productId) => {
     const token = localStorage.getItem("token");
     if (!token) return toast.error("Please login to add items to cart");
 
     try {
-      const res = await fetch(`${BASE_URL}/cart/add`, {
+      const res = await fetchFromAPI(`/cart/add`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ productId, quantity: 1 }),
       });
 
@@ -244,7 +231,7 @@ function ProductsContent() {
                           e.stopPropagation(); // Prevents layout routing bubbling conflict
                           handleAddCart(product._id);
                         }}
-                        className="w-full mt-auto border border-gray-300 sm:border-2 border-orange-500 py-1.5 text-[10px] font-bold bg-white text-orange-600 hover:bg-orange-500 hover:text-white transition-all rounded-sm flex items-center justify-center gap-1"
+                        className="w-full mt-auto border  sm:border-2 border-orange-500 py-1.5 text-[10px] font-bold bg-white text-orange-600 hover:bg-orange-500 hover:text-white transition-all rounded-sm flex items-center justify-center gap-1"
                       >
                         <FaShoppingBag size={10} /> ADD TO CART
                       </button>

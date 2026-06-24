@@ -7,7 +7,7 @@ import { FaShoppingBag, FaBolt, FaStar, FaShieldAlt, FaTruck, FaUndo, FaRegStar,
 import toast, { Toaster } from "react-hot-toast";
 
 //src/app/product/[id]/page.js
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 export default function ProductPage() {
     const { id } = useParams();
