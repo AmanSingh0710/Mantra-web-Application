@@ -136,7 +136,7 @@ function ProductsContent() {
               {/* Mobile Adaptive Scroll Track */}
               <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-1 max-h-[350px]">
                 {allCategories.map((cat, idx) => {
-                  const isActive = selectedCategory.toLowerCase() === cat.toLowerCase();
+                  const isActive = selectedCategory.toLowerCase() === cat?.toLowerCase();
                   return (
                     <button
                       key={idx}

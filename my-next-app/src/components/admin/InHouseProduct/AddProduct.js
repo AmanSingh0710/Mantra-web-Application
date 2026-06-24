@@ -62,10 +62,10 @@ export default function AddProduct() {
 
         const fetchCategories = async () => {
             try {
-                const res = await fetchFromAPI(`/categories`, {
+                const result = await fetchFromAPI(`/categories`, {
                     credentials: "include"
                 });
-                const result = await res.json();
+               
 
                 const categories = result.data || [];
 
@@ -79,29 +79,27 @@ export default function AddProduct() {
 
         const fetchStores = async () => {
             try {
-                const res = await fetchFromAPI(`/stores`, {
+                const data = await fetchFromAPI(`/stores`, {
                     credentials: "include"
                 });
-                const data = await res.json();
+                
                 setStores(data);
             } catch (err) { console.error("Store Fetch Error:", err); }
         };
 
         const fetchBrands = async () => {
             try {
-                const res = await fetchFromAPI(`/brand`, {
+                const data = await fetchFromAPI(`/brand`, {
                     credentials: "include"
                 });
-                const data = await res.json();
+                
                 setBrands(data);
             } catch (err) { console.error("Brand Fetch Error:", err); }
         };
 
         const fetchConcerns = async () => {
             try {
-                const res = await fetchFromAPI(`/concerns/public/all`);
-
-                const data = await res.json();
+                const data = await fetchFromAPI(`/concerns/public/all`);
 
                 if (data.success) {
                     setConcerns(data.concerns);
@@ -170,16 +168,16 @@ export default function AddProduct() {
         data.append("tags", JSON.stringify(tags.split(",").map(tag => tag.trim()))); // String to Array conversion
 
         try {
-            const res = await fetchFromAPI(`/Adminproducts/add`, {
+            const result = await fetchFromAPI(`/Adminproducts/add`, {
                 method: "POST",
                 credentials: "include",
                 body: data
             });
 
-            if (res.ok) toast.success("Product Uploaded!");
+            if (result.ok) toast.success("Product Uploaded!");
             else {
-                const err = await res.json();
-                alert("Error: " + err.message);
+                toast.err("Product uploadtion Failed !!!" + err.message)
+        
             }
         } catch (err) { console.error(err); }
     };
