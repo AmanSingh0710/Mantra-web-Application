@@ -388,7 +388,7 @@ export default function InHouseProductList({setActiveTab}) {
                                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                         <span className="text-xs font-bold text-slate-900">₹{product.discountPrice > 0 ? product.discountPrice : product.price}</span>
                                         {product.discountAmount > 0 && <span className="text-[11px] text-slate-400 line-through">₹{product.price}</span>}
-                                        <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-medium">{product.category}</span>
+                                        <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-medium">{product.category?.name || "General"}</span>
                                     </div>
                                 </div>
                             </div>
@@ -457,7 +457,7 @@ export default function InHouseProductList({setActiveTab}) {
                                 <div>
                                     <span className="bg-slate-900 text-white font-mono font-bold tracking-wider text-[9px] px-1.5 py-0.5 rounded uppercase">{selectedProduct.hsnCode ? `HSN-${selectedProduct.hsnCode}` : "No HSN"}</span>
                                     <h3 className="text-xl font-extrabold text-slate-900 mt-1 leading-tight">{selectedProduct.productName}</h3>
-                                    <p className="text-xs font-semibold text-blue-600 mt-0.5">{selectedProduct.category} / {selectedProduct.subCategory || "General"}</p>
+                                    <p className="text-xs font-semibold text-blue-600 mt-0.5">{selectedProduct.category?.name || "General"} / {selectedProduct.subCategory?.name || "General"}</p>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2.5">

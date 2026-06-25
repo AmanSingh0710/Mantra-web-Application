@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { fetchFromAPI } from "@/utils/api";
 import { FaCloudUploadAlt, FaFileDownload, FaInfoCircle } from "react-icons/fa";
