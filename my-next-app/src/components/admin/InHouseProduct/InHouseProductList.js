@@ -77,10 +77,9 @@ export default function InHouseProductList() {
         }).toString();
 
         try {
-            const res = await fetchFromAPI(`/Adminproducts?${query}`, {
+            const data = await fetchFromAPI(`/Adminproducts?${query}`, {
                 credentials: "include"
             });
-            const data = await res.json();
             setProducts(data.products || []);
             setTotalPages(data.totalPages || 1);
             setTotalCount(data.totalProducts || 0);
@@ -104,8 +103,7 @@ export default function InHouseProductList() {
         if (!categoryId) return setSubCategories([]);
 
         try {
-            const res = await fetchFromAPI(`/categories?parent=${categoryId}`, { credentials: "include" });
-            const result = await res.json();
+            const result = await fetchFromAPI(`/categories?parent=${categoryId}`, { credentials: "include" });
             setSubCategories(result.data || result || []);
         } catch (err) { console.error(err); }
     };
@@ -117,8 +115,7 @@ export default function InHouseProductList() {
         if (!subId) return setSubSubCategories([]);
 
         try {
-            const res = await fetchFromAPI(`/categories?parent=${subId}`, { credentials: "include" });
-            const result = await res.json();
+            const result = await fetchFromAPI(`/categories?parent=${subId}`, { credentials: "include" });
             setSubSubCategories(result.data || result || []);
         } catch (err) { console.error(err); }
     };
@@ -140,13 +137,12 @@ export default function InHouseProductList() {
                 updatedValue = currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE";
             }
 
-            const res = await fetchFromAPI(`/Adminproducts/toggle-status`, {
+            const result = await fetchFromAPI(`/Adminproducts/toggle-status`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({ id, field, value: updatedValue })
             });
-            if (res.ok) {
+            if (result.ok) {
                 setProducts(products.map(p => p._id === id ? { ...p, [field]: updatedValue } : p));
             }
         } catch (err) { console.error(err); }
@@ -167,14 +163,14 @@ export default function InHouseProductList() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetchFromAPI(`/Adminproducts/${editFormData.id}`, {
+            const result = await fetchFromAPI(`/Adminproducts/${editFormData.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify(editFormData)
             });
 
-            if (res.ok) {
+            if (result.ok) {
                 setProducts(products.map(p => p._id === editFormData.id ? { ...p, ...editFormData } : p));
                 setIsEditModalOpen(false);
             }
@@ -186,11 +182,11 @@ export default function InHouseProductList() {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this product listing from the master catalogue?")) {
             try {
-                const res = await fetchFromAPI(`/Adminproducts/${id}`, {
+                const result = await fetchFromAPI(`/Adminproducts/${id}`, {
                     method: "DELETE",
                     credentials: "include"
                 });
-                if (res.ok) {
+                if (result.ok) {
                     setProducts(products.filter(p => p._id !== id));
                     setTotalCount(prev => prev - 1);
                 }
