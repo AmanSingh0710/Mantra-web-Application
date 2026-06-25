@@ -1,14 +1,11 @@
 "use client";
 
-import { fetchFromAPI , getImageUrl } from "@/utils/api";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-    FaSearch, FaDownload, FaPlus, FaEye, FaEdit, FaTrash,
-    FaFilter, FaBoxOpen, FaLayerGroup, FaTag, FaCheckCircle, FaTimesCircle
-} from "react-icons/fa";
+import { FaSearch, FaDownload, FaPlus, FaEye, FaEdit, FaTrash, FaFilter, FaBoxOpen, FaLayerGroup, FaTag, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-export default function InHouseProductList() {
+export default function InHouseProductList({setActiveTab}) {
     const router = useRouter();
     const [products, setProducts] = useState([]);
     const [page, setPage] = useState(1);
@@ -47,14 +44,13 @@ export default function InHouseProductList() {
     useEffect(() => {
         const fetchMetadata = async () => {
             try {
-                const [catRes, brandRes] = await Promise.all([
+                const [catResult, brandResult] = await Promise.all([
                     fetchFromAPI(`/categories`, { credentials: "include" }),
                     fetchFromAPI(`/brand`, { credentials: "include" })
                 ]);
-                const catResult = await catRes.json();
-                const brandResult = await brandRes.json();
 
-                const cats = catResult.data || [];
+                const cats = catResult.data || catResult || [];
+
                 setCategories(cats.filter(c => !c.parent || c.level === 1));
                 setBrands(brandResult.data || brandResult || []);
             } catch (err) {
@@ -165,7 +161,6 @@ export default function InHouseProductList() {
         try {
             const result = await fetchFromAPI(`/Adminproducts/${editFormData.id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify(editFormData)
             });
@@ -192,6 +187,16 @@ export default function InHouseProductList() {
                 }
             } catch (err) { console.error(err); }
         }
+    };
+
+    const exportCSV = () => {
+        const csv = products.map(p => ({
+            Name: p.productName,
+            Price: p.price,
+            Stock: p.stock
+        }));
+
+        console.log(csv);
     };
 
     // Helper to format stock badges cleanly like Flipkart's inventory engine
@@ -221,7 +226,7 @@ export default function InHouseProductList() {
 
             {/* Amazon-Inspired Multi-Tier Filter Block */}
             <div className="bg-white p-4 md:p-6 rounded-xl shadow-xs border border-slate-200/80 mb-6">
-                <div className="flex items-center gap-2 font-bold text-slate-900 border-b pb-3 mb-4 text-sm uppercase tracking-wider text-slate-500">
+                <div className="flex items-center gap-2 font-bold text-slate-900 border-b pb-3 mb-4 text-sm uppercase tracking-wider ">
                     <FaFilter className="text-blue-500 text-xs" /> Filter Matrix
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -268,8 +273,8 @@ export default function InHouseProductList() {
                         <button onClick={() => { setPage(1); fetchProducts(); }} className="bg-slate-900 text-white px-4 hover:bg-black text-sm flex items-center gap-2 transition-all"><FaSearch /></button>
                     </div>
                     <div className="flex items-center gap-2 self-end lg:self-auto w-full lg:w-auto justify-end">
-                        <button className="border border-slate-300 px-4 py-2 bg-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-50 shadow-2xs transition-all"><FaDownload className="text-slate-500" /> Export CSV</button>
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-blue-700 shadow-sm shadow-blue-600/10 transition-all"><FaPlus /> Create Entry</button>
+                        <button onClick={exportCSV} className="border border-slate-300 px-4 py-2 bg-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-50 shadow-2xs transition-all"><FaDownload className="text-slate-500" /> Export CSV</button>
+                        <button onClick={() => setActiveTab("product_add")} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-blue-700 shadow-sm shadow-blue-600/10 transition-all"><FaPlus /> Create Entry</button>
                     </div>
                 </div>
 
@@ -307,8 +312,8 @@ export default function InHouseProductList() {
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="text-xs space-y-0.5">
-                                            <div className="font-semibold text-slate-800 flex items-center gap-1"><FaLayerGroup className="text-slate-400 text-[10px]" /> {product.category || "General"}</div>
-                                            {product.brand && <div className="text-slate-500 flex items-center gap-1"><FaTag className="text-slate-400 text-[10px]" /> {product.brand}</div>}
+                                            <div className="font-semibold text-slate-800 flex items-center gap-1"><FaLayerGroup className="text-slate-400 text-[10px]" /> {product.category?.name || "General"}</div>
+                                            {product.brand && <div className="text-slate-500 flex items-center gap-1"><FaTag className="text-slate-400 text-[10px]" /> {product.brand?.name}</div>}
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
@@ -324,7 +329,7 @@ export default function InHouseProductList() {
                                     </td>
                                     <td className="px-4 py-4 text-center">
                                         <span className={`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${product.listingType === "BESTSELLER" ? "bg-orange-100 text-orange-700" :
-                                                product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : product.listingType === "COMBOS" ? "bg-blue-100 text-blue-700" :
+                                            product.listingType === "NEW_ARRIVAL" ? "bg-purple-100 text-purple-700" : product.listingType === "COMBOS" ? "bg-blue-100 text-blue-700" :
                                                 "bg-gray-100 text-gray-700"
                                             }`}>
                                             {product.listingType || "Standard"}
@@ -440,9 +445,9 @@ export default function InHouseProductList() {
                                     />
                                 </div>
                                 <div className="grid grid-cols-3 gap-1.5">
-                                    {selectedProduct.images?.slice(0, 3).map(( itemIdx) => (
+                                    {selectedProduct.images?.slice(0, 3).map((itemIdx) => (
                                         <div key={itemIdx} className="aspect-square border border-slate-200 rounded bg-slate-50 overflow-hidden">
-                                            <img src={getImageUrl(selectedProduct.thumbnail)} alt = "No Image" className="object-cover w-full h-full"/>
+                                            <img src={getImageUrl(selectedProduct.thumbnail)} alt="No Image" className="object-cover w-full h-full" />
                                         </div>
                                     ))}
                                 </div>
