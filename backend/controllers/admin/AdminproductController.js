@@ -4,6 +4,7 @@ const deleteCloudinaryFile = require("../../utils/cloudinary");
 const path = require("path");
 const excelJS = require("exceljs");
 const mongoose = require("mongoose");
+const fs = require("fs");
 
 
 
@@ -41,6 +42,10 @@ exports.getProducts = async (req, res) => {
 
     const products = await Product.find(filterQuery)
       .populate("store", "storeName")
+      .populate("category", "name")
+      .populate("subCategory", "name")
+      .populate("subSubCategory", "name")
+      .populate("brand", "name")
       .limit(limit)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 })
@@ -65,10 +70,10 @@ exports.getPublicProducts = async (req, res) => {
   try {
     const { category } = req.query;
 
-    const matchStage = {status: "ACTIVE",approvedByAdmin: true,isDeleted: false,};
+    const matchStage = { status: "ACTIVE", approvedByAdmin: true, isDeleted: false, };
 
     const pipeline = [
-      {$match: matchStage,},
+      { $match: matchStage, },
 
       // Category
       {
@@ -296,6 +301,14 @@ exports.addProduct = async (req, res) => {
       approvedByAdmin: true, // Platform-added inventory bypasses moderation
       status: "ACTIVE"
     };
+
+    if (req.body.tags) {
+      req.body.tags = JSON.parse(req.body.tags);
+    }
+
+    if (req.body.concerns) {
+      req.body.concerns = JSON.parse(req.body.concerns);
+    }
 
     if (req.files) {
       if (req.files?.thumbnail) {
@@ -696,58 +709,163 @@ exports.getPublicProductsByConcern = async (req, res) => {
 
 // ================= 7. BULK EXCEL SHEET INGESTION ENGINE =================
 exports.bulkImportProducts = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
-    if (!req.file) return res.status(400).json({ success: false, message: "Please supply a valid matrix spreadsheet file" });
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file required"
+      });
+    }
 
     const filePath = req.file.path;
+
     const workbook = new excelJS.Workbook();
     await workbook.xlsx.readFile(filePath);
 
     const worksheet = workbook.getWorksheet(1);
-    const parsedProducts = [];
 
-    // 🌟 FIX: Pre-extracted out loop variable initialization constraint dependency crash
-    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (rowNumber > 1) {
-        const pName = row.getCell(1).value?.toString() || "";
-        if (!pName) return; // Skip structural blank rows safely
+    const productsToInsert = [];
+    const errors = [];
 
-        const generatedSlug = pName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    let successCount = 0;
+    let failedCount = 0;
 
-        parsedProducts.push({
-          productName: pName,
-          description: row.getCell(2).value?.toString() || "No description provided",
-          category: row.getCell(3).value?.toString() || "General",
-          brand: row.getCell(4).value?.toString() || "Generic",
-          price: Number(row.getCell(5).value) || 0,
-          stock: Number(row.getCell(6).value) || 0,
-          sku: row.getCell(7).value?.toString() || `SKU-${generatedSlug}-${Date.now()}-${rowNumber}`,
-          slug: `${generatedSlug}-${Date.now()}-${rowNumber}`,
+    session.startTransaction();
+
+    for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+
+      const row = worksheet.getRow(rowNumber);
+
+      try {
+
+        const productName = row.getCell(1).value?.toString()?.trim();
+        const description = row.getCell(2).value?.toString()?.trim();
+
+        const categoryId = row.getCell(3).value?.toString()?.trim();
+        const brandId = row.getCell(4).value?.toString()?.trim();
+
+        const price = Number(row.getCell(5).value);
+        const stock = Number(row.getCell(6).value);
+
+        const sku = row.getCell(7).value?.toString()?.trim();
+
+        const storeId = row.getCell(8).value?.toString()?.trim();
+
+        if (!productName) {
+          throw new Error("Product name missing");
+        }
+
+        if (!categoryId) {
+          throw new Error("Category missing");
+        }
+
+        if (!storeId) {
+          throw new Error("Store missing");
+        }
+
+        const category = await Category.findById(categoryId);
+
+        if (!category) {
+          throw new Error("Invalid category");
+        }
+
+        let brand = null;
+
+        if (brandId) {
+          brand = await Brand.findById(brandId);
+          if (!brand) {
+            throw new Error("Invalid brand");
+          }
+        }
+
+        const store = await Store.findById(storeId);
+
+        if (!store) {
+          throw new Error("Invalid store");
+        }
+
+        if (sku) {
+          const existingSku =
+            await Product.findOne({ sku });
+
+          if (existingSku) {
+            throw new Error("Duplicate SKU");
+          }
+        }
+
+        const slug = productName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)+/g, "") +
+          "-" +
+          Date.now() +
+          "-" +
+          rowNumber;
+
+        productsToInsert.push({
+          store: store._id,
+          productName,
+          description,
+          category: category._id,
+          brand: brand?._id,
+          price,
+          stock,
+          sku,
+          slug,
           status: "ACTIVE",
-          approvedByAdmin: true
+          approvedByAdmin: true,
+          addedBy: "ADMIN"
+        });
+
+        successCount++;
+
+      } catch (error) {
+        failedCount++;
+        errors.push({
+          row: rowNumber,
+          error: error.message
         });
       }
-    });
-
-    if (parsedProducts.length > 2000) {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      return res.status(400).json({ success: false, message: "Payload size threshold exceeded limit (Max 2000 lines)" });
     }
 
-    if (parsedProducts.length > 0) {
-      await Product.insertMany(parsedProducts);
+    if (productsToInsert.length > 0) {
+      await Product.insertMany(productsToInsert, {
+        session,
+        ordered: false
+      }
+      );
     }
 
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    await session.commitTransaction();
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
     res.status(200).json({
       success: true,
-      message: `System successfully synchronized ${parsedProducts.length} entries to storefront live catalog cluster.`,
-      total: parsedProducts.length
+      inserted: productsToInsert.length,
+      successCount,
+      failedCount,
+      errors
     });
-  } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    console.error("Bulk Import Engine Crash:", err);
-    res.status(500).json({ success: false, message: "Bulk import execution anomaly detected", error: err.message });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error(error);
+
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  } finally {
+    session.endSession();
   }
 };

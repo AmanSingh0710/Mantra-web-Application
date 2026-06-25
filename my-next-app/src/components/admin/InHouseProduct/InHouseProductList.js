@@ -4,7 +4,7 @@ import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FaSearch, FaDownload, FaPlus, FaEye, FaEdit, FaTrash, FaFilter, FaBoxOpen, FaLayerGroup, FaTag, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-
+//src/components/admin/InHouseProduct/InHouseProductList.js
 export default function InHouseProductList({setActiveTab}) {
     const router = useRouter();
     const [products, setProducts] = useState([]);

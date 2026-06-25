@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { FaCloudUploadAlt, FaInfoCircle, FaYoutube, FaGlobe } from "react-icons/fa";
 import "react-quill-new/dist/quill.snow.css";
 import { useSearchParams } from "next/navigation";
-
+//src/components/admin/InHouseProduct/AddProduct.js
 // Rich Text Editor ko dynamic import karna padta hai Next.js mein
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -36,7 +36,7 @@ export default function AddProduct() {
         category: "",
         subCategory: "",
         subSubCategory: "",
-        concern: "",
+        concerns: [],
         brand: "",
         productType: "Physical",
         sku: "",
@@ -54,6 +54,19 @@ export default function AddProduct() {
         metaTitle: "",
         metaDescription: "",
         listingType: "BESTSELLER",
+        shortDescription: "",
+        featured: false,
+        returnable: true,
+        returnDays: 7,
+        costPrice: 0,
+        weight: 0,
+        hsnCode: "",
+        barcode: "",
+        shippingType: "PAID",
+        countryOfOrigin: "India",
+        warranty: "",
+        returnPolicy: "",
+
     });
 
     const [tags, setTags] = useState(""); // Tags ke liye alag state (comma separated input)
@@ -65,7 +78,7 @@ export default function AddProduct() {
                 const result = await fetchFromAPI(`/categories`, {
                     credentials: "include"
                 });
-               
+
 
                 const categories = result.data || [];
 
@@ -82,7 +95,7 @@ export default function AddProduct() {
                 const data = await fetchFromAPI(`/stores`, {
                     credentials: "include"
                 });
-                
+
                 setStores(data);
             } catch (err) { console.error("Store Fetch Error:", err); }
         };
@@ -92,7 +105,7 @@ export default function AddProduct() {
                 const data = await fetchFromAPI(`/brand`, {
                     credentials: "include"
                 });
-                
+
                 setBrands(data);
             } catch (err) { console.error("Brand Fetch Error:", err); }
         };
@@ -155,13 +168,15 @@ export default function AddProduct() {
         // 2. Appending Form Data (With Number Conversion)
         Object.keys(formData).forEach((key) => {
             // Numbers ko convert karke bhejein
-            const numberFields = ['price', 'minOrderQty', 'stock', 'discountAmount', 'taxAmount', 'shippingCharge'];
+            const numberFields = ["price", "costPrice", "weight", "minOrderQty", "stock", "discountAmount", "taxAmount", "shippingCharge", "returnDays"];
             if (numberFields.includes(key)) {
                 data.append(key, Number(formData[key]));
             } else {
                 data.append(key, formData[key]);
             }
         });
+
+        if (formData.concern) { data.append("concerns", JSON.stringify([formData.concern])); }
 
         // 3. Special Fields (Tags & Description)
         data.append("description", description);
@@ -174,10 +189,10 @@ export default function AddProduct() {
                 body: data
             });
 
-            if (result.ok) toast.success("Product Uploaded!");
-            else {
-                toast.err("Product uploadtion Failed !!!" + err.message)
-        
+            if (result.success) {
+                toast.success("Product Uploaded Successfully");
+            } else {
+                toast.error(result.message);
             }
         } catch (err) { console.error(err); }
     };
@@ -187,7 +202,8 @@ export default function AddProduct() {
         setFormData({
             productName: "", store: "", category: "", subCategory: "", subSubCategory: "", brand: "", productType: "Physical",
             sku: "", price: 0, stock: 0, minOrderQty: 1, discountType: "Flat", discountAmount: 0, taxAmount: 0, taxCalculation: "Include with product", shippingCharge: 0,
-            videoLink: "", metaTitle: "", metaDescription: "", listingType: "BESTSELLER", shortDescription: "", featured: false, returnable: true, returnDays: 7, status: "ACTIVE"
+            videoLink: "", metaTitle: "", metaDescription: "", listingType: "BESTSELLER", shortDescription: "", featured: false, returnable: true, returnDays: 7, status: "ACTIVE", concern: "",
+            costPrice: 0, weight: 0, hsnCode: "", barcode: "", shippingType: "", countryOfOrigin: "", warranty: "", returnPolicy: "",
         });
 
         setDescription("");
@@ -235,6 +251,12 @@ export default function AddProduct() {
                         <div className="h-64 overflow-hidden border rounded-md">
                             <ReactQuill theme="snow" value={description} onChange={setDescription} className="h-52" />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Short Description
+                        </label><textarea name="shortDescription" value={formData.shortDescription} onChange={handleInputChange} rows={3} className="w-full border rounded-md p-2" />
                     </div>
                 </div>
 
@@ -359,9 +381,9 @@ export default function AddProduct() {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Product Type</label>
-                            <select className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
-                                <option>Physical</option>
-                                <option>Digital</option>
+                            <select name="productType" value={formData.productType} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
+                                <option value="Physical">Physical</option>
+                                <option value="Digital">Digital</option>
                             </select>
                         </div>
                         <div>
@@ -380,7 +402,7 @@ export default function AddProduct() {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Unit</label>
-                            <select name="unit" value={formData.weightUnit} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
+                            <select name="weightUnit" value={formData.weightUnit} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
                                 <option value="pc">pc</option>
                                 <option value="pcs">pcs</option>
                                 <option value="kg">kg</option>
@@ -399,6 +421,104 @@ export default function AddProduct() {
                                 className="w-full border rounded-md p-2 text-sm outline-none"
                             />
                         </div>
+                        <div>
+                            <label className="block text-xs font-bold mb-1">HSN Code</label>
+                            <input
+                                type="text"
+                                name="hsnCode"
+                                value={formData.hsnCode}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2 text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Barcode</label>
+                            <input
+                                type="text"
+                                name="barcode"
+                                value={formData.barcode}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2 text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Shipping Type</label>
+                            <select
+                                name="shippingType"
+                                value={formData.shippingType}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2 text-sm"
+                            >
+                                <option value="PAID">Paid</option>
+                                <option value="FREE">Free</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Country Of Origin</label>
+                            <input
+                                type="text"
+                                name="countryOfOrigin"
+                                value={formData.countryOfOrigin}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2 text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Warranty</label>
+                            <input
+                                type="text"
+                                name="warranty"
+                                value={formData.warranty}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Return Policy</label>
+                            <textarea
+                                name="returnPolicy"
+                                value={formData.returnPolicy}
+                                onChange={handleInputChange}
+                                rows={3}
+                                className="w-full border rounded-md p-2"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                name="featured"
+                                checked={formData.featured}
+                                onChange={handleInputChange}
+                            />
+                            <label>Featured Product</label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                name="returnable"
+                                checked={formData.returnable}
+                                onChange={handleInputChange}
+                            />
+                            <label>Returnable Product</label>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold mb-1">Return Days</label>
+                            <input
+                                type="number"
+                                name="returnDays"
+                                value={formData.returnDays}
+                                onChange={handleInputChange}
+                                className="w-full border rounded-md p-2"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -413,6 +533,8 @@ export default function AddProduct() {
                             { label: "Discount Amount (₹)", name: "discountAmount" },
                             { label: "Tax Amount (%)", name: "taxAmount" },
                             { label: "Shipping Cost (₹)", name: "shippingCharge" },
+                            { label: "Cost Price (₹)", name: "costPrice" },
+                            { label: "Weight", name: "weight" },
                         ].map((item) => (
                             <div key={item.name}>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">{item.label} <FaInfoCircle className="inline text-gray-400 text-[10px]" /></label>
@@ -427,11 +549,17 @@ export default function AddProduct() {
                         ))}
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Discount Type</label>
-                            <select className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none"><option>Flat</option><option>Percent</option></select>
+                            <select name="discountType" value={formData.discountType} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
+                                <option value="Flat">Flat</option>
+                                <option value="Percent">Percent</option>
+                            </select>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Tax Calculation</label>
-                            <select className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none"><option>Include with product</option><option>Exclude</option></select>
+                            <select name="taxCalculation" value={formData.taxCalculation} onChange={handleInputChange} className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none">
+                                <option value="Include with product">Include with product</option>
+                                <option value="Exclude">Exclude</option>
+                            </select>
                         </div>
                     </div>
                     <div className="mt-4 flex items-center gap-3">
