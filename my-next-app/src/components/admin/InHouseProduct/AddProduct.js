@@ -174,6 +174,7 @@ export default function AddProduct() {
         // 2. Appending Form Data (With Number Conversion)
         Object.keys(formData).forEach((key) => {
             // Numbers ko convert karke bhejein
+            if (key === "concerns") return;
             const numberFields = ["price", "costPrice", "weight", "minOrderQty", "stock", "discountAmount", "taxAmount", "shippingCharge", "returnDays"];
             if (numberFields.includes(key)) {
                 data.append(key, Number(formData[key]));
@@ -224,7 +225,7 @@ export default function AddProduct() {
         setFormData({
             productName: "", store: "", category: "", subCategory: "", subSubCategory: "", brand: "", productType: "Physical",
             sku: "", price: 0, stock: 0, minOrderQty: 1, discountType: "Flat", discountAmount: 0, taxAmount: 0, taxCalculation: "Include with product", shippingCharge: 0,
-            videoLink: "", metaTitle: "", metaDescription: "", listingType: "BESTSELLER", shortDescription: "", featured: false, returnable: true, returnDays: 7, status: "ACTIVE", concern: "",
+            videoLink: "", metaTitle: "", metaDescription: "", listingType: "BESTSELLER", shortDescription: "", featured: false, returnable: true, returnDays: 7, status: "ACTIVE", concerns: [],
             costPrice: 0, weight: 0, hsnCode: "", barcode: "", shippingType: "", countryOfOrigin: "", warranty: "", returnPolicy: "",
         });
 
@@ -346,19 +347,31 @@ export default function AddProduct() {
 
                         {/*concerns */}
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">
-                                Concern
+                            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">
+                                Concerns
                             </label>
 
-                            <select
-                                name="concern"
-                                value={formData.concern}
-                                onChange={handleInputChange}
-                                className="w-full border rounded-md p-2 text-sm bg-gray-50 outline-none"
-                            >
-                                <option value="">Select Concern</option>
-                                {concerns.map((item) => (<option key={item._id} value={item._id}>{item.title}</option>))}
-                            </select>
+                            <div className="grid grid-cols-2 gap-2">
+                                {concerns.map((item) => (
+                                    <label key={item._id} className="flex items-center gap-2" >
+                                        <input
+                                            type="checkbox"
+                                            name="concerns"
+                                            value={item._id}
+                                            checked={formData.concerns.includes(item._id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setFormData({ ...formData, concerns: [...formData.concerns, item._id] });
+                                                } else {
+                                                    setFormData({ ...formData, concerns: formData.concerns.filter((id) => id !== item._id) });
+                                                }
+                                            }}
+                                        />
+
+                                        {item.title}
+                                    </label>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Store */}
