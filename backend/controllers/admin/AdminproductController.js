@@ -295,20 +295,14 @@ exports.addProduct = async (req, res) => {
 
     const productData = {
       ...req.body,
+      tags: req.body.tags ? JSON.parse(req.body.tags) : [],
+      concerns: req.body.concerns ? JSON.parse(req.body.concerns) : [],
       slug: req.body.slug || `${generatedSlug}-${Date.now()}`,
       price: Number(price),
       stock: Number(stock),
-      approvedByAdmin: true, // Platform-added inventory bypasses moderation
+      approvedByAdmin: true,
       status: "ACTIVE"
     };
-
-    if (req.body.tags) {
-      req.body.tags = JSON.parse(req.body.tags);
-    }
-
-    if (req.body.concerns) {
-      req.body.concerns = JSON.parse(req.body.concerns);
-    }
 
     if (req.files) {
       if (req.files?.thumbnail) {
