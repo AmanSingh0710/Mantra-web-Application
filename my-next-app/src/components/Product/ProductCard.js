@@ -48,7 +48,7 @@ export default function ProductCard({ product }) {
   return (
     <div
       onClick={() =>
-        router.push(`/product/${product.slug}`)
+        router.push(`/product/${product._id}`)
       }
       className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
     >
