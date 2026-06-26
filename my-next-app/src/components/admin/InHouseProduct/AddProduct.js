@@ -26,8 +26,7 @@ export default function AddProduct() {
     const [metaImage, setMetaImage] = useState(null);
     const metaImageRef = useRef(null);
     const [stores, setStores] = useState([]);
-    const searchParams = useSearchParams();
-    const concernId = searchParams.get("concern");
+
 
     // Saare input fields ke liye main state
     const [formData, setFormData] = useState({
@@ -161,10 +160,6 @@ export default function AddProduct() {
         if (e) e.preventDefault();
 
         const data = new FormData();
-
-        for (const pair of data.entries()) {
-            console.log(pair[0], ":", pair[1]);
-        }
 
         // 1. Appending Files
         if (thumbnail) data.append("thumbnail", thumbnail);
@@ -794,7 +789,7 @@ export default function AddProduct() {
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3">
                     <button type="button" onClick={handleReset} className="px-8 py-2 bg-gray-200 text-gray-600 rounded-md font-medium hover:bg-gray-300">Reset</button>
-                    <button type="submit" onClick={(e) => handleSubmit(e)} className="px-8 py-2 bg-[#0084ff] text-white rounded-md font-medium hover:bg-blue-600">Submit</button>
+                    <button type="submit"  className="px-8 py-2 bg-[#0084ff] text-white rounded-md font-medium hover:bg-blue-600">Submit</button>
                 </div>
             </div>
         </form>
