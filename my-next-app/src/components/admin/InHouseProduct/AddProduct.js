@@ -155,7 +155,7 @@ export default function AddProduct() {
         setSubSubCategories(level3);
     };
 
-    
+
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
@@ -163,8 +163,8 @@ export default function AddProduct() {
         const data = new FormData();
 
         for (const pair of data.entries()) {
-        console.log(pair[0], ":", pair[1]);
-    }
+            console.log(pair[0], ":", pair[1]);
+        }
 
         // 1. Appending Files
         if (thumbnail) data.append("thumbnail", thumbnail);
@@ -182,11 +182,27 @@ export default function AddProduct() {
             }
         });
 
-        if (formData.concern) { data.append("concerns", JSON.stringify([formData.concern])); }
+        data.append("concerns", JSON.stringify(formData.concerns));
 
         // 3. Special Fields (Tags & Description)
         data.append("description", description);
-        data.append("tags", JSON.stringify(tags.split(",").map(tag => tag.trim()))); // String to Array conversion
+        let tagsArray = [];
+
+        try {
+
+            tagsArray = JSON.parse(tags);
+
+            if (!Array.isArray(tagsArray)) {
+                tagsArray = [];
+            }
+        } catch {
+            tagsArray = tags
+                .split(",")
+                .map(tag => tag.trim().replace(/^"(.*)"$/, "$1"))
+                .filter(Boolean);
+        }
+
+        data.append("tags", JSON.stringify(tagsArray));
 
         try {
             const result = await fetchFromAPI(`/Adminproducts/add`, {
