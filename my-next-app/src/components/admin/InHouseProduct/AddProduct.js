@@ -155,6 +155,10 @@ export default function AddProduct() {
         setSubSubCategories(level3);
     };
 
+    for (const pair of data.entries()) {
+        console.log(pair[0], ":", pair[1]);
+    }
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
 
