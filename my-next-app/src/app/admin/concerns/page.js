@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { fetchFromAPI } from "@/utils/api";
-//src/concerns/[id]/page.js
+//src/app/admin/concerns/[id]/page.js
 export default function ConcernsPage() {
   const [concerns, setConcerns] = useState([]);
   const [categories, setCategories] = useState([]);

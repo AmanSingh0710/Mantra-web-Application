@@ -33,7 +33,7 @@ import Newsletter from "@/components/admin/Newsletter/NewsletterList";
 import OurStory from "@/components/admin/OurStory";
 import AdminAddBlog from "@/components/admin/blog/AdminAddBlog";
 import AdminBlogList from "@/components/admin/blog/AdminBlogList";
-import ConcernsPage from "@/app/admin/concerns/[id]/page";
+import ConcernsPage from "@/app/admin/concerns/page";
 import Approved from "./refunds/approved/page";
 import Pending from "./refunds/pending/page";
 import Processed from "./refunds/refunded/page";
