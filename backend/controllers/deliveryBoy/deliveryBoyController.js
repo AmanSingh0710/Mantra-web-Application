@@ -14,10 +14,7 @@ exports.loginDeliveryBoy = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const deliveryBoy =
-      await DeliveryBoy.findOne({
-        email,
-      }).select("+password");
+    const deliveryBoy = await DeliveryBoy.findOne({email,}).select("+password");
 
     if (!deliveryBoy) {
       return res.status(401).json({
@@ -33,10 +30,7 @@ exports.loginDeliveryBoy = async (req, res) => {
       });
     }
 
-    const isMatch =
-      await deliveryBoy.comparePassword(
-        password
-      );
+    const isMatch =await deliveryBoy.comparePassword(password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -58,16 +52,13 @@ exports.loginDeliveryBoy = async (req, res) => {
       }
     );
 
-    deliveryBoy.lastLogin =
-      new Date();
+    deliveryBoy.lastLogin = new Date();
 
-    deliveryBoy.status =
-      "ONLINE";
+    deliveryBoy.status = "ONLINE";
 
     await deliveryBoy.save();
 
-    deliveryBoy.password =
-      undefined;
+    deliveryBoy.password =undefined;
 
     res.status(200).json({
       success: true,

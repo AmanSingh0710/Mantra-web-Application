@@ -28,8 +28,7 @@ export default function LoginOTPPage() {
 
         try {
 
-            const res = await fetchFromAPI(
-                "/otp/send-login-otp",
+            const res = await fetchFromAPI("/otp/send-login-otp",
                 {
                     method: "POST",
                     body: JSON.stringify({

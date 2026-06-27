@@ -28,8 +28,31 @@ const getCookieOptions = () => {
 //get me
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-      .select("-password -refreshToken");
+    let user;
+
+    switch (req.user.role) {
+      case "ADMIN":
+      case "USER":
+        user = await User.findById(req.user.id)
+          .select("-password -refreshToken");
+        break;
+
+      case "VENDOR":
+        user = await Store.findById(req.user.id)
+          .select("-password -refreshToken");
+        break;
+
+      case "DELIVERY":
+        user = await DeliveryMan.findById(req.user.id)
+          .select("-password -refreshToken");
+        break;
+
+      default:
+        return res.status(401).json({
+          success: false,
+          message: "Invalid role"
+        });
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -40,6 +63,7 @@ exports.getMe = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      role: req.user.role,
       user
     });
 
@@ -202,20 +226,13 @@ exports.login = async (req, res) => {
     }
      */ }
 
-    const payload = {
-      id: user._id,
-      role,
-    };
+    const payload = { id: user._id, role, };
 
-    const accessToken = jwt.sign(
-      payload,
-      process.env.JWT_ACCESS_SECRET,
+    const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET,
       { expiresIn: process.env.JWT_ACCESS_EXPIRE }
     );
 
-    const refreshToken = jwt.sign(
-      payload,
-      process.env.JWT_REFRESH_SECRET,
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET,
       { expiresIn: process.env.JWT_REFRESH_EXPIRE }
     );
     user.refreshToken = refreshToken;
@@ -224,14 +241,8 @@ exports.login = async (req, res) => {
 
     // Remove password string from output data leak paths
     user.password = undefined;
-
-    const isProduction = process.env.NODE_ENV === "production";
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,      // Must be true on Render (HTTPS)
-      sameSite: "None",  // Required because frontend is Vercel and backend is Render
-      path: "/",
-    };
+    
+    const cookieOptions = getCookieOptions();
 
     // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
     res.cookie("accessToken", accessToken, {

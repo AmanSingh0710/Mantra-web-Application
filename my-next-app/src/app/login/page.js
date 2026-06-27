@@ -1,5 +1,5 @@
 "use client";
-
+//src/app/login/page.js
 import { fetchFromAPI } from "@/utils/api";
 import { useState } from "react";
 import Link from "next/link";
@@ -44,6 +44,7 @@ export default function LoginPage({ isOpen, onClose }) {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.role);
 
       toast.success(`Welcome back, ${data.user.name}! 🎉`);
 
