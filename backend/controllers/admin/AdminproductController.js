@@ -353,7 +353,7 @@ exports.getPublicProductById = async (req, res) => {
 
     const reviews = await Review.find({
       productId: product._id,
-      status: "ACTIVE",
+      status: "active",
     })
       .populate("customerId", "name")
       .sort({ createdAt: -1 });
