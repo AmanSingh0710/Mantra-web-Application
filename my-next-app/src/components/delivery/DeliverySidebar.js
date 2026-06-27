@@ -20,7 +20,7 @@ const menus = [
 
   {
     name: "My Orders",
-    href: "/deliveryBoy/orders",
+    href: "/deliveryBoy/my-orders",
     icon: Package,
   },
 
@@ -38,7 +38,7 @@ const menus = [
 
   {
     name: "Profile",
-    href: "/deliveryBoy/profile",
+    href: "/deliveryBoy/my-profile",
     icon: UserCircle2,
   },
 ];
