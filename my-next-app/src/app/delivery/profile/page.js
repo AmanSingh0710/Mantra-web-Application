@@ -15,7 +15,7 @@ export default function ProfilePage() {
 
       try {
 
-        const data =await fetchFromAPI("/delivery-boy/my-profile");
+        const data =await fetchFromAPI("/deliveryBoy/my-profile");
 
         setProfile(data);
 

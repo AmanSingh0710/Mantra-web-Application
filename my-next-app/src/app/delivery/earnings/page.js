@@ -23,7 +23,7 @@ export default function EarningsPage() {
 
         const data =
           await fetchFromAPI(
-            "/delivery-boy/earnings"
+            "/deliveryBoy/earnings"
           );
 
         setEarnings(data);

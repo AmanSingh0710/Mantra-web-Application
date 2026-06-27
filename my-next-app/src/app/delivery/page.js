@@ -24,12 +24,12 @@ export default function DashboardPage() {
 
         const statsData =
           await fetchFromAPI(
-            "/delivery-boy/my-stats"
+            "/deliveryBoy/my-stats"
           );
 
         const profileData =
           await fetchFromAPI(
-            "/delivery-boy/my-profile"
+            "/deliveryBoy/my-profile"
           );
 
         setStats(statsData);

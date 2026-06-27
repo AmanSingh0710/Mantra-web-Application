@@ -19,10 +19,7 @@ export default function OrdersPage() {
 
       try {
 
-        const data =
-          await fetchFromAPI(
-            "/delivery-boy/my-orders"
-          );
+        const data = await fetchFromAPI("/deliveryBoy/my-orders");
 
         setOrders(data);
 
