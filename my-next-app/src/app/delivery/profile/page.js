@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import {useEffect,useState,} from "react";
 
-import {
-  fetchFromAPI,
-  getImageUrl,
-} from "@/utils/api";
-
+import {fetchFromAPI,getImageUrl,} from "@/utils/api";
+//src/app/delivery
 export default function ProfilePage() {
 
   const [profile, setProfile] =
@@ -17,15 +11,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
 
-    const fetchProfile =
-      async () => {
+    const fetchProfile =async () => {
 
       try {
 
-        const data =
-          await fetchFromAPI(
-            "/delivery-boy/my-profile"
-          );
+        const data =await fetchFromAPI("/delivery-boy/my-profile");
 
         setProfile(data);
 

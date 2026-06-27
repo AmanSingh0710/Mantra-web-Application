@@ -63,8 +63,10 @@ exports.getMe = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      role: req.user.role,
-      user
+      user: {
+        ...user.toObject(),
+        role: req.user.role
+      }
     });
 
   } catch (error) {
@@ -241,7 +243,10 @@ exports.login = async (req, res) => {
 
     // Remove password string from output data leak paths
     user.password = undefined;
-    
+
+    const userData = user.toObject();
+    userData.role = role;
+
     const cookieOptions = getCookieOptions();
 
     // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
@@ -258,10 +263,9 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      role,
       accessToken,
       refreshToken,
-      user
+      user: userData,
     });
 
 

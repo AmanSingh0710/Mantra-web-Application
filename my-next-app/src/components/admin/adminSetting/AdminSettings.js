@@ -1,12 +1,12 @@
 "use client";
 
-import { fetchFromAPI } from "@/utils/api";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import { FaUser, FaLock, FaCamera, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import Image from "next/image";
-
+//sr/components/admin/adminSetting/AdminSettings.js
 
 export default function AdminSettings() {
 
@@ -36,7 +36,7 @@ export default function AdminSettings() {
                 setLoading(true);
 
                 const result = await fetchFromAPI("/auth/admin-profile");
-                
+
 
                 const admin = result?.admin || result?.user;
 
@@ -51,13 +51,9 @@ export default function AdminSettings() {
                     setPhone(admin.mobile || "");
 
                     if (admin.image) {
-                        const imageUrl = admin.image.startsWith("http")
-                            ? admin.image
-                            : `${process.env.NEXT_PUBLIC_BASE_URL}${admin.image}`;
-
-                        setPreviewImage(imageUrl);
+                        setPreviewImage(getImageUrl(admin.image));
                     }
-                } 
+                }
             } catch (err) {
                 console.error("Admin fetch error:", err);
             }

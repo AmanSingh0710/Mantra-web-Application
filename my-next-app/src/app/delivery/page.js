@@ -1,5 +1,5 @@
 "use client";
-
+//src/app/delivery/page.js
 import {useEffect,useState,} from "react";
 
 import {fetchFromAPI,getImageUrl,} from "@/utils/api";

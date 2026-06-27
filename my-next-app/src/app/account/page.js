@@ -1,17 +1,17 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { fetchFromAPI } from "@/utils/api";
+import { fetchFromAPI, getImageUrl } from "@/utils/api";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import {FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt,FaHashtag, FaSignOutAlt, FaCamera, FaShieldAlt, FaSave, FaEdit} from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHashtag, FaSignOutAlt, FaCamera, FaShieldAlt, FaSave, FaEdit } from "react-icons/fa";
 //src/app/account/apge.js
 export default function MyAccount() {
   const router = useRouter();
 
   const { user, loading: authLoading, refreshUser, logout } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
@@ -46,32 +46,13 @@ export default function MyAccount() {
     if (selectedImage) {
       const objectUrl = URL.createObjectURL(selectedImage);
       setImgSrc(objectUrl);
+
       return () => URL.revokeObjectURL(objectUrl);
     }
 
-    if (user?.image) {
-      setImgSrc(
-        user.image.startsWith("http")
-          ? user.image
-          : `${BASE_URL}${user.image}`
-      );
-    } else {
-      setImgSrc("/default-avatar.png");
-    }
+    setImgSrc(getImageUrl(user?.image));
+
   }, [selectedImage, user]);
-
-  // ✅ FETCH PROFILE FROM SERVER
-  const fetchFreshData = async () => {
-    try {
-      if (!user?._id) return;
-
-      const data = await fetchFromAPI(`/auth/profile/${user._id}`);
-
-      setFormData(data);
-    } catch (err) {
-      console.error(err.message);
-    }
-  };
 
   // ✅ UPDATE PROFILE
   const handleUpdate = async () => {
@@ -109,9 +90,6 @@ export default function MyAccount() {
       setIsEditing(false);
 
       toast.success("Profile updated!");
-
-      // ❌ No need to refetch (optimization)
-      // fetchFreshData();
 
     } catch (err) {
       toast.error(err.message || "Server error");
