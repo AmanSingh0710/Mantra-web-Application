@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import {useEffect,useState,} from "react";
 
-import {
-  fetchFromAPI,
-} from "@/utils/api";
+import {fetchFromAPI} from "@/utils/api";
 
 export default function EarningsPage() {
 
@@ -21,10 +16,7 @@ export default function EarningsPage() {
 
       try {
 
-        const data =
-          await fetchFromAPI(
-            "/deliveryBoy/earnings"
-          );
+        const data =await fetchFromAPI("/deliveryBoy/earnings");
 
         setEarnings(data);
 

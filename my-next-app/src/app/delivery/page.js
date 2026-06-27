@@ -22,15 +22,9 @@ export default function DashboardPage() {
 
       try {
 
-        const statsData =
-          await fetchFromAPI(
-            "/deliveryBoy/my-stats"
-          );
+        const statsData =await fetchFromAPI("/deliveryBoy/my-stats");
 
-        const profileData =
-          await fetchFromAPI(
-            "/deliveryBoy/my-profile"
-          );
+        const profileData =await fetchFromAPI("/deliveryBoy/my-profile");
 
         setStats(statsData);
 

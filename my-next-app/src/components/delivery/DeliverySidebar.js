@@ -14,31 +14,31 @@ import {
 const menus = [
   {
     name: "Dashboard",
-    href: "/delivery-boy/dashboard",
+    href: "/deliveryBoy/dashboard",
     icon: LayoutDashboard,
   },
 
   {
     name: "My Orders",
-    href: "/delivery-boy/orders",
+    href: "/deliveryBoy/orders",
     icon: Package,
   },
 
   {
     name: "Live Tracking",
-    href: "/delivery-boy/tracking",
+    href: "/deliveryBoy/tracking",
     icon: MapPinned,
   },
 
   {
     name: "Wallet & Earnings",
-    href: "/delivery-boy/earnings",
+    href: "/deliveryBoy/earnings",
     icon: Wallet,
   },
 
   {
     name: "Profile",
-    href: "/delivery-boy/profile",
+    href: "/deliveryBoy/profile",
     icon: UserCircle2,
   },
 ];
