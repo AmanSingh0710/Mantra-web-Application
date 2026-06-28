@@ -3,6 +3,24 @@
 const nodemailer = require("nodemailer");
 
 
+const transporter = nodemailer.createTransport({
+    host: process.env.BREVO_HOST,
+    port: Number(process.env.BREVO_PORT),
+    secure: false,
+    auth: {
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS
+    }
+});
+
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("SMTP VERIFY ERROR:", error);
+    } else {
+        console.log("SMTP Server is ready");
+    }
+});
+
 async function testSMTP() {
   try {
     await transporter.verify();
@@ -20,24 +38,6 @@ console.log({
   port: process.env.BREVO_PORT,
   user: process.env.BREVO_USER,
   from: process.env.MAIL_FROM
-});
-
-const transporter = nodemailer.createTransport({
-    host: process.env.BREVO_HOST,
-    port: Number(process.env.BREVO_PORT),
-    secure: false,
-    auth: {
-        user: process.env.BREVO_USER,
-        pass: process.env.BREVO_PASS
-    }
-});
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("SMTP VERIFY ERROR:", error);
-    } else {
-        console.log("SMTP Server is ready");
-    }
 });
 
 exports.sendOTPEmail = async (email, otp) => {
