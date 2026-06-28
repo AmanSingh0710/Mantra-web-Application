@@ -16,6 +16,9 @@ router.post("/register", authLimiter, uploadLimiter, upload.single("image"), aut
 router.post("/login", authLimiter, authController.login);
 router.post("/refresh", authLimiter, authController.refreshToken);
 router.post("/logout", authLimiter, authController.logout);
+router.post("/forgot-password", authLimiter, authController.forgotPassword);
+router.post("/verify-reset-otp", authLimiter, authController.verifyResetOTP);
+router.post("/reset-password", authLimiter, authController.resetPassword);
 
 // ================= ADMIN =================
 router.get("/all", authLimiter, auth, isAdmin("ADMIN"), authController.getAllUsers);

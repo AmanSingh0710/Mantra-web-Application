@@ -182,7 +182,7 @@ export default function LoginPage({ isOpen, onClose }) {
 
               <div className="text-right mt-1">
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="text-[11px] text-[#2874f0] font-bold hover:underline"
                 >
                   Forgot?

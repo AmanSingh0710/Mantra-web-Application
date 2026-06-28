@@ -80,7 +80,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center text-xs bg-green-500/10 text-green-400 font-bold px-2 py-1 rounded">
-                  <TrendingUp size={12} className="mr-1" /> +12%
+                  <TrendingUp size={12} className="mr-1" /> 
                 </span>
                 <p className="text-[10px] text-slate-500 mt-1 font-medium">Auto-settles Tue</p>
               </div>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs">
-                <span className="text-green-600 font-semibold flex items-center gap-0.5">+18% lifetime</span>
+                <span className="text-green-600 font-semibold flex items-center gap-0.5"></span>
                 <ChevronRight size={14} className="text-gray-400" />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs">
                 <span className="text-green-600 font-semibold flex items-center gap-0.5">
-                  98.4% SLA score
+                 
                 </span>
                 <ChevronRight size={14} className="text-gray-400" />
               </div>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Gross Revenue</p>
+                  <p className="text-xs font-bold text-gray-900 uppercase tracking-wider ">Gross Revenue</p>
                   <h4 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
                     ₹{isLoading ? "---" : (stats.totalEarnings || 0).toLocaleString("en-IN")}
                   </h4>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs">
                 <span className="text-blue-600 font-semibold flex items-center gap-0.5">
-                  +31% vs last wk <ArrowUpRight size={12} />
+                  <ArrowUpRight size={12} />
                 </span>
                 <ChevronRight size={14} className="text-gray-400" />
               </div>

@@ -26,16 +26,33 @@ exports.verifyEmailOTP = async (req, res) => {
             });
         }
 
-        // ✅ Compare hashed OTP
-        const isMatch = await bcrypt.compare(
-            otp,
-            record.otp
-        );
-
-        if (!isMatch || record.expiresAt < Date.now()) {
+        if (record.isUsed) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid or expired OTP"
+                message: "OTP has already been used"
+            });
+        }
+
+        // ✅ Compare hashed OTP
+        const isMatch = await bcrypt.compare(otp, record.otp);
+
+        if (!isMatch) {
+
+            record.attempts += 1;
+            await record.save();
+
+            if (record.attempts >= 5) {
+                await Otp.deleteOne({ _id: record._id });
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum OTP attempts exceeded. Request a new OTP."
+                });
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
             });
         }
 
@@ -74,6 +91,9 @@ exports.verifyEmailOTP = async (req, res) => {
 
         // ✅ save refresh token
         updatedUser.refreshToken = refreshToken;
+
+        record.isUsed = true;
+        await record.save();
 
         await updatedUser.save();
 
@@ -118,25 +138,41 @@ exports.verifyMobileOTP = async (req, res) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(
-            otp,
-            record.otp
-        );
-
-        if (!isMatch || record.expiresAt < Date.now()) {
+        if (record.isUsed) {
             return res.status(400).json({
-                message: "Invalid or expired OTP"
+                success: false,
+                message: "OTP has already been used"
             });
         }
 
-        await User.findByIdAndUpdate(userId, {
-            isMobileVerified: true
-        });
+        const isMatch = await bcrypt.compare(otp, record.otp);
 
-        await Otp.deleteMany({
-            userId,
-            type: "mobile"
-        });
+        if (!isMatch) {
+
+            record.attempts += 1;
+            await record.save();
+
+            if (record.attempts >= 5) {
+                await Otp.deleteOne({ _id: record._id });
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum OTP attempts exceeded. Request a new OTP."
+                });
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP"
+            });
+        }
+
+        await User.findByIdAndUpdate(userId, { isMobileVerified: true });
+
+        await Otp.deleteMany({ userId, type: "mobile" });
+
+        record.isUsed = true;
+        await record.save();
 
         res.json({
             success: true,
@@ -149,7 +185,6 @@ exports.verifyMobileOTP = async (req, res) => {
         });
     }
 };
-
 
 //Login with OTP
 exports.loginWithOTP = async (req, res) => {
@@ -180,6 +215,13 @@ exports.loginWithOTP = async (req, res) => {
             });
         }
 
+        if (record.isUsed) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP has already been used"
+            });
+        }
+
         // ✅ check expiry
         if (record.expiresAt < Date.now()) {
             return res.status(400).json({
@@ -189,12 +231,22 @@ exports.loginWithOTP = async (req, res) => {
         }
 
         // ✅ compare bcrypt
-        const isMatch = await bcrypt.compare(
-            otp,
-            record.otp
-        );
+        const isMatch = await bcrypt.compare(otp,record.otp);
 
         if (!isMatch) {
+
+            record.attempts += 1;
+            await record.save();
+
+            if (record.attempts >= 5) {
+                await Otp.deleteOne({ _id: record._id });
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum OTP attempts exceeded. Request a new OTP."
+                });
+            }
+
             return res.status(400).json({
                 success: false,
                 message: "Invalid OTP"
@@ -213,6 +265,9 @@ exports.loginWithOTP = async (req, res) => {
                     process.env.JWT_ACCESS_EXPIRE || "1h"
             }
         );
+
+        record.isUsed = true;
+        await record.save();
 
         // ✅ cleanup login OTP
         await Otp.deleteMany({
@@ -255,6 +310,7 @@ exports.resendEmailOTP = async (req, res) => {
 
         await Otp.create({
             userId,
+            userModel: "User",
             otp: hashedOtp,
             type: "email",
             expiresAt: Date.now() + 5 * 60 * 1000
@@ -302,6 +358,7 @@ exports.resendMobileOTP = async (req, res) => {
         // ✅ Save new OTP
         await Otp.create({
             userId,
+            userModel: "User",
             otp: hashedOtp,
             type: "mobile",
             expiresAt: Date.now() + 5 * 60 * 1000
@@ -362,6 +419,7 @@ exports.sendLoginOTP = async (req, res) => {
         // ✅ save login OTP
         await Otp.create({
             userId: user._id,
+            userModel: "User",
             otp: hashedOtp,
             type: "login",
             expiresAt: Date.now() + 5 * 60 * 1000

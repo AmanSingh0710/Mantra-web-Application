@@ -4,16 +4,19 @@ const express = require("express");
 const router = express.Router();
 
 const otpController = require("../../controllers/user/otpController");
+const authLimiter = require("../../middleware/authLimiter");
+const otpLimiter = require("../../middleware/otpLimiter");
+const auth = require("../../middleware/auth");
 
-router.post("/verify-email", otpController.verifyEmailOTP);
+router.post("/verify-email", authLimiter, otpLimiter, otpController.verifyEmailOTP);
 router.post("/verify-mobile", otpController.verifyMobileOTP);
 
-router.post("/resend-email-otp", otpController.resendEmailOTP);
+router.post("/resend-email-otp", authLimiter, otpLimiter,otpController.resendEmailOTP);
 
-router.post("/resend-mobile-otp", otpController.resendMobileOTP);
+router.post("/resend-mobile-otp", authLimiter, otpLimiter,otpController.resendMobileOTP);
 
-router.post("/send-login-otp", otpController.sendLoginOTP);
+router.post("/send-login-otp", authLimiter, otpLimiter,otpController.sendLoginOTP);
 
-router.post("/login-with-otp", otpController.loginWithOTP);
+router.post("/login-with-otp", authLimiter, otpLimiter,otpController.loginWithOTP);
 
 module.exports = router;

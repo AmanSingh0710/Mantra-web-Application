@@ -113,6 +113,7 @@ exports.register = async (req, res) => {
     // ✅ save OTP in collection
     await Otp.create({
       userId: user._id,
+      userModel: "User",
       otp: hashedOtp,
       type: "email",
       expiresAt: Date.now() + 5 * 60 * 1000
@@ -606,4 +607,250 @@ exports.updateLanguage = async (req, res) => {
     });
 
   }
+};
+
+// forgot passwpord
+exports.forgotPassword = async (req, res) => {
+  try {
+
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    let userModel = "User";
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await Store.findOne({ email });
+
+      if (user) userModel = "Store";
+    }
+
+    if (!user) {
+      user = await DeliveryMan.findOne({ email });
+
+      if (user) userModel = "DeliveryMan";
+    }
+
+    // Production security:
+    // Don't reveal whether the email exists.
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "If the email exists, an OTP has been sent."
+      });
+    }
+
+    // Remove previous reset OTPs
+    await Otp.deleteMany({
+      userId: user._id,
+      type: "reset-password"
+    });
+
+    const otp = generateOTP();
+
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    await Otp.create({
+      userId: user._id,
+      userModel,
+      otp: hashedOtp,
+      type: "reset-password",
+      expiresAt: Date.now() + 10 * 60 * 1000
+    });
+
+    await sendOTPEmail(user.email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully"
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+// verify Reset OTP
+exports.verifyResetOTP = async (req, res) => {
+
+  try {
+
+    const { email, otp } = req.body;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await Store.findOne({ email });
+    }
+
+    if (!user) {
+      user = await DeliveryMan.findOne({ email });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const otpDoc = await Otp.findOne({
+      userId: user._id,
+      type: "reset-password"
+    }).sort({ createdAt: -1 });
+
+    if (!otpDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found"
+      });
+    }
+
+    if (otpDoc.isUsed) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP already used"
+      });
+    }
+
+    if (otpDoc.expiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired"
+      });
+    }
+
+    const valid = await bcrypt.compare(otp, otpDoc.otp);
+
+    if (!valid) {
+
+      otpDoc.attempts += 1;
+      await otpDoc.save();
+
+      if (otpDoc.attempts >= 5) {
+
+        await Otp.deleteOne({ _id: otpDoc._id });
+
+        return res.status(400).json({
+          success: false,
+          message: "Maximum OTP attempts exceeded. Request a new OTP."
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "OTP verified"
+    });
+
+
+
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
+};
+
+// rrset password
+exports.resetPassword = async (req, res) => {
+
+  try {
+
+    const { email, otp, newPassword } = req.body;
+
+    let user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      user = await Store.findOne({ email }).select("+password");
+    }
+
+    if (!user) {
+      user = await DeliveryMan.findOne({ email }).select("+password");
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const otpDoc = await Otp.findOne({
+      userId: user._id,
+      type: "reset-password"
+    }).sort({ createdAt: -1 });
+
+    if (!otpDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found"
+      });
+    }
+
+    if (otpDoc.expiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired"
+      });
+    }
+
+    const valid = await bcrypt.compare(otp, otpDoc.otp);
+
+    if (!valid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP"
+      });
+    }
+
+    user.password = newPassword;
+
+    user.refreshToken = null;
+
+    user.passwordChangedAt = new Date();
+
+    await user.save();
+
+    await Otp.deleteMany({
+      userId: user._id,
+      type: "reset-password"
+    });
+
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+
 };
