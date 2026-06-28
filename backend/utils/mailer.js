@@ -2,6 +2,19 @@
 
 const nodemailer = require("nodemailer");
 
+
+async function testSMTP() {
+  try {
+    await transporter.verify();
+    console.log("✅ SMTP Connected");
+  } catch (err) {
+    console.error("❌ SMTP ERROR");
+    console.error(err);
+  }
+}
+
+testSMTP();
+
 console.log({
   host: process.env.BREVO_HOST,
   port: process.env.BREVO_PORT,
