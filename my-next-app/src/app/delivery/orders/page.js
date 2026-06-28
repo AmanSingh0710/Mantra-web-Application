@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 
+//src/app/delivery/orders/page.js
 import { fetchFromAPI }
 from "@/utils/api";
 
@@ -55,18 +56,17 @@ export default function OrdersPage() {
               <div>
 
                 <h2 className="text-xl font-black">
-                  Order #
-                  {order._id.slice(-6)}
+                 #{order.orderNumber}
                 </h2>
 
                 <p className="text-gray-500 mt-2">
-                  ₹{order.totalAmount}
+                  ₹{order.pricing?.grandTotal}
                 </p>
 
               </div>
 
               <span className="bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-bold">
-                {order.deliveryStatus}
+                {order.status}
               </span>
 
             </div>

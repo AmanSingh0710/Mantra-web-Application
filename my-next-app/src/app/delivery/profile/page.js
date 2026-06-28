@@ -3,7 +3,7 @@
 import {useEffect,useState,} from "react";
 
 import {fetchFromAPI,getImageUrl,} from "@/utils/api";
-//src/app/delivery
+//src/app/delivery/profile/page.js
 export default function ProfilePage() {
 
   const [profile, setProfile] =

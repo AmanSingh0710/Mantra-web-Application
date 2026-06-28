@@ -1,5 +1,5 @@
 "use client";
-
+//src/components/delivery/DeliverySidebar.js
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -14,13 +14,13 @@ import {
 const menus = [
   {
     name: "Dashboard",
-    href: "/deliveryBoy/dashboard",
+    href: "/delivery",
     icon: LayoutDashboard,
   },
 
   {
     name: "My Orders",
-    href: "/deliveryBoy/my-orders",
+    href: "/deliveryBoy/orders",
     icon: Package,
   },
 
@@ -38,7 +38,7 @@ const menus = [
 
   {
     name: "Profile",
-    href: "/deliveryBoy/my-profile",
+    href: "/deliveryBoy/profile",
     icon: UserCircle2,
   },
 ];

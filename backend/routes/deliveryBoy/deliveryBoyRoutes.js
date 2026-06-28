@@ -35,6 +35,12 @@ router.get("/my-stats",auth,isAdmin("DELIVERY"),controller.getMyStats);
 // ======================================================
 router.get("/earnings",auth,isAdmin("DELIVERY"),controller.getEarnings);
 
+
+// ======================================================
+// GET TRACKING
+// ======================================================
+router.get("/tracking",auth,isAdmin("DELIVERY"),controller.getTracking);
+
 // ======================================================
 // UPDATE LIVE LOCATION
 // ======================================================
@@ -54,6 +60,12 @@ router.put("/toggle-status",auth,isAdmin("DELIVERY"),controller.toggleOnlineStat
 // ACCEPT ORDER
 // ======================================================
 router.put("/accept-order/:id",auth,isAdmin("DELIVERY"),controller.acceptOrder);
+
+
+// ======================================================
+// CHNAGE PASSWORD
+// ======================================================
+router.put("/change-password",auth,isAdmin("DELIVERY"),controller.changePassword);
 
 // ======================================================
 // VERIFY DELIVERY OTP

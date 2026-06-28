@@ -4,7 +4,6 @@ const DeliveryBoy = require("../../models/Deliveryman/DeliveryMan");
 
 const Order = require("../../models/Order");
 
-const bcrypt = require("bcryptjs");
 
 // ======================================================
 // LOGIN
@@ -14,7 +13,7 @@ exports.loginDeliveryBoy = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const deliveryBoy = await DeliveryBoy.findOne({email,}).select("+password");
+    const deliveryBoy = await DeliveryBoy.findOne({ email, }).select("+password");
 
     if (!deliveryBoy) {
       return res.status(401).json({
@@ -30,7 +29,7 @@ exports.loginDeliveryBoy = async (req, res) => {
       });
     }
 
-    const isMatch =await deliveryBoy.comparePassword(password);
+    const isMatch = await deliveryBoy.comparePassword(password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -58,7 +57,7 @@ exports.loginDeliveryBoy = async (req, res) => {
 
     await deliveryBoy.save();
 
-    deliveryBoy.password =undefined;
+    deliveryBoy.password = undefined;
 
     res.status(200).json({
       success: true,
@@ -115,18 +114,16 @@ exports.getMyProfile = async (req, res) => {
 exports.getMyOrders = async (req, res) => {
   try {
 
-    const orders =
-      await Order.find({
-        deliveryBoy:
-          req.user.id,
-      })
-        .sort({
-          createdAt: -1,
-        });
+    const orders = await Order.find({
+      deliveryManId: req.user.id,
+      isDeleted: false,
+    })
+      .sort({ createdAt: -1 })
+      .select(
+        "orderNumber pricing.grandTotal status createdAt shipping"
+      );
 
-    res.status(200).json(
-      orders
-    );
+    return res.status(200).json(orders);
 
   } catch (error) {
 
@@ -144,34 +141,13 @@ exports.getMyOrders = async (req, res) => {
 exports.getMyStats = async (req, res) => {
   try {
 
-    const totalOrders =
-      await Order.countDocuments({
-        deliveryBoy:
-          req.user.id,
-      });
+    const totalOrders = await Order.countDocuments({ deliveryManId: req.user.id, });
 
-    const completedOrders =
-      await Order.countDocuments({
-        deliveryBoy:
-          req.user.id,
+    const completedOrders = await Order.countDocuments({ deliveryManId: req.user.id, status: "Delivered", });
 
-        deliveryStatus:
-          "DELIVERED",
-      });
+    const pendingOrders = await Order.countDocuments({ deliveryManId: req.user.id, status: "Out For Delivery", });
 
-    const pendingOrders =
-      await Order.countDocuments({
-        deliveryBoy:
-          req.user.id,
-
-        deliveryStatus:
-          "OUT_FOR_DELIVERY",
-      });
-
-    const profile =
-      await DeliveryBoy.findById(
-        req.user.id
-      );
+    const profile = await DeliveryBoy.findById(req.user.id);
 
     res.status(200).json({
       totalDeliveries:
@@ -222,6 +198,57 @@ exports.getEarnings = async (req, res) => {
   } catch (error) {
 
     res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+
+// ======================================================
+// GET TRACKING
+// ======================================================
+exports.getTracking = async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      deliveryManId: req.user.id,
+      status: {
+        $in: [
+          "Confirmed",
+          "Processing",
+          "Packed",
+          "Shipped",
+          "Out For Delivery",
+        ],
+      },
+    })
+      .populate("userId", "name mobile")
+      .sort({ updatedAt: -1 })
+      .select(
+        "orderNumber shipping pricing.grandTotal status updatedAt userId"
+      );
+
+    const tracking = orders.map((order) => ({
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      customerName: order.userId?.name || "",
+      customerPhone: order.userId?.mobile || "",
+      address: order.shipping.address,
+      city: order.shipping.city,
+      state: order.shipping.state,
+      pin: order.shipping.pin,
+      status: order.status,
+      totalAmount: order.pricing.grandTotal,
+      updatedAt: order.updatedAt,
+    }));
+
+    return res.status(200).json(tracking);
+
+  } catch (error) {
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -290,15 +317,26 @@ exports.updateLocation = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
 
-    const {
-      orderId,
-      deliveryStatus,
-    } = req.body;
+    const { orderId, status, } = req.body;
 
-    const order =
-      await Order.findById(
-        orderId
-      );
+    const order = await Order.findById(orderId);
+
+    const allowedStatus = [
+      "Processing",
+      "Packed",
+      "Shipped",
+      "Out For Delivery",
+      "Delivered",
+    ];
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
+    }
+
+    order.status = status;
 
     if (!order) {
       return res.status(404).json({
@@ -309,10 +347,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // ================= ASSIGNED CHECK =================
-    if (
-      order.deliveryBoy.toString() !==
-      req.user.id
-    ) {
+    if (!order.deliveryManId || order.deliveryManId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message:
@@ -321,31 +356,14 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // ================= UPDATE =================
-    order.deliveryStatus =
-      deliveryStatus;
+    order.status = status;
 
-    // ================= DELIVERED =================
-    if (
-      deliveryStatus ===
-      "DELIVERED"
-    ) {
-
-      order.status =
-        "Delivered";
-
-      const deliveryBoy =
-        await DeliveryBoy.findById(
-          req.user.id
-        );
-
-      deliveryBoy.totalDeliveries += 1;
-
-      deliveryBoy.walletBalance += 50;
-
-      deliveryBoy.totalEarnings += 50;
-
-      await deliveryBoy.save();
-    }
+    order.statusHistory.push({
+      status,
+      note: `Order status changed to ${status}`,
+      updatedBy: req.user.id,
+      updatedAt: new Date(),
+    });
 
     await order.save();
 
@@ -379,7 +397,7 @@ exports.toggleOnlineStatus = async (req, res) => {
 
     deliveryBoy.status =
       deliveryBoy.status ===
-      "ONLINE"
+        "ONLINE"
         ? "OFFLINE"
         : "ONLINE";
 
@@ -407,10 +425,7 @@ exports.toggleOnlineStatus = async (req, res) => {
 exports.acceptOrder = async (req, res) => {
   try {
 
-    const order =
-      await Order.findById(
-        req.params.id
-      );
+    const order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -419,7 +434,7 @@ exports.acceptOrder = async (req, res) => {
       });
     }
 
-    if (order.deliveryBoy) {
+    if (order.deliveryManId) {
       return res.status(400).json({
         success: false,
         message:
@@ -427,16 +442,20 @@ exports.acceptOrder = async (req, res) => {
       });
     }
 
-    order.deliveryBoy =
-      req.user.id;
+    order.deliveryManId = req.user.id;
 
-    order.deliveryStatus =
-      "OUT_FOR_DELIVERY";
+    order.status = "Out For Delivery";
+
+    order.statusHistory.push({
+      status: "Out For Delivery",
+      note: "Order accepted by delivery partner",
+      updatedBy: req.user.id,
+      updatedAt: new Date(),
+    });
 
     await order.save();
 
-    await DeliveryBoy.findByIdAndUpdate(
-      req.user.id,
+    await DeliveryBoy.findByIdAndUpdate(req.user.id,
       {
         status:
           "ON_DELIVERY",
@@ -465,15 +484,9 @@ exports.acceptOrder = async (req, res) => {
 exports.verifyDeliveryOTP = async (req, res) => {
   try {
 
-    const {
-      orderId,
-      otp,
-    } = req.body;
+    const { orderId, otp, } = req.body;
 
-    const order =
-      await Order.findById(
-        orderId
-      );
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({
@@ -483,27 +496,36 @@ exports.verifyDeliveryOTP = async (req, res) => {
       });
     }
 
-    if (
-      order.deliveryOTP !== otp
-    ) {
+    if (order.deliveryOtp !== otp) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid OTP",
+        message: "Invalid OTP",
       });
     }
 
-    order.deliveryStatus =
-      "DELIVERED";
+    if (order.deliveryOtpVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP already verified",
+      });
+    }
 
-    order.status =
-      "Delivered";
+
+    order.status = "Delivered";
+    order.deliveryOtpVerified = true;
+    order.tracking.deliveredAt = new Date();
+
+    order.statusHistory.push({
+      status: "Delivered",
+      note: "OTP verified successfully",
+      updatedBy: req.user.id,
+      updatedAt: new Date(),
+    });
 
     await order.save();
 
     // earnings
-    await DeliveryBoy.findByIdAndUpdate(
-      req.user.id,
+    await DeliveryBoy.findByIdAndUpdate(req.user.id,
       {
         $inc: {
           totalDeliveries: 1,

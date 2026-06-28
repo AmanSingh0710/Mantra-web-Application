@@ -1,5 +1,6 @@
 "use client";
 
+//src/app/delivery/earnings/page.js
 import {useEffect,useState,} from "react";
 
 import {fetchFromAPI} from "@/utils/api";
