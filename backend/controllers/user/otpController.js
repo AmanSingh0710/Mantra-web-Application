@@ -2,7 +2,7 @@
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const generateOTP = require("../../utils/sendMobileOTP");
+const generateOTP = require("../../utils/generateOTP");
 const { sendOTPEmail } = require("../../utils/mailer");
 const { sendMobileOTP } = require("../../utils/sendMobileOTP");
 const Otp = require("../../models/Otp");
