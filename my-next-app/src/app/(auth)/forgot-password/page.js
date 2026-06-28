@@ -47,7 +47,7 @@ export default function ForgotPassword() {
 
             <div className="w-[400px] bg-white p-8 rounded shadow">
 
-                <h2 className="text-2xl font-bold mb-6">
+                <h2 className="text-2xl font-bold mb-6 text-black">
                     Forgot Password
                 </h2>
 
