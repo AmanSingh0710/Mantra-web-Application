@@ -20,25 +20,25 @@ const menus = [
 
   {
     name: "My Orders",
-    href: "/deliveryBoy/orders",
+    href: "/delivery/orders",
     icon: Package,
   },
 
   {
     name: "Live Tracking",
-    href: "/deliveryBoy/tracking",
+    href: "/delivery/tracking",
     icon: MapPinned,
   },
 
   {
     name: "Wallet & Earnings",
-    href: "/deliveryBoy/earnings",
+    href: "/delivery/earnings",
     icon: Wallet,
   },
 
   {
     name: "Profile",
-    href: "/deliveryBoy/profile",
+    href: "/delivery/profile",
     icon: UserCircle2,
   },
 ];
