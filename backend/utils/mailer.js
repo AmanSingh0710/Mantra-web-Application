@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendOTPEmail = async (email, otp) => {
+  try{
   await transporter.sendMail({
     from: `"LifeInfotech" <${process.env.EMAIL}>`,
     to: email,
@@ -21,4 +22,9 @@ exports.sendOTPEmail = async (email, otp) => {
       <p>Valid for 5 minutes</p>
     `
   });
+   console.log("Mail Sent:", info.messageId);
+}catch(err){
+  console.error("MAIL ERROR:", err);
+    throw err;
+}
 };

@@ -5,8 +5,7 @@ const axios = require("axios");
 exports.sendMobileOTP = async (mobile) => {
   try {
 
-    const response = await axios.post(
-      "https://control.msg91.com/api/v5/otp",
+    const response = await axios.post("https://control.msg91.com/api/v5/otp",
       {
         mobile: `91${mobile}`,
         template_id: process.env.MSG91_TEMPLATE_ID,
@@ -24,9 +23,7 @@ exports.sendMobileOTP = async (mobile) => {
 
   } catch (error) {
 
-    console.log(
-      "MSG91 ERROR:",
-      error.response?.data || error.message
+    console.log("MSG91 ERROR:",error.response?.data || error.message
     );
 
     throw new Error("Failed to send OTP");
