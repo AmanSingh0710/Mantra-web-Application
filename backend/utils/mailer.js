@@ -13,6 +13,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+console.log("MAILER FILE LOADED");
 transporter.verify((error, success) => {
     if (error) {
         console.error("SMTP VERIFY ERROR:", error);
