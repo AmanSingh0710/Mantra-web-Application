@@ -1,7 +1,7 @@
 "use client";
 import { FaBell, FaSearch } from "react-icons/fa";
 import {getImageUrl } from "@/utils/api";
-import { getUser} from "@/utils/auth";
+import { getUser} from "@/utils/session";
 
 export default function StoreTopbar() {
   const user = getUser();
