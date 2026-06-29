@@ -78,15 +78,31 @@ exports.verifyMobileOTP = async (req, res) => {
 //Login with OTP
 exports.loginWithOTP = async (req, res) => {
     try {
-
         const { email, otp } = req.body;
 
-        const user = await User.findOne({ email });
+        let user = await User.findOne({ email });
+        let userModel = "User";
+
+        if (!user) {
+            user = await Store.findOne({ email });
+
+            if (user) {
+                userModel = "Store";
+            }
+        }
+
+        if (!user) {
+            user = await DeliveryMan.findOne({ email });
+
+            if (user) {
+                userModel = "DeliveryMan";
+            }
+        }
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: "Account not found"
             });
         }
 
@@ -99,23 +115,23 @@ exports.loginWithOTP = async (req, res) => {
         const { accessToken, refreshToken } = generateTokens(user);
 
         user.refreshToken = refreshToken;
-
         await user.save();
 
         setAuthCookies(res, accessToken, refreshToken);
 
         user.password = undefined;
 
-        return res.json({
+        return res.status(200).json({
             success: true,
             message: "Login successful",
+            role: userModel,
             user
         });
 
     } catch (error) {
+        console.error(error);
 
-        console.log(error);
-        res.status(error.statusCode || 500).json({
+        return res.status(error.statusCode || 500).json({
             success: false,
             message: error.message
         });
@@ -194,34 +210,57 @@ exports.resendMobileOTP = async (req, res) => {
 //Send Login OTP
 exports.sendLoginOTP = async (req, res) => {
     try {
-
         const { email } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+
+        let user = await User.findOne({ email });
+        let userModel = "User";
+
+        if (!user) {
+            user = await Store.findOne({ email });
+
+            if (user) {
+                userModel = "Store";
+            }
+        }
+
+        if (!user) {
+            user = await DeliveryMan.findOne({ email });
+
+            if (user) {
+                userModel = "DeliveryMan";
+            }
+        }
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: "Account not found"
             });
         }
 
         await createOTP({
             userId: user._id,
+            userModel,
             type: "login",
             destination: user.email
         });
 
-        return res.json({
+        return res.status(200).json({
             success: true,
-            message: "Login OTP sent"
+            message: "Login OTP sent successfully"
         });
 
     } catch (error) {
+        console.error(error);
 
-        console.log(error);
-
-        res.status(error.statusCode || 500).json({
+        return res.status(error.statusCode || 500).json({
             success: false,
             message: error.message
         });
