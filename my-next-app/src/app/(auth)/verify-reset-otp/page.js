@@ -1,28 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { fetchFromAPI } from "@/utils/api";
 
 export default function VerifyResetOTP() {
-
     const router = useRouter();
 
-    const [email, setEmail] = useState(
-        typeof window !== "undefined"
-            ? localStorage.getItem("resetEmail") || ""
-            : ""
-    );
-
     const [otp, setOtp] = useState("");
-
+    const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Get email from sessionStorage
+    useEffect(() => {
+        const storedEmail = sessionStorage.getItem("resetEmail");
+
+        if (!storedEmail) {
+            toast.error("Reset session expired");
+            router.replace("/forgot-password");
+            return;
+        }
+
+        setEmail(storedEmail);
+    }, [router]);
 
     const verifyOTP = async () => {
 
-        if (!email || !otp) {
-            return toast.error("Email and OTP are required");
+        if (!otp.trim()) {
+            return toast.error("OTP is required");
         }
 
         try {
@@ -30,36 +36,33 @@ export default function VerifyResetOTP() {
             setLoading(true);
 
             const res = await fetchFromAPI("/auth/verify-reset-otp", {
-
                 method: "POST",
-
                 body: JSON.stringify({
                     email,
-                    otp
-                })
-
+                    otp: otp.trim()
+                }),
             });
+
+            if (!res.success) {
+                return toast.error(res.message);
+            }
 
             toast.success(res.message);
 
-            localStorage.setItem("verifiedOTP", otp);
-
+            // OTP verified
+            sessionStorage.setItem("resetOTP", otp.trim());
+            sessionStorage.setItem("resetVerified", "true");
+            
             router.push("/reset-password");
 
         } catch (err) {
-
-            toast.error(err.message);
-
+            toast.error(err.message || "Verification failed");
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
     return (
-
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
             <div className="bg-white p-8 rounded-xl shadow w-[420px]">
@@ -69,24 +72,28 @@ export default function VerifyResetOTP() {
                 </h1>
 
                 <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full border rounded p-3 mb-4 bg-gray-100"
-                />
-
-                <input
                     type="text"
-                    placeholder="Enter OTP"
+                    maxLength={6}
                     value={otp}
-                    onChange={(e)=>setOtp(e.target.value)}
+                    placeholder="Enter OTP"
+                    onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, ""))
+                    }
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            verifyOTP();
+                        }
+                    }}
                     className="w-full border rounded p-3 mb-6"
                 />
 
                 <button
                     onClick={verifyOTP}
                     disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded"
+                    className={`w-full py-3 rounded text-white font-semibold ${loading
+                            ? "bg-blue-400 cursor-not-allowed"
+                            : "bg-blue-600 hover:bg-blue-700"
+                        }`}
                 >
                     {loading ? "Verifying..." : "Verify OTP"}
                 </button>
@@ -94,7 +101,5 @@ export default function VerifyResetOTP() {
             </div>
 
         </div>
-
     );
-
 }

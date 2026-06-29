@@ -4,8 +4,13 @@ import { useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
+
+//src/app/login-otp/page.js
 export default function LoginOTPPage() {
+
+    const { refreshUser } = useAuth();
 
     const router = useRouter();
 
@@ -20,93 +25,87 @@ export default function LoginOTPPage() {
     // ✅ SEND OTP
     const handleSendOTP = async () => {
 
-        if (!email) {
-            return toast.error("Enter email");
+        if (loading) return;
+
+        const userEmail = email.trim().toLowerCase();
+
+        if (!userEmail) {
+            return toast.error("Email is required");
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(userEmail)) {
+            return toast.error("Enter a valid email");
         }
 
         setLoading(true);
 
         try {
+            const res = await fetchFromAPI("/otp/send-login-otp", {
+                method: "POST",
+                body: JSON.stringify({
+                    email: userEmail
+                })
+            });
 
-            const res = await fetchFromAPI("/otp/send-login-otp",
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        email
-                    })
-                }
-            );
+            if (!res.success) { return toast.error(res.message); }
 
-            toast.success(
-                res.message || "OTP sent"
-            );
+            setEmail(userEmail);
 
+            toast.success(res.message);
             setStep(2);
 
         } catch (err) {
-
-            toast.error(
-                err.message || "Failed"
-            );
-
+            toast.error(err.message || "Failed");
         } finally {
-
             setLoading(false);
-
         }
     };
 
     // ✅ VERIFY OTP
-    const handleVerifyOTP = async () => {
+   const handleVerifyOTP = async (otpValue = otp) => {
 
-        if (!otp) {
-            return toast.error("Enter OTP");
+    if (loading) return;
+
+    const enteredOTP = otpValue.trim();
+
+    if (!enteredOTP) {
+        return toast.error("Enter OTP");
+    }
+
+    if (enteredOTP.length !== 6) {
+        return toast.error("Enter valid OTP");
+    }
+
+    setLoading(true);
+
+    try {
+
+        const res = await fetchFromAPI("/otp/login-with-otp", {
+            method: "POST",
+            body: JSON.stringify({
+                email,
+                otp: enteredOTP
+            })
+        });
+
+        if (!res.success) {
+            return toast.error(res.message);
         }
 
-        setLoading(true);
+        toast.success(res.message);
 
-        try {
+        await refreshUser();
 
-            const res = await fetchFromAPI(
-                "/otp/login-with-otp",
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        email,
-                        otp
-                    })
-                }
-            );
+        router.replace("/");
 
-            // ✅ save token
-            localStorage.setItem(
-                "accessToken",
-                res.accessToken
-            );
-
-            localStorage.setItem(
-                "user",
-                JSON.stringify(res.user)
-            );
-
-            toast.success(
-                "Login successful 🎉"
-            );
-
-            router.push("/");
-
-        } catch (err) {
-
-            toast.error(
-                err.message || "Invalid OTP"
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-    };
+    } catch (err) {
+        toast.error(err.message || "Invalid OTP");
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -127,6 +126,11 @@ export default function LoginOTPPage() {
                             onChange={(e) =>
                                 setEmail(e.target.value)
                             }
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSendOTP();
+                                }
+                            }}
                             className="w-full border p-3 rounded-lg mb-4 text-black outline-none"
                         />
 
@@ -152,9 +156,14 @@ export default function LoginOTPPage() {
                             maxLength={6}
                             placeholder="Enter OTP"
                             value={otp}
-                            onChange={(e) =>
-                                setOtp(e.target.value)
-                            }
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, "");
+                                setOtp(value);
+
+                                if (value.length === 6) {
+                                    handleVerifyOTP(value);
+                                }
+                            }}
                             className="w-full border p-3 rounded-lg mb-4 text-center tracking-[8px] text-black outline-none"
                         />
 

@@ -4,16 +4,19 @@ import { useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-
+//src/app/forgot-password/page.js
 export default function ForgotPassword() {
 
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+
 
     const sendOTP = async () => {
 
-        if (!email) {
+        const userEmail = email.trim().toLowerCase();
+
+        if (!userEmail) {
             return toast.error("Email is required");
         }
 
@@ -23,22 +26,24 @@ export default function ForgotPassword() {
 
             const res = await fetchFromAPI("/auth/forgot-password", {
                 method: "POST",
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email: userEmail })
             });
 
-            toast.success(res.message);
-            localStorage.setItem("resetEmail", email);
+            if (!res.success) {
+                return toast.error(res.message);
+            }
 
-            router.push("/verify-reset-otp");
+            sessionStorage.setItem("resetEmail", userEmail);
+
+            toast.success(res.message);
+
+            router.push(`/verify-reset-otp`);
 
         } catch (err) {
-
-            toast.error(err.message);
-
+            toast.error(err.message || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
-
     };
 
     return (
@@ -57,6 +62,11 @@ export default function ForgotPassword() {
                     className="border p-3 w-full rounded"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            sendOTP();
+                        }
+                    }}
                 />
 
                 <button

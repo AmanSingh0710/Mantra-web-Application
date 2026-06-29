@@ -25,7 +25,12 @@ export default function RegisterPage({ isOpen, onClose }) {
   if (onClose && !isOpen) return null;
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const validate = () => {
@@ -47,7 +52,9 @@ export default function RegisterPage({ isOpen, onClose }) {
   };
 
   const handleRegister = async () => {
-    // ✅ frontend validation
+
+    if (loading) return;
+
     if (!validate()) {
       toast.error("Please fix the form errors");
       return;
@@ -72,45 +79,16 @@ export default function RegisterPage({ isOpen, onClose }) {
         }
       );
 
-      // ✅ save verification data
-      localStorage.setItem(
-        "verifyUserId",
-        data.userId
-      );
 
-      localStorage.setItem(
-        "verifyEmail",
-        form.email
-      );
+      toast.success(data.message || "Account created successfully");
 
-      localStorage.setItem(
-        "verifyMobile",
-        form.mobile
-      );
+      sessionStorage.setItem("verifyUserId",data.userId);
 
-      // ✅ success message
-      toast.success(
-        "Account created successfully 🎉"
-      );
-
-      toast.success(
-        "OTP sent to your email 📩"
-      );
-
-      // ✅ redirect to email verification
-      router.push("/verify-email");
+      router.replace("/verify-email");
 
     } catch (err) {
-
-      console.error(
-        "REGISTER ERROR:",
-        err
-      );
-
-      toast.error(
-        err.message ||
-        "Registration failed"
-      );
+      console.error("REGISTER ERROR:", err);
+      toast.error(err.message || "Registration failed");
 
     } finally {
 
@@ -133,7 +111,7 @@ export default function RegisterPage({ isOpen, onClose }) {
               Sign up with your mobile number to get started.
             </p>
           </div>
-          <div className="text-4xl font-bold opacity-20">LEBROSTONE</div>
+          <div className="text-4xl font-bold opacity-20">MANTRA</div>
         </div>
 
         {/* Form Section */}
@@ -164,7 +142,7 @@ export default function RegisterPage({ isOpen, onClose }) {
               <label className="text-[15px] uppercase font-bold text-gray-700">Email Address</label>
               <div className="flex items-center">
                 <FaEnvelope className="text-gray-400 mr-2 text-xs" />
-                <input type="email" name="email" placeholder="example@mail.com" className="w-full py-1 outline-none text-sm" value={form.email} onChange={handleChange} />
+                <input type="email" name="email" placeholder="example@mail.com" className="w-full py-1 outline-none text-sm" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value.toLowerCase() }); }} />
               </div>
               {errors.email && <p className="text-red-500 text-[9px] font-bold uppercase">{errors.email}</p>}
             </div>
@@ -174,7 +152,7 @@ export default function RegisterPage({ isOpen, onClose }) {
               <label className="text-[15px] uppercase font-bold text-gray-700">Mobile Number</label>
               <div className="flex items-center">
                 <FaPhone className="text-gray-400 mr-2 text-xs" />
-                <input type="text" name="mobile" placeholder="10-digit number" className="w-full py-1 outline-none text-sm" value={form.mobile} onChange={handleChange} />
+                <input type="text" name="mobile" inputMode="numeric" maxLength={10} value={form.mobile} onChange={(e) => { const value = e.target.value.replace(/\D/g, ""); setForm({ ...form, mobile: value }); }} placeholder="10-digit number" className="w-full py-1 outline-none text-sm" />
               </div>
               {errors.mobile && <p className="text-red-500 text-[9px] font-bold uppercase">{errors.mobile}</p>}
             </div>
@@ -204,7 +182,7 @@ export default function RegisterPage({ isOpen, onClose }) {
               <label className="text-[15px] uppercase font-bold text-gray-700">PIN Code</label>
               <div className="flex items-center">
                 <FaHashtag className="text-gray-400 mr-2 text-xs" />
-                <input type="text" name="pin" placeholder="6 digits" className="w-full py-1 outline-none text-sm" value={form.pin} onChange={handleChange} />
+                <input type="text" name="pin" inputMode="numeric" maxLength={6} placeholder="6 digits" className="w-full py-1 outline-none text-sm" value={form.pin} onChange={(e) => { const value = e.target.value.replace(/\D/g, ""); setForm({ ...form, pin: value }); }} />
               </div>
               {errors.pin && <p className="text-red-500 text-[9px] font-bold uppercase">{errors.pin}</p>}
             </div>

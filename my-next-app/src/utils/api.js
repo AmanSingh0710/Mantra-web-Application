@@ -1,5 +1,7 @@
 // src/utils/api.js
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 export const getImageUrl = (image) => {
   if (!image) return "/no-image.png";
@@ -9,24 +11,6 @@ export const getImageUrl = (image) => {
   return image;
 };
 
-// Safe logout helper
-export const logoutUser = async () => {
-  if (typeof window === "undefined") return;
-
-  try {
-    // Inform the backend to clear cookies (res.clearCookie)
-    await fetch(`${BASE_URL}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-  } catch (err) {
-    console.error("Backend logout failed:", err);
-  } finally {
-    // Wipe local UI state cache and force redirect
-    localStorage.clear();
-    window.location.href = "/login";
-  }
-};
 
 export const fetchFromAPI = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
@@ -53,9 +37,7 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
 
   // 🔴 Access Token Expired or Not Found (401)
   if (res.status === 401) {
-    // 💡 GUEST SEAMLESS BROWSING FIX:
-    // If a guest lands on the site and hits /auth/me, a 401 is normal. 
-    // Return null right away so we don't trigger a forced redirect loop.
+
     if (endpoint === "/auth/me") {
       return null;
     }
@@ -81,8 +63,13 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
       });
     } catch (err) {
       console.error("Refresh failed:", err);
-      await logoutUser();
-      return;
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+
+      return null;
     }
   }
 
@@ -100,6 +87,8 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
     const message = data?.message || "Something went wrong";
     throw new Error(message);
   }
+
+
 
   return data;
 };

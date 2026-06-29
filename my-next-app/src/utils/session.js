@@ -1,32 +1,41 @@
-//src/utils/auth.js
+// src/utils/session.js
+
 import { fetchFromAPI } from "./api";
+
+// ===============================
+// Get Logged-in User
+// ===============================
 export const getUser = async () => {
   if (typeof window === "undefined") return null;
 
   try {
-    // Hits the backend server, which validates the secure cookie
-    const data = await fetchFromAPI("/auth/me", { method: "GET" });
-    
-    // If user returns successfully, cache non-sensitive info for fast UI loading
-    if (data && data.success) {
+    const data = await fetchFromAPI("/auth/me", {
+      method: "GET",
+    });
+
+    if (data?.success) {
       setAuthLocally(data.user);
       return data.user;
     }
+
+    clearLocalSession();
     return null;
   } catch (error) {
-    console.error("Session verification failed:", error.message);
-    // If the token is invalid or expired, clear out stale UI user data
-    localStorage.removeItem("user");
+    console.error("Session check failed:", error.message);
+    clearLocalSession();
     return null;
   }
 };
 
+// ===============================
+// Local Storage Helpers
+// ===============================
 export const getLocalUser = () => {
   if (typeof window === "undefined") return null;
+
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 };
-
 
 export const setAuthLocally = (user) => {
   if (typeof window === "undefined") return;
@@ -38,16 +47,26 @@ export const setAuthLocally = (user) => {
   }
 };
 
+export const clearLocalSession = () => {
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem("user");
+};
+
+// ===============================
+// Logout
+// ===============================
 export const logout = async () => {
   try {
-    // Calls the endpoint to clear backend cookies (res.clearCookie)
-    await fetchFromAPI("/auth/logout", { method: "POST" });
+    await fetchFromAPI("/auth/logout", {
+      method: "POST",
+    });
   } catch (error) {
-    console.error("Backend logout route failed to respond:", error.message);
+    console.error("Logout failed:", error.message);
   } finally {
-    // Always clear frontend states and redirect, regardless of network status
+    clearLocalSession();
+
     if (typeof window !== "undefined") {
-      localStorage.clear();
       window.location.href = "/login";
     }
   }

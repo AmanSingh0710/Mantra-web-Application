@@ -2,28 +2,16 @@
 
 const User = require("../../models/User");
 const Order = require("../../models/Order");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { sendOTPEmail } = require("../../utils/mailer");
-const { sendMobileOTP } = require("../../utils/sendMobileOTP");
-const generateOTP = require("../../utils/generateOTP");
-const Otp = require("../../models/Otp");
 const Store = require("../../models/Store");
 const cloudinary = require("../../utils/cloudinary");
+const Otp = require("../../models/Otp");
 const DeliveryMan = require("../../models/Deliveryman/DeliveryMan");
+const createOTP = require("../../utils/otp/createOTP");
+const verifyOTP = require("../../utils/otp/verifyOTP");
+const { setAuthCookies } = require("../../utils/setAuthCookies");
+const { clearAuthCookies } = require("../../utils/clearAuthCookies");
 
-
-// Helper to generate cookie options dynamically based on environment.
-const getCookieOptions = () => {
-  const isProduction = process.env.NODE_ENV === "production";
-  return {
-    httpOnly: true, // Neutralizes XSS by making the cookie unreadable to client JS
-    secure: isProduction, // True in production (requires HTTPS)
-    // If your frontend and backend domains are separate (e.g. Vercel & Heroku), use "None".
-    sameSite: isProduction ? "None" : "Lax",
-    path: "/",
-  };
-};
 
 //get me
 exports.getMe = async (req, res) => {
@@ -104,42 +92,17 @@ exports.register = async (req, res) => {
       role: role || "USER",
     });
 
-
-    // ✅ Generate OTP
-    const otp = generateOTP();
-
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    // ✅ save OTP in collection
-    await Otp.create({
+    await createOTP({
       userId: user._id,
-      userModel: "User",
-      otp: hashedOtp,
       type: "email",
-      expiresAt: Date.now() + 5 * 60 * 1000
+      destination: user.email
     });
 
-    console.log("OTP:", otp);
-
-    // ✅ send email
-    await sendOTPEmail(email, otp);
-
-    // const mobileOtp = generateOTP();
-
-    // const hashedMobileOtp = await bcrypt.hash(
-    //   mobileOtp,
-    //   10
-    // );
-
-    // await Otp.create({
+    // await createOTP({
     //   userId: user._id,
-    //   otp: hashedMobileOtp,
     //   type: "mobile",
-    //   expiresAt: Date.now() + 5 * 60 * 1000
+    //   destination: user.mobile
     // });
-
-    // // ✅ send sms on mobile
-    // await sendMobileOTP(user.mobile, mobileOtp);
 
     res.status(201).json({
       success: true,
@@ -217,7 +180,8 @@ exports.login = async (req, res) => {
     if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Please verify your email before login"
+        message: "Please verify your email before login",
+        userId: user._id
       });
     }
 
@@ -248,30 +212,49 @@ exports.login = async (req, res) => {
     const userData = user.toObject();
     userData.role = role;
 
-    const cookieOptions = getCookieOptions();
-
-    // Access token cookie (Matches your short lived JWT life, e.g. 15 minutes)
-    res.cookie("accessToken", accessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
-    });
-
-    // Refresh token cookie (Matches your longer lived token life, e.g. 7 days)
-    res.cookie("refreshToken", refreshToken, {
-      ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       success: true,
-      accessToken,
-      refreshToken,
       user: userData,
     });
 
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// LOGOUT (sweep and clear client engine cookies)
+exports.logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (refreshToken) {
+      let account = await User.findOne({ refreshToken });
+
+      if (!account) {
+        account = await Store.findOne({ refreshToken });
+      }
+
+      if (!account) {
+        account = await DeliveryMan.findOne({ refreshToken });
+      }
+
+      if (account) {
+        account.refreshToken = null;
+        await account.save();
+      }
+    }
+
+    clearAuthCookies(res);
+    res.json({ success: true, message: "Logged out successfully" });
+
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -387,7 +370,7 @@ exports.getAdminProfile = async (req, res) => {
 
     res.status(200).json({ success: true, admin });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 };
 
@@ -437,7 +420,6 @@ exports.updatePassword = async (req, res) => {
 
   } catch (error) {
     console.error("UPDATE PASSWORD ERROR:", error);
-
     res.status(500).json({
       success: false,
       message: error.message
@@ -463,11 +445,7 @@ exports.updateAdmin = async (req, res) => {
       updateData.imagePublicId = req.file.filename;
     }
 
-    if (
-      req.body.length ||
-      req.body.width ||
-      req.body.height
-    ) {
+    if (req.body.length || req.body.width || req.body.height) {
       updateData.dimensions = {
         length: Number(req.body.length) || 0,
         width: Number(req.body.width) || 0,
@@ -489,11 +467,7 @@ exports.updateAdmin = async (req, res) => {
           : req.body.tags;
     }
 
-    const updatedAdmin = await User.findByIdAndUpdate(
-      id || req.user.id,
-      updateData,
-      { new: true }
-    );
+    const updatedAdmin = await User.findByIdAndUpdate(id || req.user.id, updateData, { new: true });
 
     res.status(200).json({ success: true, admin: updatedAdmin });
 
@@ -517,59 +491,42 @@ exports.refreshToken = async (req, res) => {
     }
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.id);
+    let user = await User.findById(decoded.id);
+
+    if (!user) {user = await Store.findById(decoded.id);}
+
+    if (!user) {user = await DeliveryMan.findById(decoded.id);}
 
     if (!user || user.refreshToken !== refreshToken) {
-      return res.status(403).json({ message: "Invalid refresh token" });
+      return res.status(403).json({ success: false , message: "Invalid refresh token" });
     }
 
     const payload = { id: user._id, role: user.role, storeId: user.storeId };
 
-    const newAccessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.JWT_ACCESS_EXPIRE || "15m" });
-    const newRefreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRE || "7d" });
+    const newAccessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET,
+      {
+        expiresIn: process.env.JWT_ACCESS_EXPIRE,
+      }
+    );
+
+    const newRefreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: process.env.JWT_REFRESH_EXPIRE,
+      }
+    );
 
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    const cookieOptions = getCookieOptions();
+    setAuthCookies(res, newAccessToken, newRefreshToken);
 
-    // Deliver new tokens quietly back via client cookies
-    res.cookie("accessToken", newAccessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-    res.cookie("refreshToken", newRefreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
-
-    return res.json({ success: true });
+    return res.json({ success: true, message: "Token refreshed" });
 
   } catch (err) {
     return res.status(403).json({
       success: false,
       message: "Invalid or expired refresh token"
     });
-  }
-};
-
-// LOGOUT (sweep and clear client engine cookies)
-exports.logout = async (req, res) => {
-  try {
-    const { refreshToken } = req.cookies;
-
-    if (refreshToken) {
-      const user = await User.findOne({ refreshToken });
-      if (user) {
-        user.refreshToken = null;
-        await user.save();
-      }
-    }
-
-    const cookieOptions = getCookieOptions();
-
-    // Expire and clear client side cookie paths instantly
-    res.clearCookie("accessToken", cookieOptions);
-    res.clearCookie("refreshToken", cookieOptions);
-
-    res.json({ success: true, message: "Logged out successfully" });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
 };
 
@@ -600,12 +557,10 @@ exports.updateLanguage = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message
     });
-
   }
 };
 
@@ -647,25 +602,11 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Remove previous reset OTPs
-    await Otp.deleteMany({
+    await createOTP({
       userId: user._id,
-      type: "reset-password"
-    });
-
-    const otp = generateOTP();
-
-    const hashedOtp = await bcrypt.hash(otp, 10);
-
-    await Otp.create({
-      userId: user._id,
-      userModel,
-      otp: hashedOtp,
       type: "reset-password",
-      expiresAt: Date.now() + 10 * 60 * 1000
+      destination: user.email
     });
-
-    await sendOTPEmail(user.email, otp);
 
     res.status(200).json({
       success: true,
@@ -673,12 +614,10 @@ exports.forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-
-    res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message
     });
-
   }
 };
 
@@ -706,70 +645,22 @@ exports.verifyResetOTP = async (req, res) => {
       });
     }
 
-    const otpDoc = await Otp.findOne({
+    await verifyOTP({
       userId: user._id,
+      otp,
       type: "reset-password"
-    }).sort({ createdAt: -1 });
+    });
 
-    if (!otpDoc) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP not found"
-      });
-    }
-
-    if (otpDoc.isUsed) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP already used"
-      });
-    }
-
-    if (otpDoc.expiresAt < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired"
-      });
-    }
-
-    const valid = await bcrypt.compare(otp, otpDoc.otp);
-
-    if (!valid) {
-
-      otpDoc.attempts += 1;
-      await otpDoc.save();
-
-      if (otpDoc.attempts >= 5) {
-
-        await Otp.deleteOne({ _id: otpDoc._id });
-
-        return res.status(400).json({
-          success: false,
-          message: "Maximum OTP attempts exceeded. Request a new OTP."
-        });
-      }
-
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP"
-      });
-    }
-
-    res.json({
+    return res.json({
       success: true,
       message: "OTP verified"
     });
 
-
-
-
   } catch (error) {
-
-    res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message
     });
-
   }
 
 };
@@ -798,33 +689,11 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    const otpDoc = await Otp.findOne({
+    await verifyOTP({
       userId: user._id,
+      otp,
       type: "reset-password"
-    }).sort({ createdAt: -1 });
-
-    if (!otpDoc) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP not found"
-      });
-    }
-
-    if (otpDoc.expiresAt < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired"
-      });
-    }
-
-    const valid = await bcrypt.compare(otp, otpDoc.otp);
-
-    if (!valid) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP"
-      });
-    }
+    });
 
     user.password = newPassword;
 
@@ -832,25 +701,24 @@ exports.resetPassword = async (req, res) => {
 
     user.passwordChangedAt = new Date();
 
-    await user.save();
-
     await Otp.deleteMany({
       userId: user._id,
       type: "reset-password"
     });
+
+    await user.save();
+
 
     res.json({
       success: true,
       message: "Password changed successfully"
     });
 
-  } catch (error) {
-
-    res.status(500).json({
+  }
+  catch (error) {
+    return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message
     });
-
   }
-
 };

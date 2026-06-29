@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { fetchFromAPI } from "@/utils/api";
@@ -9,21 +9,30 @@ export default function ResetPassword() {
 
     const router = useRouter();
 
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState("");
 
+    const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [loading, setLoading] = useState(false);
 
-    const email =
-        typeof window !== "undefined"
-            ? localStorage.getItem("resetEmail")
-            : "";
+    useEffect(() => {
 
-    const otp =
-        typeof window !== "undefined"
-            ? localStorage.getItem("verifiedOTP")
-            : "";
+        const verified = sessionStorage.getItem("resetVerified");
+        const storedEmail = sessionStorage.getItem("resetEmail");
+        const storedOTP = sessionStorage.getItem("resetOTP");
+
+        if (!verified || !storedEmail || !storedOTP) {
+            toast.error("Reset session expired");
+            router.replace("/forgot-password");
+            return;
+        }
+
+        setEmail(storedEmail);
+        setOtp(storedOTP);
+
+    }, [router]);
 
     const resetPassword = async () => {
 
@@ -40,39 +49,32 @@ export default function ResetPassword() {
             setLoading(true);
 
             const res = await fetchFromAPI("/auth/reset-password", {
-
                 method: "POST",
-
                 body: JSON.stringify({
-
                     email,
-
                     otp,
-
-                    newPassword: password
-
-                })
-
+                    newPassword: password,
+                }),
             });
+
+            if (!res.success) {
+                return toast.error(res.message);
+            }
 
             toast.success(res.message);
 
-            localStorage.removeItem("resetEmail");
+            // Cleanup session
+            sessionStorage.removeItem("resetEmail");
+            sessionStorage.removeItem("resetOTP");
+            sessionStorage.removeItem("resetVerified");
 
-            localStorage.removeItem("verifiedOTP");
-
-            router.push("/login");
+            router.replace("/login");
 
         } catch (err) {
-
-            toast.error(err.message);
-
+            toast.error(err.message || "Something went wrong");
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
     return (
@@ -90,7 +92,12 @@ export default function ResetPassword() {
                     placeholder="New Password"
                     className="w-full border rounded p-3 mb-4"
                     value={password}
-                    onChange={(e)=>setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            resetPassword();
+                        }
+                    }}
                 />
 
                 <input
@@ -98,13 +105,22 @@ export default function ResetPassword() {
                     placeholder="Confirm Password"
                     className="w-full border rounded p-3 mb-6"
                     value={confirmPassword}
-                    onChange={(e)=>setConfirmPassword(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            resetPassword();
+                        }
+                    }}
                 />
 
                 <button
                     onClick={resetPassword}
                     disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded"
+                    className={`w-full py-3 rounded text-white font-semibold ${
+                        loading
+                            ? "bg-green-400 cursor-not-allowed"
+                            : "bg-green-600 hover:bg-green-700"
+                    }`}
                 >
                     {loading ? "Updating..." : "Update Password"}
                 </button>
@@ -114,5 +130,4 @@ export default function ResetPassword() {
         </div>
 
     );
-
 }
