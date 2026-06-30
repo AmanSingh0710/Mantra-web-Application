@@ -25,7 +25,7 @@ export default function EmployeeList() {
   const deleteEmployee = async (emp) => {
     try {
 
-      const url = emp.type === "DELIVERY_BOY" ? `/delivery-boy/delete/${emp._id}` : `/employees/${emp._id}`;
+      const url = emp.type === "DELIVERY_BOY" ? `/deliveryman/delete/${emp._id}` : `/employees/${emp._id}`;
 
       await fetchFromAPI(url, {
         method: "DELETE",

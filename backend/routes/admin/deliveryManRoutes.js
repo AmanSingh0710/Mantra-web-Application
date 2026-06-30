@@ -1,14 +1,10 @@
 const express = require("express");
-
 const router = express.Router();
-
 const controller = require("../../controllers/admin/Deliverymans/deliveryManController");
-
 const auth = require("../../middleware/auth");
-
 const isAdmin = require("../../middleware/isAdmin");
 const upload = require("../../middleware/upload");
-
+//rotes/admin/deliveryManRoutes.js
 router.post("/add", auth, isAdmin("ADMIN"), upload.fields([
     { name: "image", maxCount: 1 },
     { name: "aadhaarFront", maxCount: 1 },
