@@ -44,7 +44,7 @@ export default function EmployeeList() {
 
     if (emp.type === "DELIVERY_BOY") {
 
-      await fetchFromAPI(`/delivery-boy/block/${emp._id}`, {
+      await fetchFromAPI(`/deliveryman/block/${emp._id}`, {
         method: "PUT",
       });
 
