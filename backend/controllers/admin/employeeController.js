@@ -1,6 +1,10 @@
 const Employee = require("../../models/Employee");
 const Deliveryman = require("../../models/Deliveryman/DeliveryMan");
+const { deleteCloudinaryFile } = require("../../utils/cloudinary");
 const bcrypt = require("bcrypt");
+
+
+//controllers/admin/employeeController.js
 
 // CREATE EMPLOYEE
 exports.createEmployee = async (req, res) => {
@@ -14,130 +18,583 @@ exports.createEmployee = async (req, res) => {
       phone,
       address,
       identityType,
-      identityNumber
+      identityNumber,
     } = req.body;
 
-    const existing = await Employee.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "Email already exists" });
+    // ==========================
+    // Validation
+    // ==========================
+
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !phone ||
+      !address ||
+      !identityType ||
+      !identityNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields.",
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    if (!password) {
-      return res.status(400).json({ message: "Password is required" });
+    if (!req.files?.employee_image?.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee image is required.",
+      });
     }
 
-    // Handling multiple files from multer (upload.fields)
-    const employeeImagePath = req.files?.employee_image?.[0]?.filename || "";
-    const identityImagePath = req.files?.identity_image?.[0]?.filename || "";
+    if (!req.files?.identity_image?.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Identity image is required.",
+      });
+    }
 
-    const employee = new Employee({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      role,
-      phone,
-      address,
-      identityType,
-      identityNumber,
-      employeeImage: employeeImagePath,
-      identityImage: identityImagePath
+    // ==========================
+    // Check Email
+    // ==========================
+
+    const existingEmployee = await Employee.findOne({
+      email: email.toLowerCase(),
     });
 
-    await employee.save();
+    if (existingEmployee) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already exists.",
+      });
+    }
 
-    res.status(201).json({ message: "Employee created successfully ✅", employee });
+    // ==========================
+    // Hash Password
+    // ==========================
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // ==========================
+    // Cloudinary Images
+    // ==========================
+
+    const employeeImage = req.files.employee_image[0];
+
+    const identityImage = req.files.identity_image[0];
+
+    // ==========================
+    // Create Employee
+    // ==========================
+
+    const employee = await Employee.create({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.toLowerCase().trim(),
+
+      password: hashedPassword,
+
+      phone: phone.trim(),
+
+      address: address.trim(),
+
+      role,
+
+      identityType,
+
+      identityNumber,
+
+      employeeImage: {
+        public_id: employeeImage.filename,
+        url: employeeImage.path,
+      },
+
+      identityImage: {
+        public_id: identityImage.filename,
+        url: identityImage.path,
+      },
+    });
+
+    const employeeData = employee.toObject();
+
+    delete employeeData.password;
+
+    return res.status(201).json({
+      success: true,
+      message: "Employee created successfully.",
+      data: employeeData,
+    });
   } catch (error) {
-    console.log("ERROR:", error);
-    res.status(500).json({ message: "Error creating employee", error: error.message });
+
+    // ==========================
+    // Delete Uploaded Images
+    // If Mongo Save Failed
+    // ==========================
+
+    try {
+
+      if (req.files?.employee_image?.length) {
+
+        await deleteCloudinaryFile(
+          req.files.employee_image[0].filename
+        );
+
+      }
+
+      if (req.files?.identity_image?.length) {
+
+        await deleteCloudinaryFile(
+          req.files.identity_image[0].filename
+        );
+
+      }
+
+    } catch (cloudinaryError) {
+
+      console.log("Cloudinary Cleanup Error:", cloudinaryError.message);
+
+    }
+
+    console.log("Create Employee Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create employee.",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
+    });
   }
 };
 
-// GET ALL EMPLOYEES
+// GET ALL STAFF (Employees + Delivery Boys)
 exports.getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find().select("-password").sort({ createdAt: -1 });
-    res.status(200).json(employees);
+    // Fetch both collections in parallel
+    const [employees, deliverymen] = await Promise.all([
+      Employee.find()
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .lean(),
+
+      Deliveryman.find()
+        .select("-password -refreshToken")
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
+
+    // Normalize Employee Data
+    const employeeData = employees.map((emp) => ({
+      _id: emp._id,
+      type: "EMPLOYEE",
+
+      name: `${emp.firstName} ${emp.lastName}`.trim(),
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+
+      email: emp.email,
+      phone: emp.phone,
+
+      role: emp.role,
+      status: emp.status,
+
+      image: emp.employeeImage,
+
+      createdAt: emp.createdAt,
+      updatedAt: emp.updatedAt,
+    }));
+
+    // Normalize Delivery Boy Data
+    const deliveryData = deliverymen.map((delivery) => ({
+      _id: delivery._id,
+      type: "DELIVERY_BOY",
+
+      name: delivery.name,
+
+      email: delivery.email,
+      phone: delivery.mobile,
+
+      role: "DELIVERY",
+
+      // Keep actual delivery status
+      status: delivery.status,
+
+      // Separate blocked flag
+      isBlocked: delivery.isBlocked,
+
+      image: delivery.image,
+
+      totalDeliveries: delivery.totalDeliveries,
+      totalEarnings: delivery.totalEarnings,
+      walletBalance: delivery.walletBalance,
+
+      createdAt: delivery.createdAt,
+      updatedAt: delivery.updatedAt,
+    }));
+
+    // Merge & Sort Latest First
+    const staff = [...employeeData, ...deliveryData].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Staff fetched successfully.",
+      count: staff.length,
+      data: staff,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Error fetching employees" });
+    console.error("Get Employees Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching staff.",
+    });
   }
 };
 
 // UPDATE EMPLOYEE
 exports.updateEmployee = async (req, res) => {
   try {
+
     const { id } = req.params;
-    const updateData = { ...req.body };
 
-    if (req.body.password) {
-      updateData.password = await bcrypt.hash(req.body.password, 10);
+    const employee = await Employee.findOne({ _id: id, isDeleted: false, });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
     }
 
-    // Handle Image Updates if new files are uploaded
-    if (req.files) {
-      if (req.files['employee_image']) {
-        updateData.employeeImage = req.files['employee_image'][0].filename;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      phone,
+      address,
+      identityType,
+      identityNumber,
+      status,
+    } = req.body;
+
+    // ==================================
+    // Email Duplicate Check
+    // ==================================
+
+    if (email && email !== employee.email) {
+
+      const exists = await Employee.findOne({
+        email: email.toLowerCase(),
+        _id: { $ne: id },
+      });
+
+      if (exists) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already exists.",
+        });
       }
-      if (req.files['identity_image']) {
-        updateData.identityImage = req.files['identity_image'][0].filename;
-      }
+
+      employee.email = email.toLowerCase().trim();
     }
 
-    const updated = await Employee.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true // Ensures enum values are checked
-    }).select("-password");
+    // ==================================
+    // Basic Fields
+    // ==================================
 
-    res.status(200).json({ message: "Updated successfully", updated });
+    if (firstName) employee.firstName = firstName.trim();
+
+    if (lastName) employee.lastName = lastName.trim();
+
+    if (phone) employee.phone = phone.trim();
+
+    if (address) employee.address = address.trim();
+
+    if (role) employee.role = role;
+
+    if (status) employee.status = status;
+
+    if (identityType) employee.identityType = identityType;
+
+    if (identityNumber)
+      employee.identityNumber = identityNumber;
+
+    // ==================================
+    // Password
+    // ==================================
+
+    if (password && password.trim() !== "") {
+
+      employee.password = await bcrypt.hash(password, 12);
+
+    }
+
+    // ==================================
+    // Employee Image
+    // ==================================
+
+    if (req.files?.employee_image?.length) {
+
+      if (employee.employeeImage?.public_id) {
+
+        await deleteCloudinaryFile(
+          employee.employeeImage.public_id
+        );
+
+      }
+
+      employee.employeeImage = {
+        public_id: req.files.employee_image[0].filename,
+        url: req.files.employee_image[0].path,
+      };
+
+    }
+
+    // ==================================
+    // Identity Image
+    // ==================================
+
+    if (req.files?.identity_image?.length) {
+
+      if (employee.identityImage?.public_id) {
+
+        await deleteCloudinaryFile(
+          employee.identityImage.public_id
+        );
+
+      }
+
+      employee.identityImage = {
+        public_id: req.files.identity_image[0].filename,
+        url: req.files.identity_image[0].path,
+      };
+
+    }
+
+    await employee.save();
+
+    const response = employee.toObject();
+
+    delete response.password;
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee updated successfully.",
+      data: response,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Update failed", error: error.message });
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update employee.",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
+    });
+
   }
 };
 
-// DELETE, GET SINGLE, and STATUS remain mostly same, just ensure they use the correct Model
+// GET SINGLE EMPLOYEE
 exports.getEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).select("-password");
-    if (!employee) return res.status(404).json({ message: "Employee not found" });
-    res.status(200).json(employee);
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid employee ID.",
+      });
+    }
+
+    const employee = await Employee.findById(id)
+      .select("-password")
+      .lean();
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+    }
+
+    // Normalize Response
+    const data = {
+      _id: employee._id,
+
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      name: `${employee.firstName} ${employee.lastName}`.trim(),
+
+      email: employee.email,
+      phone: employee.phone,
+      address: employee.address,
+
+      role: employee.role,
+      status: employee.status,
+
+      identityType: employee.identityType,
+      identityNumber: employee.identityNumber,
+
+      employeeImage: employee.employeeImage,
+      identityImage: employee.identityImage,
+
+      createdAt: employee.createdAt,
+      updatedAt: employee.updatedAt,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee fetched successfully.",
+      data,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Error" });
+    console.error("Get Employee Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching employee.",
+    });
   }
 };
 
-exports.getEmployees = async (req, res) => {
-  try {
-    const employees = await Employee.find().select("-password");
-    const deliverymen = await Deliveryman.find().select("-password"); // Add this
-
-    // Combine both arrays into one list
-    const allStaff = [...employees, ...deliverymen];
-    
-    res.status(200).json(allStaff);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching staff" });
-  }
-};
-
+// DELETE EMPLOYEE (SOFT DELETE)
 exports.deleteEmployee = async (req, res) => {
   try {
-    await Employee.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Deleted successfully" });
+
+    const { id } = req.params;
+
+    const employee = await Employee.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+    }
+
+    // ==========================
+    // Delete Cloudinary Images
+    // ==========================
+
+    if (employee.employeeImage?.public_id) {
+      await deleteCloudinaryFile(employee.employeeImage.public_id);
+    }
+
+    if (employee.identityImage?.public_id) {
+      await deleteCloudinaryFile(employee.identityImage.public_id);
+    }
+
+    // ==========================
+    // Soft Delete
+    // ==========================
+
+    employee.isDeleted = true;
+
+    employee.status = "inactive";
+
+    await employee.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee deleted successfully.",
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Delete failed" });
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete employee.",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
+    });
+
   }
 };
 
+// UPDATE EMPLOYEE STATUS
 exports.updateStatus = async (req, res) => {
+
   try {
-    const updated = await Employee.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
-    res.status(200).json(updated);
+
+    const { id } = req.params;
+
+    const { status } = req.body;
+
+    if (!["active", "inactive"].includes(status)) {
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status.",
+      });
+
+    }
+
+    const employee = await Employee.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+
+    if (!employee) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+
+    }
+
+    employee.status = status;
+
+    await employee.save();
+
+    return res.status(200).json({
+
+      success: true,
+
+      message: "Status updated successfully.",
+
+      data: employee,
+
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Status update failed" });
+
+    console.log(error);
+
+    return res.status(500).json({
+
+      success: false,
+
+      message: "Failed to update status.",
+
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : undefined,
+
+    });
+
   }
+
 };

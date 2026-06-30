@@ -1,17 +1,17 @@
 "use client";
 
-import { fetchFromAPI} from "@/utils/api";
+import { fetchFromAPI } from "@/utils/api";
 import { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
-
+//src/components/admin/Employees/EmployeeList.js
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
 
   const fetchEmployees = async () => {
     try {
       const data = await fetchFromAPI("/employees");
-      setEmployees(Array.isArray(data) ? data : []);
+      setEmployees(data.data || []);
     } catch (err) {
       toast.error("Failed to fetch employees ❌");
     }
@@ -22,43 +22,43 @@ export default function EmployeeList() {
   }, []);
 
   // Delete Employee
-  const deleteEmployee = async (id) => {
+  const deleteEmployee = async (emp) => {
     try {
-      await fetchFromAPI(`/employees/${id}`, {
+
+      const url = emp.type === "DELIVERY_BOY" ? `/delivery-boy/delete/${emp._id}` : `/employees/${emp._id}`;
+
+      await fetchFromAPI(url, {
         method: "DELETE",
       });
 
-      toast.success("Employee deleted ✅");
+      toast.success("Deleted Successfully");
       fetchEmployees();
+
     } catch (err) {
-      toast.error("Delete failed ❌");
+      toast.error("Delete failed");
     }
   };
 
   // Toggle status
-  const toggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+  const toggleStatus = async (emp) => {
 
-    try {
-      await fetchFromAPI(`/employees/status/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: newStatus }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+    if (emp.type === "DELIVERY_BOY") {
+
+      await fetchFromAPI(`/delivery-boy/block/${emp._id}`, {
+        method: "PUT",
       });
 
-      toast.success(`Employee marked as ${newStatus}`);
+    } else {
 
-      // Update UI instantly
-      setEmployees(prev =>
-        prev.map(emp =>
-          emp._id === id ? { ...emp, status: newStatus } : emp
-        )
-      );
-    } catch (err) {
-      toast.error("Status update failed ❌");
+      const newStatus = emp.status === "active" ? "inactive" : "active";
+
+      await fetchFromAPI(`/employees/status/${emp._id}`, {
+
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus, }),
+      });
     }
+    fetchEmployees();
   };
 
   return (
@@ -82,48 +82,31 @@ export default function EmployeeList() {
           {employees.map((emp, index) => (
             <tr key={emp._id} className="text-center border text-gray-900">
               <td>{index + 1}</td>
-
-              {/* ✅ ID */}
               <td>{emp._id}</td>
-
-              {/* ✅ IMAGE */}
               <td>
-                <img
-                  src={
-                    emp.employeeImage
-                      ? `${BASE_URL}/uploads/${emp.employeeImage}`
-                      : "/default-user.png"
-                  }
-                  width={40}
-                  height={40}
-                  className="rounded-full mx-auto"
+                <img src={emp.image?.url || "/default-user.png"}
+                  alt={emp.name}
+                  className="w-10 h-10 rounded-full object-cover mx-auto"
                 />
               </td>
-
-              {/* ✅ NAME */}
-              <td>{emp.firstName} {emp.lastName}</td>
-
-              {/* ✅ EMAIL */}
+              <td>{emp.name}</td>
               <td>{emp.email}</td>
-
-              {/* ✅ ROLE */}
               <td>{emp.role}</td>
-
               {/* ✅ ACTION */}
               <td>
-
                 {/* Status Toggle Button */}
                 <button
-                  onClick={() => toggleStatus(emp._id, emp.status)}
+                  onClick={() => toggleStatus(emp)}
                   className={`px-3 py-1 rounded text-xs font-bold cursor-pointer transition-colors ${emp.status === "active"
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-red-100 text-red-700 hover:bg-red-200"
                     }`}
                 >
                   {emp.status === "active" ? "Active" : "Inactive"}
                 </button>
+
                 <button
-                  onClick={() => deleteEmployee(emp._id)}
+                  onClick={() => deleteEmployee(emp)}
                   className="bg-red-500 text-white px-2 py-1 rounded"
                 >
                   Delete

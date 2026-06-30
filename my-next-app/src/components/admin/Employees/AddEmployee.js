@@ -5,6 +5,8 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaUser, FaUserCircle, FaImage } from "react-icons/fa";
 
+//src/components/admin/Employees/AddEmployee.js
+
 export default function AddEmployee() {
     // Initial state object for easy resetting
     const initialFormState = {
