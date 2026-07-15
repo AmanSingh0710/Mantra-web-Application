@@ -1,0 +1,59 @@
+const mongoose = require("mongoose");
+
+const deliverySettlementSchema = new mongoose.Schema({
+  settlementNumber:{
+    type:String,
+    unique:true,
+    index:true
+  },
+  deliveryBoyId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"DeliveryMan",
+    required:true,
+    index:true
+  },
+  walletId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Wallet",
+    required:true
+  },
+  amount:{
+    type:Number,
+    required:true,
+    min:1
+  },
+  paymentMethod:{
+    type:String,
+    enum:["BANK","UPI"],
+    default:"BANK"
+  },
+  accountHolderName:String,
+  bankName:String,
+  accountNumber:String,
+  ifscCode:String,
+  upiId:String,
+  status:{
+    type:String,
+    enum:["PENDING","APPROVED","PAID","REJECTED"],
+    default:"PENDING"
+  },
+  approvedBy:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"User",
+    default:null
+  },
+  approvedAt:Date,
+  paidAt:Date,
+  remarks:String
+},{
+  timestamps:true
+});
+
+deliverySettlementSchema.pre("save",function(next){
+  if(!this.settlementNumber){
+    this.settlementNumber="DSL-"+Date.now()+"-"+Math.floor(Math.random()*1000);
+  }
+  next();
+});
+
+module.exports=mongoose.model("DeliverySettlement",deliverySettlementSchema);

@@ -1,0 +1,282 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const deliveryManSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Invalid Email",
+      ],
+    },
+
+    mobile: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/^[6-9]\d{9}$/, "Invalid Mobile"],
+    },
+
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
+
+    image: {
+      url: String,
+      publicId: String,
+    },
+
+    vehicleType: {
+      type: String,
+      enum: ["BIKE", "SCOOTER", "BICYCLE", "CAR"],
+      default: "BIKE",
+    },
+
+    vehicleNumber: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+
+    licenseNumber: {
+      type: String,
+      trim: true,
+    },
+
+    bankName: {
+      type: String,
+      trim: true,
+    },
+
+    accountHolderName: {
+      type: String,
+      trim: true,
+    },
+
+    accountNumber: {
+      type: String,
+      trim: true,
+    },
+
+    ifscCode: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+
+    upiId: {
+      type: String,
+      lowercase: true,
+      trim: true,
+    },
+
+    aadhaarNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    aadhaarFront: {
+      url: String,
+      publicId: String,
+    },
+
+    aadhaarBack: {
+      url: String,
+      publicId: String,
+    },
+
+    drivingLicenseImage: {
+      url: String,
+      publicId: String,
+    },
+
+    vehicleImage: {
+      url: String,
+      publicId: String,
+    },
+
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
+
+    currentLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
+    },
+
+    status: {
+      type: String,
+      enum: ["ONLINE", "OFFLINE", "ON_DELIVERY"],
+      default: "OFFLINE",
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    totalDeliveries: {
+      type: Number,
+      default: 0,
+    },
+
+    totalEarnings: {
+      type: Number,
+      default: 0,
+    },
+
+    walletBalance: {
+      type: Number,
+      default: 0,
+    },
+
+    lastLogin: Date,
+
+    isEmailVerified: {
+      type: Boolean,
+      default: true, // Admin create karta hai
+    },
+
+    refreshToken: {
+      type: String,
+      default: null,
+    },
+
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
+
+    todayDeliveries: {
+      type: Number,
+      default: 0
+    },
+
+    todayEarnings: {
+      type: Number,
+      default: 0
+    },
+
+    monthlyEarnings: {
+      type: Number,
+      default: 0
+    },
+
+    averageRating: {
+      type: Number,
+      default: 5
+    },
+
+    activeOrder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null
+    },
+
+    lastActive: {
+      type: Date,
+      default: null
+    }
+  },
+  {
+    timestamps: true,
+  }
+);
+
+deliveryManSchema.index({
+  currentLocation: "2dsphere",
+});
+
+deliveryManSchema.index({
+  status: 1
+});
+
+deliveryManSchema.index({
+  isBlocked: 1
+});
+
+deliveryManSchema.index({
+  city: 1
+});
+
+deliveryManSchema.index({
+  totalDeliveries: -1
+});
+
+deliveryManSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+
+  this.password = await bcrypt.hash(
+    this.password,
+    12
+  );
+});
+
+deliveryManSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(
+    password,
+    this.password
+  );
+};
+
+deliveryManSchema.methods.handleLoginAttempt = async function (isMatch) {
+
+  const MAX_ATTEMPTS = 5;
+  const LOCK_TIME = 15 * 60 * 1000; // 15 min
+
+  if (isMatch) {
+    this.loginAttempts = 0;
+    this.lockUntil = null;
+  } else {
+    this.loginAttempts += 1;
+
+    if (this.loginAttempts >= MAX_ATTEMPTS) {
+      this.lockUntil = Date.now() + LOCK_TIME;
+    }
+  }
+
+  await this.save();
+};
+
+deliveryManSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+
+  delete obj.password;
+  delete obj.refreshToken;
+
+  return obj;
+};
+
+module.exports = mongoose.model("DeliveryMan", deliveryManSchema);
