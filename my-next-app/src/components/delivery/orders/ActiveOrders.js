@@ -46,7 +46,7 @@ export default function ActiveOrders() {
         />
         <div className="flex gap-2">
           <button onClick={() => load(1, search)} className="px-4 py-2 bg-black text-white rounded-lg">Search</button>
-          <button onClick={() => load()} className="px-4 py-2 border rounded-lg">Refresh</button>
+          <button onClick={() => load()} className="px-4 py-2 bg-black text-white border rounded-lg">Refresh</button>
         </div>
       </div>
 
@@ -55,12 +55,12 @@ export default function ActiveOrders() {
       ) : orders.length === 0 ? (
         <div className="text-center py-10 text-gray-500">No active orders found.</div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-6 text-black">
           {orders.map(o => <OrderCard key={o._id} order={o} onView={setSelected} />)}
         </div>
       )}
 
-      <div className="flex justify-center items-center gap-3">
+      <div className="flex justify-center items-center gap-3 text-black">
         <button disabled={page <= 1} onClick={() => { const n = page - 1; setPage(n); load(n, search); }} className="border px-4 py-2 rounded disabled:opacity-50">Prev</button>
         <span>{page} / {pages}</span>
         <button disabled={page >= pages} onClick={() => { const n = page + 1; setPage(n); load(n, search); }} className="border px-4 py-2 rounded disabled:opacity-50">Next</button>
