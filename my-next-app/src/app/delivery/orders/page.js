@@ -13,6 +13,7 @@ export default function OrdersPage() {
   const [openModal, setOpenModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [otp, setOtp] = useState("");
+  const [nextStatus, setNextStatus] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -33,6 +34,7 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = (order) => {
     setSelectedOrder(order);
+    setNextStatus(getNextStatus(order.status) || "");
     setOtp("");
     setOpenModal(true);
   };
@@ -64,7 +66,7 @@ export default function OrdersPage() {
         method: "PUT",
         body: JSON.stringify({
           orderId: selectedOrder._id,
-          status: selectedOrder.status
+          status: nextStatus
         })
       });
 
@@ -73,22 +75,19 @@ export default function OrdersPage() {
         return;
       }
 
+      const updatedOrder = res.order;
+
+      setSelectedOrder(updatedOrder);
+
       setOrders(prev =>
         prev.map(order =>
-          order._id === selectedOrder._id
-            ? { ...order, status: selectedOrder.status }
+          order._id === updatedOrder._id
+            ? updatedOrder
             : order
         )
       );
 
-      if (selectedOrder.status === "Out For Delivery") {
-        setSelectedOrder(prev => ({
-          ...prev,
-          status: "Out For Delivery"
-        }));
-      } else {
-        setOpenModal(false);
-      }
+      setNextStatus(getNextStatus(updatedOrder.status) || "");
     } catch (err) {
       console.error(err);
     } finally {
@@ -123,13 +122,18 @@ export default function OrdersPage() {
           order._id === selectedOrder._id
             ? {
               ...order,
-              status: "Delivered"
+              status: "Delivered",
+              deliveryOtpVerified: true
             }
             : order
         )
       );
 
+      setSelectedOrder(null);
+      setNextStatus("");
+      setOtp("");
       setOpenModal(false);
+
       toast.success("Delivery Completed");
     } catch (err) {
       console.log(err);
@@ -294,19 +298,16 @@ export default function OrdersPage() {
                 {selectedOrder.status}
               </div>
 
-              {getNextStatus(selectedOrder.status) && (
+              {nextStatus && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-900">
+                    Next Status
+                  </p>
 
-                <button
-                  onClick={() =>
-                    setSelectedOrder({
-                      ...selectedOrder,
-                      status: getNextStatus(selectedOrder.status)
-                    })
-                  }
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3"
-                >
-                  Move to {getNextStatus(selectedOrder.status)}
-                </button>
+                  <div className="px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold">
+                    {nextStatus}
+                  </div>
+                </div>
               )}
             </div>
 
