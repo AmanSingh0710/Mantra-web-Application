@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchFromAPI } from "@/utils/api";
-import logout  from "@/utils/session";
+import { logout } from "@/utils/session";
 import toast from "react-hot-toast";
 import { LayoutDashboard, Package, Truck, Wallet, IndianRupee, Bell, User, Settings, LogOut, ChevronDown, ChevronLeft, ChevronRight, Circle, X } from "lucide-react";
 
@@ -37,7 +37,7 @@ export default function DeliverySidebar() {
       const res = await fetchFromAPI("/deliveryBoy/my-profile");
       const profile = res.data || res;
       setDeliveryBoy(profile);
-      setIsOnline(profile?.isOnline || false);
+      setIsOnline(profile?.status === "ONLINE");
     } catch (err) {
       console.error(err);
       toast.error("Failed to load profile");
