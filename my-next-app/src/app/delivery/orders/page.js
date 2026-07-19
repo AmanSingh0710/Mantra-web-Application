@@ -73,14 +73,22 @@ export default function OrdersPage() {
         return;
       }
 
-      setOrders((prev) =>
-        prev.map((item) =>
-          item._id === selectedOrder._id
-            ? { ...item, status: selectedOrder.status }
-            : item
+      setOrders(prev =>
+        prev.map(order =>
+          order._id === selectedOrder._id
+            ? { ...order, status: selectedOrder.status }
+            : order
         )
       );
-      setOpenModal(false);
+
+      if (selectedOrder.status === "Out For Delivery") {
+        setSelectedOrder(prev => ({
+          ...prev,
+          status: "Out For Delivery"
+        }));
+      } else {
+        setOpenModal(false);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -89,6 +97,10 @@ export default function OrdersPage() {
   };
 
   const verifyOTP = async () => {
+    if (!otp.trim()) {
+      alert("Please enter OTP");
+      return;
+    }
     try {
       setSaving(true);
       const res = await fetchFromAPI("/deliveryBoy/verify-otp",
