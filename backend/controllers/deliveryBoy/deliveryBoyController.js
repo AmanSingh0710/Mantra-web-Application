@@ -175,7 +175,7 @@ exports.getMyStats = async (req, res) => {
 
     const profile = await DeliveryBoy.findById(req.user.id);
 
-    const wallet = await Wallet.findOne({userId: req.user.id,userType: "DeliveryMan"});
+    const wallet = await Wallet.findOne({ userId: req.user.id, userType: "DeliveryMan" });
 
     res.status(200).json({
       totalDeliveries: profile.totalDeliveries || 0,
@@ -547,17 +547,16 @@ exports.verifyDeliveryOTP = async (req, res) => {
 
     const { orderId, otp, } = req.body;
 
-    const earning = order.pricing.deliveryCharge || 0;
-
     const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message:
-          "Order not found",
+        message: "Order not found"
       });
     }
+
+    const earning = order.pricing?.deliveryCharge || 0;
 
     if (order.deliveryOtp !== otp) {
       return res.status(400).json({

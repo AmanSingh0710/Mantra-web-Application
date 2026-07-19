@@ -3,15 +3,20 @@
 // src/app/delivery/orders/page.js
 import { useEffect, useState } from "react";
 import { fetchFromAPI } from "@/utils/api";
-import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [otp, setOtp] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
+
       try {
         const res = await fetchFromAPI("/deliveryBoy/my-orders");
         const data = res.data || res;
@@ -26,7 +31,101 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-  // Amazon/Flipkart style colored indicator status badge helper
+  const handleUpdateStatus = (order) => {
+    setSelectedOrder(order);
+    setOtp("");
+    setOpenModal(true);
+  };
+
+  const getNextStatus = (status) => {
+
+    switch (status) {
+
+      case "Processing":
+        return "Packed";
+
+      case "Packed":
+        return "Shipped";
+
+      case "Shipped":
+        return "Out For Delivery";
+
+      default:
+        return null;
+
+    }
+
+  };
+
+  const updateOrderStatus = async () => {
+    setSaving(true);
+    try {
+      const res = await fetchFromAPI("/deliveryBoy/update-order-status", {
+        method: "PUT",
+        body: JSON.stringify({
+          orderId: selectedOrder._id,
+          status: selectedOrder.status
+        })
+      });
+
+      if (!res.success) {
+        alert(res.message);
+        return;
+      }
+
+      setOrders((prev) =>
+        prev.map((item) =>
+          item._id === selectedOrder._id
+            ? { ...item, status: selectedOrder.status }
+            : item
+        )
+      );
+      setOpenModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const verifyOTP = async () => {
+    try {
+      setSaving(true);
+      const res = await fetchFromAPI("/deliveryBoy/verify-otp",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: selectedOrder._id,
+            otp
+          })
+        }
+      );
+
+      if (!res.success) {
+        alert(res.message);
+        return;
+      }
+
+      setOrders(prev =>
+        prev.map(order =>
+          order._id === selectedOrder._id
+            ? {
+              ...order,
+              status: "Delivered"
+            }
+            : order
+        )
+      );
+
+      setOpenModal(false);
+      toast.success("Delivery Completed");
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getStatusStyles = (status) => {
     const normalStatus = status?.toLowerCase() || "";
     if (["delivered", "completed"].includes(normalStatus)) {
@@ -152,22 +251,94 @@ export default function OrdersPage() {
                       <span>Call</span>
                     </a>
 
-                    <button
-                      onClick={() => router.push(`/delivery/orders/${order._id}`)}
-                      className="flex-1 md:flex-none text-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-150"
-                    >
+                    <button onClick={() => handleUpdateStatus(order)} className="flex-1 md:flex-none text-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-150">
                       Update Status
                     </button>
                   </div>
-
                 </div>
-
               </div>
             ))}
           </div>
         )}
 
       </div>
+      {openModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <h2 className="text-xl font-bold mb-4">
+              Update Order Status
+            </h2>
+
+            <p className="mb-4">
+              Order #
+              {selectedOrder.orderNumber || selectedOrder._id.slice(-8)}
+            </p>
+
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Current Status
+              </p>
+              <div className="px-4 py-3 rounded-lg bg-gray-100 font-semibold">
+                {selectedOrder.status}
+              </div>
+
+              {getNextStatus(selectedOrder.status) && (
+
+                <button
+                  onClick={() =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      status: getNextStatus(selectedOrder.status)
+                    })
+                  }
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3"
+                >
+                  Move to {getNextStatus(selectedOrder.status)}
+                </button>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+
+              <button
+                onClick={() => setOpenModal(false)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                Cancel
+              </button>
+
+              {selectedOrder.status === "Out For Delivery" ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter Delivery OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="border rounded-lg px-3 py-2"
+                  />
+
+                  <button
+                    onClick={verifyOTP}
+                    disabled={saving}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg"
+                  >
+                    {saving ? "Verifying..." : "Verify OTP"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={updateOrderStatus}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  {saving ? "Updating..." : "Update"}
+                </button>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
