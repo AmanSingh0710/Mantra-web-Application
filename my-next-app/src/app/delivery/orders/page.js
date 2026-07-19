@@ -43,6 +43,9 @@ export default function OrdersPage() {
 
     switch (status) {
 
+      case "Confirmed":
+        return "Processing";
+
       case "Processing":
         return "Packed";
 
