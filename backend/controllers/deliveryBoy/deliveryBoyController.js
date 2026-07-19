@@ -7,6 +7,8 @@ const Settlement = require("../../models/Finance/Settlement");
 const WalletTransaction = require("../../models/Finance/WalletTransaction");
 const DeliverySettlement = require("../../models/Finance/DeliverySettlement");
 const Notification = require("../../models/Notification/SendNotification");
+const createOTP = require("../../utils/otp/createOTP");
+const verifyOTP = require("../../utils/otp/verifyOTP");
 
 //helper function
 const buildOrderQuery = (deliveryId, query) => {
@@ -541,11 +543,64 @@ exports.acceptOrder = async (req, res) => {
   }
 };
 
+// SEND DELIVERY OTP
+exports.sendDeliveryOTP = async (req, res) => {
+  try {
+
+    const { orderId } = req.body;
+
+    const order = await Order.findById(orderId)
+      .populate("userId", "email");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (
+      !order.deliveryManId ||
+      order.deliveryManId.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    await createOTP({
+      userId: order.userId._id,
+      type: "delivery",
+      destination: order.userId.email,
+    });
+
+    return res.json({
+      success: true,
+      message: "Delivery OTP sent successfully",
+    });
+
+  } catch (err) {
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+
+  }
+};
+
 // VERIFY DELIVERY OTP
 exports.verifyDeliveryOTP = async (req, res) => {
   try {
 
     const { orderId, otp, } = req.body;
+
+    await verifyOTP({
+      userId: order.userId,
+      otp,
+      type: "delivery"
+    });
 
     const order = await Order.findById(orderId);
 
@@ -557,31 +612,6 @@ exports.verifyDeliveryOTP = async (req, res) => {
     }
 
     const earning = order.pricing?.deliveryCharge || 0;
-
-    if (order.deliveryOtp !== otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    if (new Date() > order.deliveryOtpExpiresAt) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired"
-      });
-    }
-
-    if (order.deliveryOtpVerified) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP already verified",
-      });
-    }
-
-    order.deliveryOtp = null;
-    order.deliveryOtpExpiresAt = null;
-
 
     order.status = "Delivered";
     order.deliveryOtpVerified = true;

@@ -78,6 +78,18 @@ export default function OrdersPage() {
         return;
       }
 
+      if (nextStatus === "Out For Delivery") {
+
+        await fetchFromAPI("/deliveryBoy/send-delivery-otp", {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: selectedOrder._id,
+          }),
+        });
+
+        toast.success("Delivery OTP sent to customer");
+      }
+
       const updatedOrder = res.order;
 
       setSelectedOrder(updatedOrder);

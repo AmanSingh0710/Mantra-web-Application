@@ -27,6 +27,7 @@ router.get("/my-orders", deliveryLimiter, auth, isAdmin("DELIVERY"), controller.
 router.patch("/accept-order/:id", deliveryStatusLimiter, auth, isAdmin("DELIVERY"), controller.acceptOrder);
 router.put("/update-order-status", deliveryStatusLimiter, auth, isAdmin("DELIVERY"), controller.updateOrderStatus);
 router.post("/verify-otp", otpLimiter, auth, isAdmin("DELIVERY"), controller.verifyDeliveryOTP);
+router.post("/send-delivery-otp",otpLimiter,auth,isAdmin("DELIVERY"),controller.sendDeliveryOTP);
 
 // Order Tabs
 router.get("/orders/assigned", deliveryLimiter, auth, isAdmin("DELIVERY"), controller.getAssignedOrders);
