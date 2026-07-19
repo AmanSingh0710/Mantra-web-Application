@@ -265,20 +265,20 @@ export default function OrdersPage() {
       {openModal && selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-xl font-bold mb-4 text-black">
               Update Order Status
             </h2>
 
-            <p className="mb-4">
+            <p className="mb-4 text-black">
               Order #
               {selectedOrder.orderNumber || selectedOrder._id.slice(-8)}
             </p>
 
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-900">
                 Current Status
               </p>
-              <div className="px-4 py-3 rounded-lg bg-gray-100 font-semibold">
+              <div className="px-4 py-3 rounded-lg bg-gray-100 font-semibold text-black">
                 {selectedOrder.status}
               </div>
 
